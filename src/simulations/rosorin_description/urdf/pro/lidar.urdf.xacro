@@ -46,7 +46,7 @@
   <joint name="lidar_joint" type="fixed">
     <origin
       xyz="0.048156 7.5552E-05 0.106748"
-      rpy="0 0 3.1416" />
+      rpy="0 0 0" />
     <parent link="$(arg prefix)base_link" />
     <child link="$(arg prefix)lidar_frame" />
     <axis xyz="0 0 0" />
