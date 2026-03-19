@@ -50,7 +50,7 @@ def generate_launch_description():
         lidar_frame_arg,
         scan_raw_arg,
         ld19_node,
-        statis_tf_trans_node,
+        # statis_tf_trans_node,
     ])
 
 if __name__ == '__main__':
