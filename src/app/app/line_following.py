@@ -146,7 +146,7 @@ class LineFollowingNode(Node):
         self.create_service(Trigger, '~/get_target_color', self.get_target_color_srv_callback)   # 获取颜色(get the color)
         self.create_service(SetFloat64, '~/set_threshold', self.set_threshold_srv_callback)  # 设置阈值(set the threshold)
         self.joints_pub = self.create_publisher(ServosPosition, 'servo_controller', 1)
-        Heart(self, self.name + '/heartbeat', 5, lambda _: self.exit_srv_callback(request=Trigger.Request(), response=Trigger.Response()))  # 心跳包(heartbeat package)
+        self.heartbeat = Heart(self, self.name + '/heartbeat', 5, lambda _: self.exit_srv_callback(request=Trigger.Request(), response=Trigger.Response())) # 心跳包(heartbeat package)
         self.debug = self.get_parameter('debug').value
         if self.debug:
             threading.Thread(target=self.main, daemon=True).start()
@@ -192,6 +192,8 @@ class LineFollowingNode(Node):
 
     def enter_srv_callback(self, request, response):
         self.get_logger().info('\033[1;32m%s\033[0m' % "line following enter")
+        if hasattr(self, 'heartbeat') and self.heartbeat:
+            self.heartbeat.start()
         with self.lock:
             self.color = ''
             self.stop = False
@@ -211,7 +213,7 @@ class LineFollowingNode(Node):
             if self.lidar_sub is None:
                 qos = QoSProfile(depth=1, reliability=QoSReliabilityPolicy.BEST_EFFORT)
                 self.lidar_sub = self.create_subscription(LaserScan, '/scan_raw', self.lidar_callback, qos)  # 订阅雷达数据(subscribe to Lidar data)
-                set_servo_position(self.joints_pub, 1, ((10, 300), (5, 500), (4, 170), (3, 40), (2, 665), (1, 500)))
+                set_servo_position(self.joints_pub, 1, ((10, 300), (5, 500), (4, 200), (3, 70), (2, 605), (1, 500)))
             self.mecanum_pub.publish(Twist())
         response.success = True
         response.message = "enter"
@@ -219,6 +221,8 @@ class LineFollowingNode(Node):
 
     def exit_srv_callback(self, request, response):
         self.get_logger().info('\033[1;32m%s\033[0m' % "line following exit")
+        if hasattr(self, 'heartbeat') and self.heartbeat:
+            self.heartbeat.stop()
         try:
             if self.image_sub is not None:
                 self.destroy_subscription(self.image_sub)
@@ -236,7 +240,7 @@ class LineFollowingNode(Node):
             self.follower = None
             self.threshold = 0.5
             self.mecanum_pub.publish(Twist())
-            set_servo_position(self.joints_pub, 1, ((10, 500), (5, 500), (4, 150), (3, 50), (2, 765), (1, 500)))
+            set_servo_position(self.joints_pub, 1, ((10, 500), (5, 500), (4, 180), (3, 50), (2, 700), (1, 500)))
         response.success = True
         response.message = "exit"
         return response
@@ -413,4 +417,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 

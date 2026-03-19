@@ -60,16 +60,23 @@ class ColorPicker:
         else:
             return None, result_image
 
+
 class Heart:
     def __init__(self, node, srv_name, timeout, callback):
         self.heartbeat_stamp = 0
         self.callback = callback
         self.timeout = timeout
         self.node = node
+        self.is_active = True
         self.node.create_timer(1, self.heartbeat_timeout_check)
         self.node.create_service(SetBool, srv_name, self.heartbeat_srv_callback)
 
     def heartbeat_srv_callback(self, request, response):
+        if not self.is_active:
+            response.success = False
+            response.message = "heartbeat is stopped"
+            return response
+            
         self.node.get_logger().info('\033[1;32m%s\033[0m' % "♥'")
         if request.data:
             self.heartbeat_stamp = time.time() + self.timeout
@@ -80,7 +87,18 @@ class Heart:
         return response
 
     def heartbeat_timeout_check(self):
+        if not self.is_active:
+            return
+            
         if self.heartbeat_stamp != 0 and self.heartbeat_stamp < time.time():
             self.node.get_logger().info('\033[1;32m%s\033[0m' % "heartbeat timeout")
             self.heartbeat_stamp = 0
             self.callback(self)
+            
+    def stop(self):
+        self.is_active = False
+        self.heartbeat_stamp = 0
+        
+    def start(self):
+        self.is_active = True
+        self.heartbeat_stamp = 0

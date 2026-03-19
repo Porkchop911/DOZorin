@@ -18,6 +18,8 @@ from sensor_msgs.msg import LaserScan
 from interfaces.srv import SetInt64, SetFloat64List
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy
 from ros_robot_controller_msgs.msg import MotorState, SetPWMServoState, PWMServoState
+from servo_controller_msgs.msg import ServosPosition
+from servo_controller.bus_servo_control import set_servo_position
 
 CAR_WIDTH = 0.4  # meter
 MAX_SCAN_ANGLE = 240
@@ -47,7 +49,9 @@ class LidarController(Node):
         self.create_service(Trigger, '~/enter', self.enter_srv_callback)  # 进入玩法(enter the game)
         self.create_service(Trigger, '~/exit', self.exit_srv_callback)  # 退出玩法(exit the game)
         self.create_service(SetInt64, '~/set_running', self.set_running_srv_callback)  # 开启玩法(start the game)
-        Heart(self, self.name + '/heartbeat', 5, lambda _: self.exit_srv_callback(request=Trigger.Request(), response=Trigger.Response()))  # 心跳包(heartbeat package)
+        self.joints_pub = self.create_publisher(ServosPosition, 'servo_controller', 1)
+
+        self.heartbeat = Heart(self, self.name + '/heartbeat', 5, lambda _: self.exit_srv_callback(request=Trigger.Request(), response=Trigger.Response())) # 心跳包(heartbeat package)
         self.create_service(SetFloat64List, '~/set_param', self.set_parameters_srv_callback)  # 参数设置(set parameter)
         self.servo_state_pub = self.create_publisher(SetPWMServoState, 'ros_robot_controller/pwm_servo/set_state', 1)
         self.create_service(Trigger, '~/init_finish', self.get_node_state)
@@ -74,16 +78,20 @@ class LidarController(Node):
 
     def enter_srv_callback(self, request, response):
         self.get_logger().info('\033[1;32m%s\033[0m' % 'lidar enter')
+        if hasattr(self, 'heartbeat') and self.heartbeat:
+            self.heartbeat.start()
         self.reset_value()
         qos = QoSProfile(depth=1, reliability=QoSReliabilityPolicy.BEST_EFFORT)
         self.lidar_sub = self.create_subscription(LaserScan, '/scan_raw', self.lidar_callback, qos)  # 订阅雷达数据(subscribe to Lidar data)
-        set_servo_position(self.joints_pub, 1, ((10, 500), (5, 500), (4, 150), (3, 50), (2, 765), (1, 500)))
+        set_servo_position(self.joints_pub, 1, ((10, 500), (5, 500), (4, 180), (3, 50), (2, 700), (1, 500)))
         response.success = True
         response.message = "enter"
         return response
 
     def exit_srv_callback(self, request, response):
         self.get_logger().info('\033[1;32m%s\033[0m' % 'lidar exit')
+        if hasattr(self, 'heartbeat') and self.heartbeat:
+            self.heartbeat.stop()
         self.reset_value()
         self.mecanum_pub.publish(Twist())
         response.success = True
@@ -393,3 +401,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

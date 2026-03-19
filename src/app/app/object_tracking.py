@@ -153,7 +153,7 @@ class OjbectTrackingNode(Node):
         self.get_target_color_srv = self.create_service(Trigger, '~/get_target_color', self.get_target_color_srv_callback)
         self.set_threshold_srv = self.create_service(SetFloat64, '~/set_threshold', self.set_threshold_srv_callback)
         self.joints_pub = self.create_publisher(ServosPosition, 'servo_controller', 1)
-        Heart(self, self.name + '/heartbeat', 5, lambda _: self.exit_srv_callback(request=Trigger.Request(), response=Trigger.Response()))  # 心跳包(heartbeat package)
+        self.heartbeat = Heart(self, self.name + '/heartbeat', 5, lambda _: self.exit_srv_callback(request=Trigger.Request(), response=Trigger.Response())) # 心跳包(heartbeat package)
         self.camera_type = 'Stereo'
         self.debug = self.get_parameter('debug').value
         if self.debug: 
@@ -199,6 +199,8 @@ class OjbectTrackingNode(Node):
 
     def enter_srv_callback(self, request, response):
         self.get_logger().info('\033[1;32m%s\033[0m' % 'object tracking enter')
+        if hasattr(self, 'heartbeat') and self.heartbeat:
+            self.heartbeat.start()
         with self.lock:
             self.is_running = False
             self.threshold = 0.5
@@ -213,7 +215,7 @@ class OjbectTrackingNode(Node):
                 else:
                     self.camera_type = 'Mono'
                     self.image_sub = self.create_subscription(Image, '/usb_cam/image_raw', self.image_callback, 1)  # 摄像头订阅(subscribe to the camera)
-            set_servo_position(self.joints_pub, 1, ((10, 500), (5, 500), (4, 150), (3, 50), (2, 765), (1, 500)))
+            set_servo_position(self.joints_pub, 1, ((10, 500), (5, 500), (4, 180), (3, 50), (2, 700), (1, 500)))
             self.mecanum_pub.publish(Twist())
         response.success = True
         response.message = "enter"
@@ -221,6 +223,8 @@ class OjbectTrackingNode(Node):
 
     def exit_srv_callback(self, request, response):
         self.get_logger().info('\033[1;32m%s\033[0m' % 'object tracking exit')
+        if hasattr(self, 'heartbeat') and self.heartbeat:
+            self.heartbeat.stop()
         try:
             if self.image_sub is not None:
                 self.destroy_subscription(self.image_sub)
@@ -234,7 +238,7 @@ class OjbectTrackingNode(Node):
             self.threshold = 0.5
             self.dist_threshold = 0.3
             self.mecanum_pub.publish(Twist())
-        set_servo_position(self.joints_pub, 1, ((10, 500), (5, 500), (4, 150), (3, 50), (2, 765), (1, 500)))
+        set_servo_position(self.joints_pub, 1, ((10, 500), (5, 500), (4, 180), (3, 50), (2, 700), (1, 500)))
         response.success = True
         response.message = "exit"
         return response
@@ -348,4 +352,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 

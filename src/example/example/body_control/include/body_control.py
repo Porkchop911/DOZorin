@@ -273,21 +273,21 @@ class BodyControlNode(Node):
                         if self.move_status[0]:
                             self.move_finish = False
                             self.last_status = 1
-                            if self.machine_type == 'ROSOrin_Mecanum':
+                            if 'Mecanum' in self.machine_type:
                                 twist.linear.y = -0.3
-                            elif self.machine_type == 'ROSOrin_Acker':
+                            elif 'Acker' in self.machine_type:
                                 twist.angular.z = -1.0
-                            elif self.machine_type == 'ROSOrin_Differential':
+                            elif 'Differential' in self.machine_type:
                                 twist.linear.x = -0.3
                             threading.Thread(target=self.move, args=(twist, 1)).start()
                         elif self.move_status[1]:
                             self.move_finish = False
                             self.last_status = 2
-                            if self.machine_type == 'ROSOrin_Mecanum':
+                            if 'Mecanum' in self.machine_type:
                                 twist.linear.y = 0.3
-                            elif self.machine_type == 'ROSOrin_Acker':
+                            elif 'Acker' in self.machine_type:
                                 twist.angular.z = 1.0
-                            elif self.machine_type == 'ROSOrin_Differential':
+                            elif 'Differential' in self.machine_type:
                                 twist.linear.x = 0.3
                             threading.Thread(target=self.move, args=(twist, 1)).start()
 

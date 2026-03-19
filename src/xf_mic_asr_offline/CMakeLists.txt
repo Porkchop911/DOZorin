@@ -46,7 +46,12 @@ install(PROGRAMS
   scripts/asr_node.py
   scripts/voice_control_move.py
   scripts/voice_control_navigation.py
+  scripts/voice_control_arm.py
   scripts/voice_control_color_detect.py
+  scripts/voice_control_color_sorting.py
+  scripts/voice_control_color_track.py
+  scripts/voice_control_garbage_classification.py
+  scripts/voice_control_navigation_transport.py
   scripts/wonder_echo_pro_node.py
   DESTINATION lib/${PROJECT_NAME}
 )

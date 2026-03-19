@@ -62,7 +62,7 @@ class SelfDrivingNode(Node):
         self.create_service(Trigger, '~/enter', self.enter_srv_callback) # 进入玩法(enter the game)
         self.create_service(Trigger, '~/exit', self.exit_srv_callback) # 退出玩法(exit the game)
         self.create_service(SetBool, '~/set_running', self.set_running_srv_callback)
-        Heart(self, self.name + '/heartbeat', 5, lambda _: self.exit_srv_callback(request=Trigger.Request(), response=Trigger.Response()))  # 心跳包(heartbeat package)
+        self.heartbeat = Heart(self, self.name + '/heartbeat', 5, lambda _: self.exit_srv_callback(request=Trigger.Request(), response=Trigger.Response())) # 心跳包(heartbeat package)
         timer_cb_group = ReentrantCallbackGroup()
         self.client = self.create_client(Trigger, '/controller_manager/init_finish')
         self.client.wait_for_service()
@@ -161,6 +161,8 @@ class SelfDrivingNode(Node):
 
     def enter_srv_callback(self, request, response):
         self.get_logger().info('\033[1;32m%s\033[0m' % "self driving enter")
+        if hasattr(self, 'heartbeat') and self.heartbeat:
+            self.heartbeat.start()
         with self.lock:
             self.start = False
             if self.get_parameter('use_depth_cam').value:
@@ -178,6 +180,8 @@ class SelfDrivingNode(Node):
 
     def exit_srv_callback(self, request, response):
         self.get_logger().info('\033[1;32m%s\033[0m' % "self driving exit")
+        if hasattr(self, 'heartbeat') and self.heartbeat:
+            self.heartbeat.stop()
         with self.lock:
             try:
                 if self.image_sub is not None:
@@ -551,4 +555,5 @@ def main():
  
 if __name__ == "__main__":
     main()
+
 

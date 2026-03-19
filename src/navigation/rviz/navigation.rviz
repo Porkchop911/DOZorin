@@ -4,11 +4,7 @@ Panels:
     Name: Displays
     Property Tree Widget:
       Expanded:
-        - /Global Options1
-        - /Status1
-        - /LaserScan1
         - /LaserScan1/Topic1
-        - /RobotModel1
         - /Map1/Topic1
         - /Map1/Update Topic1
         - /global1/Map1
@@ -101,7 +97,7 @@ Visualization Manager:
         Durability Policy: Volatile
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /robot_1/robot_description
+        Value: /robot_description
       Enabled: true
       Links:
         All Links Enabled: true
@@ -109,98 +105,98 @@ Visualization Manager:
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
-        robot_1/base_footprint:
+        base_footprint:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-        robot_1/base_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        robot_1/camera_link:
+        base_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        robot_1/camera_link0:
+        camera_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        robot_1/depth_cam_frame:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        robot_1/end_effector_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        robot_1/gripper_link:
+        camera_link0:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        robot_1/imu_link:
+        depth_cam_frame:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-        robot_1/l_in_link:
+        end_effector_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
-        robot_1/l_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        robot_1/l_out_link:
+        gripper_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        robot_1/lidar_frame:
+        imu_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        l_in_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        robot_1/link1:
+        l_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        robot_1/link2:
+        l_out_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        robot_1/link3:
+        lidar_frame:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        robot_1/link4:
+        link1:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        robot_1/link5:
+        link2:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        robot_1/r_in_link:
+        link3:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        robot_1/r_link:
+        link4:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        robot_1/r_out_link:
+        link5:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        r_in_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        r_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        r_out_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -399,25 +395,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 6.640392780303955
+      Distance: 5.128409385681152
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.9643856883049011
-        Y: 0.7066379189491272
-        Z: -0.06416893750429153
+        X: -0.28386080265045166
+        Y: 0.17841118574142456
+        Z: -0.05822973698377609
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.42479729652404785
+      Pitch: 1.314796805381775
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 1.9004071950912476
+      Yaw: 3.050407886505127
     Saved: ~
 Window Geometry:
   Displays:

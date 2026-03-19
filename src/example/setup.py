@@ -15,7 +15,6 @@ setup(
         (os.path.join('share', package_name, 'launch'), glob(os.path.join('example', '**/*.launch.py'))),
         (os.path.join('share', package_name, 'config'), glob(os.path.join('config', '*.yaml'))),
         (os.path.join('share', package_name, 'resource'), glob(os.path.join('resource', '*.dae'))),
-
     ],
     install_requires=['setuptools'],
     zip_safe=True,
