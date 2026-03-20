@@ -132,7 +132,7 @@ def launch_setup(context):
         camera_topic_arg,
 
         navigation_start_launch,
-        yolo_node,
+        GroupAction(actions=[yolo_node], condition=IfCondition(use_yolo_detect)),
         navigation_controller_node,
         road_network_navigator_node,
     ]

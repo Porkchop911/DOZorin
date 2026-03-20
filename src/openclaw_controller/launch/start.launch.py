@@ -8,9 +8,10 @@ from launch import LaunchDescription, LaunchService
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument, OpaqueFunction
 
-
 def launch_setup(context, *args, **kwargs):
     use_yolo = LaunchConfiguration('use_yolo').perform(context)
+    stream = LaunchConfiguration('stream').perform(context)
+    feishu_enable = LaunchConfiguration('feishu_enable').perform(context)
     
     openclaw_controller_package_path = get_package_share_directory('openclaw_controller')
     large_models_package_path = get_package_share_directory('large_models')
@@ -24,16 +25,16 @@ def launch_setup(context, *args, **kwargs):
     tts_node = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(os.path.join(
         large_models_package_path, 'launch/tts_node.launch.py'
-    )),
+        )),
     )
 
     yolo_node = IncludeLaunchDescription(PythonLaunchDescriptionSource(os.path.join(
         openclaw_controller_package_path,'launch/yolo_node.launch.py'
-    )),
+        )),
     )
 
     robot_base_launch = IncludeLaunchDescription(PythonLaunchDescriptionSource(os.path.join(
-        openclaw_controller_package_path,'launch/robot_base.launch.py'
+        openclaw_controller_package_path,'launch/robot_base_control.launch.py'
         )),
     )
 
@@ -41,6 +42,10 @@ def launch_setup(context, *args, **kwargs):
         package='openclaw_controller',
         executable='voice_openclaw',
         output='screen',
+        parameters=[{
+            'stream': stream,
+            'feishu_enable': feishu_enable,
+        }],
     )
     
     nodes = [
@@ -62,6 +67,14 @@ def generate_launch_description():
             'use_yolo',
             default_value='false',
             description='Enable YOLO node'),
+        DeclareLaunchArgument(
+            'stream',
+            default_value=False,
+            description='Enable stream mode for voice_openclaw'),
+        DeclareLaunchArgument(
+            'feishu_enable',
+            default_value='false',
+            description='Enable feishu message sending'),
         OpaqueFunction(function=launch_setup)
     ])
 

@@ -13,10 +13,12 @@ def launch_setup(context):
         controller_package_path = get_package_share_directory('controller')
         app_package_path = get_package_share_directory('app')
         peripherals_package_path = get_package_share_directory('peripherals')
+        kinematics_package_path = get_package_share_directory('kinematics')
     else:
         controller_package_path = '/home/ubuntu/ros2_ws/src/driver/controller'
         app_package_path = '/home/ubuntu/ros2_ws/src/app'
         peripherals_package_path = '/home/ubuntu/ros2_ws/src/peripherals'
+        kinematics_package_path = '/home/ubuntu/ros2_ws/src/driver/kinematics'
 
     controller_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -52,6 +54,22 @@ def launch_setup(context):
         PythonLaunchDescriptionSource(os.path.join(peripherals_package_path, 'launch/joystick_control.launch.py')),
     )
 
+
+    track_and_grab_node = Node(
+        package='openclaw_controller',
+        executable='track_and_grab',
+        output='screen',
+        parameters=[
+            {'enable_disp': False},
+        ],
+    )
+
+    kinematics_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(kinematics_package_path, 'launch/kinematics_node.launch.py')),
+    )
+
+
     startup_check_node = Node(
         package='bringup',
         executable='startup_check',
@@ -63,7 +81,8 @@ def launch_setup(context):
             depth_camera_launch,
             lidar_launch,
             joystick_control_launch,
-
+            track_and_grab_node,
+            kinematics_launch,
             init_pose_launch,
             ]
 

@@ -44,7 +44,7 @@ class ColorTracker:
         self.pid_pitch = pid.PID(10.5, 1.0, 1.2)
         self.yaw = 500
         self.pitch = 150
-    
+
     def proc(self, source_image, result_image, color_ranges):
         h, w = source_image.shape[:2]
         color = color_ranges['lab']['Stereo'][self.target_color]
@@ -121,13 +121,14 @@ class TrackAndGrabNode(Node):
         self.running = True
         self.last_pitch_yaw = (0, 0)
         self.bridge = CvBridge()
-        self.enable_disp = 1
+        self.enable_disp = self.get_parameter('enable_disp').value
         signal.signal(signal.SIGINT, self.shutdown)
         self.lab_data = common.get_yaml_data("/home/ubuntu/software/lab_tool/lab_config.yaml")
         self.last_position = (0, 0, 0)
         self.stamp = time.time()
 
         self.joints_pub = self.create_publisher(ServosPosition, '/servo_controller', 1)
+        self.result_publisher = self.create_publisher(Image, '~/image_result', 1)
 
         self.target_color = None
      

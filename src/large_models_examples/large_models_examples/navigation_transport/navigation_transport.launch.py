@@ -11,12 +11,12 @@ from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, Grou
 def launch_setup(context):
     compiled = os.environ['need_compile']
     if compiled == 'True':
-        jetauto_description_package_path = get_package_share_directory('jetauto_description')
+        rosorin_description_package_path = get_package_share_directory('rosorin_description')
         slam_package_path = get_package_share_directory('slam')
         navigation_package_path = get_package_share_directory('navigation')
         example_package_path = get_package_share_directory('large_models_examples')
     else:
-        jetauto_description_package_path = '/home/ubuntu/ros2_ws/src/simulations/jetauto_description'
+        rosorin_description_package_path = '/home/ubuntu/ros2_ws/src/simulations/rosorin_description'
         slam_package_path = '/home/ubuntu/ros2_ws/src/slam'
         navigation_package_path = '/home/ubuntu/ros2_ws/src/navigation'
         example_package_path = '/home/ubuntu/ros2_ws/src/large_models_examples'

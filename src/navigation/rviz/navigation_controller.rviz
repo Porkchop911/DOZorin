@@ -4,6 +4,7 @@ Panels:
     Name: Displays
     Property Tree Widget:
       Expanded:
+        - /LaserScan1
         - /Map1/Topic1
         - /Map1/Update Topic1
         - /Image1/Topic1
@@ -26,7 +27,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: ""
+    SyncSource: LaserScan
   - Class: slam_toolbox::SlamToolboxPlugin
     Name: SlamToolboxPlugin
   - Class: nav2_rviz_plugins/Navigation 2
@@ -67,9 +68,9 @@ Visualization Manager:
       Enabled: true
       Invert Rainbow: false
       Max Color: 255; 255; 255
-      Max Intensity: 173
+      Max Intensity: 193
       Min Color: 0; 0; 0
-      Min Intensity: 20
+      Min Intensity: 19
       Name: LaserScan
       Position Transformer: XYZ
       Selectable: true
@@ -82,7 +83,7 @@ Visualization Manager:
         Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Best Effort
-        Value: /scan_raw
+        Value: /scan
       Use Fixed Frame: true
       Use rainbow: true
       Value: true
@@ -408,25 +409,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 5.021352291107178
+      Distance: 5.3069071769714355
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 1.0751984119415283
-        Y: 0.048511818051338196
-        Z: -0.02336420677602291
+        X: 0.48543548583984375
+        Y: -0.43949002027511597
+        Z: -0.07331152260303497
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.539796233177185
+      Pitch: 1.1997963190078735
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 3.13041353225708
+      Yaw: 3.125412702560425
     Saved: ~
 Window Geometry:
   Displays:

@@ -20,17 +20,19 @@ from openclaw_controller.config import *
 
 from std_srvs.srv import Trigger
 
-
 class VoiceOpenClaw(Node):
     def __init__(self, name):
         rclpy.init()
         super().__init__(name)
-        
+
         self.openclaw = OpenClawClient()
         self.get_logger().info(f'Gateway URL: {self.openclaw.gateway_url}')
-        
+
         self.declare_parameter('stream', False)
         self.openclaw.set_stream(self.get_parameter('stream').value)
+
+        self.declare_parameter('feishu_enable', True)
+        self.feishu_enable = self.get_parameter('feishu_enable').value
 
         timer_cb_group = ReentrantCallbackGroup()
 
@@ -46,6 +48,8 @@ class VoiceOpenClaw(Node):
 
         self.create_subscription(Bool, '/tts_node/play_finish', self.play_audio_finish_callback, 1, callback_group=timer_cb_group)
 
+        self.create_subscription(Bool, '/voice_openclaw/feishu_enable', self.feishu_enable_callback, 1)
+
         self.tts_text_pub = self.create_publisher(String, '/tts_node/tts_text', 1)
         
         self.awake_client = self.create_client(SetBool, '/vocal_detect/enable_wakeup')
@@ -54,7 +58,6 @@ class VoiceOpenClaw(Node):
 
         self.yolo_client = self.create_client(Trigger, '/yolo/start')
 
-        # 飞书同步（自动获取群里用户ID）
         self.feishu = FeishuSender()
 
         self.get_logger().info('🦞OpenClaw node started')
@@ -72,6 +75,10 @@ class VoiceOpenClaw(Node):
             self.get_logger().info('Wakeup detected')
             self.wakeup_flag = True
 
+    def feishu_enable_callback(self, msg):
+        self.feishu_enable = msg.data
+        self.get_logger().info(f'Feishu enable: {self.feishu_enable}')
+
     def asr_callback(self, msg):
         if msg.data and self.wakeup_flag and not self.processing:
             # self.get_logger().info(f'ASR Result: {msg.data}')
@@ -85,9 +92,10 @@ class VoiceOpenClaw(Node):
         if text and text.strip():
             self.processing = True
             # self.get_logger().info(f'Input: {text}')
-            
-            self.feishu.send_text(text, "user")
-            
+
+            if self.feishu_enable:
+                self.feishu.send_text(text, "user")
+
             try:
                 reply = self.openclaw.chat(text)
                 self.get_logger().info(f'Reply: {reply}')
@@ -96,7 +104,8 @@ class VoiceOpenClaw(Node):
                 msg.data = reply
                 self.tts_text_pub.publish(msg)
 
-                self.feishu.send_text(reply, "robot")
+                if self.feishu_enable:
+                    self.feishu.send_text(reply, "robot")
 
                 self.action_finish = True
             except Exception as e:
