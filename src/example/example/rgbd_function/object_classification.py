@@ -94,7 +94,7 @@ class ObjectClassificationNode(Node):
         self.language = os.environ['ASR_LANGUAGE']
         self.image_queue = queue.Queue(maxsize=2)
         self.debug = True
-        self.joints_pub = self.create_publisher(ServosPosition, '/servo_controller11', 1)
+        self.joints_pub = self.create_publisher(ServosPosition, '/servo_controller', 1)
         self.buzzer_pub = self.create_publisher(BuzzerState, '/ros_robot_controller/set_buzzer', 1)
 
         self.create_service(Trigger, '~/start', self.start_srv_callback)
@@ -114,16 +114,16 @@ class ObjectClassificationNode(Node):
         self.client = self.create_client(Trigger, '/controller_manager/init_finish')
         self.client.wait_for_service()
 
-       
         timer_cb_group = ReentrantCallbackGroup()
         self.set_joint_value_target_client = self.create_client(SetJointValue, '/kinematics/set_joint_value_target', callback_group=timer_cb_group)
         self.set_joint_value_target_client.wait_for_service()
         self.kinematics_client = self.create_client(SetRobotPose, '/kinematics/set_pose_target')
         self.kinematics_client.wait_for_service()
 
-        self.controller = ActionGroupController(self.create_publisher(ServosPosition, 'servo_controller', 1), '/home/ubuntu/software/arm_pc/ActionGroups11')
+        self.controller = ActionGroupController(self.create_publisher(ServosPosition, 'servo_controller', 1), '/home/ubuntu/software/arm_pc/ActionGroups')
 
         self.timer = self.create_timer(0.0, self.init_process, callback_group=timer_cb_group)
+
 
     def init_process(self):
         self.timer.cancel()

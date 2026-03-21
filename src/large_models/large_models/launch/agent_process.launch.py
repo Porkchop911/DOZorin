@@ -26,7 +26,7 @@ def launch_setup(context):
                 'CUDA_HOME': '/usr/local/cuda',
             }
         )
-        launch_list.append(ollama_server)
+        z.append(ollama_server)
 
     agent_process_node = Node(
         package='large_models',

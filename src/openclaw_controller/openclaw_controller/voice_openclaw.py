@@ -20,6 +20,15 @@ from openclaw_controller.config import *
 
 from std_srvs.srv import Trigger
 
+# 日志颜色定义
+class LogColor:
+    GREEN = '\033[32m'
+    BLUE = '\033[34m'
+    YELLOW = '\033[33m'
+    RED = '\033[31m'
+    CYAN = '\033[36m'
+    RESET = '\033[0m'
+
 class VoiceOpenClaw(Node):
     def __init__(self, name):
         rclpy.init()
@@ -33,6 +42,8 @@ class VoiceOpenClaw(Node):
 
         self.declare_parameter('feishu_enable', True)
         self.feishu_enable = self.get_parameter('feishu_enable').value
+        self.get_logger().info(f'Feishu enable: {self.feishu_enable}')
+
 
         timer_cb_group = ReentrantCallbackGroup()
 
@@ -51,16 +62,21 @@ class VoiceOpenClaw(Node):
         self.create_subscription(Bool, '/voice_openclaw/feishu_enable', self.feishu_enable_callback, 1)
 
         self.tts_text_pub = self.create_publisher(String, '/tts_node/tts_text', 1)
-        
+        self.get_logger().info('TTS text publisher created')
+
         self.awake_client = self.create_client(SetBool, '/vocal_detect/enable_wakeup')
         self.awake_client.wait_for_service()
+        self.get_logger().info('Wakeup service found')
+
         speech.play_audio(start_audio_path)
 
+        self.get_logger().info('Start audio played')
+        
         self.yolo_client = self.create_client(Trigger, '/yolo/start')
 
         self.feishu = FeishuSender()
 
-        self.get_logger().info('🦞OpenClaw node started')
+        self.get_logger().info(f'{LogColor.GREEN}🦞OpenClaw node started{LogColor.RESET}')
         
         threading.Thread(target=self.process_loop, daemon=True).start()
         
@@ -72,7 +88,7 @@ class VoiceOpenClaw(Node):
 
     def wakeup_callback(self, msg):
         if msg.data:
-            self.get_logger().info('Wakeup detected')
+            self.get_logger().info(f'{LogColor.GREEN}Wakeup detected{LogColor.RESET}')
             self.wakeup_flag = True
 
     def feishu_enable_callback(self, msg):
@@ -80,8 +96,8 @@ class VoiceOpenClaw(Node):
         self.get_logger().info(f'Feishu enable: {self.feishu_enable}')
 
     def asr_callback(self, msg):
-        if msg.data and self.wakeup_flag and not self.processing:
-            # self.get_logger().info(f'ASR Result: {msg.data}')
+        if msg.data and not self.processing:
+            self.get_logger().info(f'{LogColor.BLUE}Openclaw Get ASR Result: {msg.data}{LogColor.RESET}')
             self.process_asr(msg.data)
             
     def play_audio_finish_callback(self, msg):
@@ -98,7 +114,7 @@ class VoiceOpenClaw(Node):
 
             try:
                 reply = self.openclaw.chat(text)
-                self.get_logger().info(f'Reply: {reply}')
+                self.get_logger().info(f'{LogColor.YELLOW}Reply: {reply}{LogColor.RESET}')
 
                 msg = String()
                 msg.data = reply

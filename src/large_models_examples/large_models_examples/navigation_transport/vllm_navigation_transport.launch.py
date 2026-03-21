@@ -9,7 +9,7 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, GroupAction, OpaqueFunction, TimerAction, ExecuteProcess
 
 def launch_setup(context):
-    jetauto_description_package_path = get_package_share_directory('jetauto_description')
+    jetauto_description_package_path = get_package_share_directory('rosorin_description')
     slam_package_path = get_package_share_directory('slam')
     navigation_package_path = get_package_share_directory('large_models_examples')
     large_models_package_path = get_package_share_directory('large_models')
@@ -37,7 +37,7 @@ def launch_setup(context):
     large_models_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(large_models_package_path, 'launch/start.launch.py')),
-        launch_arguments={'mode': mode}.items(),
+        launch_arguments={'camera_topic': '/depth_cam/rgb0/image_raw','mode': mode}.items(),
     )
 
     vllm_navigation_transport_node = Node(

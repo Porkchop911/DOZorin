@@ -21,6 +21,8 @@ def launch_setup(context):
     mode_arg = DeclareLaunchArgument('mode', default_value=mode)
     interruption = LaunchConfiguration('interruption', default=False)
     interruption_arg = DeclareLaunchArgument('interruption', default_value=interruption)
+    camera_topic = LaunchConfiguration('camera_topic', default='depth_cam/rgb0/image_raw')
+    camera_topic_arg = DeclareLaunchArgument('camera_topic', default_value=camera_topic)
 
     map_name = LaunchConfiguration('map', default='map_01').perform(context)
     robot_name = LaunchConfiguration('robot_name', default=os.environ['HOST'])
@@ -56,7 +58,7 @@ def launch_setup(context):
     large_models_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(large_models_package_path, 'launch/start.launch.py')),
-        launch_arguments={'mode': mode}.items(),
+        launch_arguments={"camera_topic": camera_topic,'mode': mode}.items(),
     )
 
     vllm_navigation_node = Node(
@@ -73,6 +75,8 @@ def launch_setup(context):
             map_name_arg, 
             master_name_arg,
             robot_name_arg,
+            camera_topic_arg,
+
             GroupAction(
                     actions=[
                         PushRosNamespace(robot_name),

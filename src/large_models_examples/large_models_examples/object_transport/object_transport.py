@@ -95,7 +95,7 @@ class ObjectTransport(Node):
         self.base_gripper_height = utils.get_gripper_size(500)[1]
 
         self.get_logger().info("Initializing publishers...")
-        self.joints_pub = self.create_publisher(ServosPosition, 'servo_controller1', 1)
+        self.joints_pub = self.create_publisher(ServosPosition, 'servo_controller', 1)
         self.transport_finished_pub = self.create_publisher(Bool, '~/transport_finished', 1)
         
         self.get_logger().info("Initializing callback groups and clients...")

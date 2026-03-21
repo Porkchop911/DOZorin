@@ -15,6 +15,7 @@ setup(
         (os.path.join('share', package_name, 'config'), glob(os.path.join('config', '*.yaml'))),
         (os.path.join('share', package_name, 'large_models_examples'), glob(os.path.join('large_models_examples', '*.*'))),
         (os.path.join('share', package_name, 'large_models_examples', 'navigation_transport'), glob(os.path.join('large_models_examples', 'navigation_transport', '*.*'))),
+        (os.path.join('share', package_name, 'large_models_examples', 'transport_dietitianl'), glob(os.path.join('large_models_examples', 'transport_dietitianl', '*.*'))),
         (os.path.join('share', package_name, 'large_models_examples', 'function_calling'), glob(os.path.join('large_models_examples', 'function_calling', '*.*'))),
         (os.path.join('share', package_name, 'large_models_examples', 'road_network'), glob(os.path.join('large_models_examples', 'road_network', '*.*'))),
         (os.path.join('share', package_name, 'large_models_examples', 'function_calling','road_network_llm'), glob(os.path.join('large_models_examples', 'function_calling', 'road_network_llm', '*.*'))),
@@ -51,7 +52,10 @@ setup(
             'vllm_track_arm = large_models_examples.vllm_track_arm.vllm_track_arm:main',
             
             'automatic_pick = large_models_examples.navigation_transport.automatic_pick:main',
+            'automatic_transport = large_models_examples.transport_dietitianl.automatic_transport:main',
             'vllm_navigation_transport = large_models_examples.navigation_transport.vllm_navigation_transport:main',
+            'vllm_transport_dietitianl = large_models_examples.transport_dietitianl.vllm_transport_dietitianl:main',
+
 
             'llm_object_sorting = large_models_examples.color_sorting.llm_object_sorting:main',
             'object_sorting = large_models_examples.color_sorting.object_sorting:main',

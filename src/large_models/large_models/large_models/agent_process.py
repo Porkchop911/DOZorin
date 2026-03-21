@@ -311,6 +311,7 @@ class AgentProcess(Node):
             image = self.bridge.imgmsg_to_cv2(request.image, desired_encoding="bgr8")  # Convert image (转换图像)
         else:
             image = self.image_queue.get(block=True)  # Get image from queue (从队列获取图像)
+            self.get_logger().info(f'wait for image22222222222222222222222222222')
         if self.offline:
             client = speech.OllamaAPI(request.base_url)
         else:

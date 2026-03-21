@@ -305,10 +305,16 @@ class LineFollowingNode(Node):
     def lidar_callback(self, lidar_data):
         # 数据大小 = 扫描角度/每扫描一次增加的角度(data size= scanning angle/ the increased angle per scan)
         if self.lidar_type != 'G4':
-            min_index = int(math.radians(MAX_SCAN_ANGLE / 2.0) / lidar_data.angle_increment)
-            max_index = int(math.radians(MAX_SCAN_ANGLE / 2.0) / lidar_data.angle_increment)
-            left_ranges = lidar_data.ranges[:max_index]  # 左半边数据(left data)
-            right_ranges = lidar_data.ranges[::-1][:max_index]  # 右半边数据(right data)
+            if self.lidar_type == 'SCLIDAR':
+                num_points = len(lidar_data.ranges)
+                shifted_ranges = list(lidar_data.ranges[num_points//2:]) + list(lidar_data.ranges[:num_points//2])
+                max_index = int(math.radians(MAX_SCAN_ANGLE / 2.0) / lidar_data.angle_increment)
+                left_ranges = shifted_ranges[:max_index]
+                right_ranges = shifted_ranges[::-1][:max_index]
+            else:
+                max_index = int(math.radians(MAX_SCAN_ANGLE / 2.0) / lidar_data.angle_increment)
+                left_ranges = lidar_data.ranges[:max_index]  # 左半边数据 (the left data)
+                right_ranges = lidar_data.ranges[::-1][:max_index]  # 右半边数据 (the right data)
         elif self.lidar_type == 'G4':
             min_index = int(math.radians((360 - MAX_SCAN_ANGLE) / 2.0) / lidar_data.angle_increment)
             max_index = int(math.radians(180) / lidar_data.angle_increment)

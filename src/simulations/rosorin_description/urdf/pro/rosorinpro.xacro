@@ -7,7 +7,18 @@
     <xacro:include filename="$(find rosorin_description)/urdf/pro/inertial_matrix.xacro" />
 
     <xacro:include filename="$(find rosorin_description)/urdf/pro/car_mecanum.urdf.xacro"/>
-    <xacro:include filename="$(find rosorin_description)/urdf/pro/lidar.urdf.xacro"/>
+
+    <xacro:if value="${lidar == 'MS200'}">
+        <xacro:include filename="$(find rosorin_description)/urdf/pro/lidar_ms200.urdf.xacro"/>
+    </xacro:if>
+
+    <xacro:if value="${lidar == 'LD19'}">
+        <xacro:include filename="$(find rosorin_description)/urdf/pro/lidar_ld19.urdf.xacro"/>
+    </xacro:if>
+
+    <xacro:if value="${lidar == 'SCLIDAR'}">
+        <xacro:include filename="$(find rosorin_description)/urdf/pro/lidar.urdf.xacro"/>
+    </xacro:if>
 
     <xacro:include filename="$(find rosorin_description)/urdf/pro/imu.urdf.xacro"/>
     <xacro:include filename="$(find rosorin_description)/urdf/pro/depth_camera.urdf.xacro"/>

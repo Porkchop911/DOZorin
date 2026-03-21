@@ -16,9 +16,11 @@ from sdk import common
 from sdk.pid import PID
 from rclpy.node import Node
 from cv_bridge import CvBridge
+from std_msgs.msg import String
 from std_srvs.srv import Trigger
 from sensor_msgs.msg import Image
 from interfaces.msg import Pose2D
+from interfaces.srv import SetString
 from geometry_msgs.msg import Twist
 from interfaces.srv import SetPose2D
 from rclpy.parameter import Parameter
@@ -76,6 +78,7 @@ class AutomaticPickNode(Node):
         self.count_stop = 0
         self.count_turn = 0
 
+        
         self.declare_parameter('status', 'start')
         self.bridge = CvBridge()
         self.image_queue = queue.Queue(maxsize=2)
@@ -87,6 +90,9 @@ class AutomaticPickNode(Node):
         self.place_without_color = self.get_parameter('place_without_color').value
         self.debug = self.get_parameter('debug').value
 
+        self.declare_parameter('use_preset_color', True)
+        self.use_preset_color = self.get_parameter('use_preset_color').value
+
         self.language = os.environ['ASR_LANGUAGE']
         self.machine_type = os.environ['MACHINE_TYPE']
         self.camera_type = os.environ['DEPTH_CAMERA_TYPE']
@@ -95,6 +101,8 @@ class AutomaticPickNode(Node):
         self.joints_pub = self.create_publisher(ServosPosition, '/servo_controller', 1)
         self.mecanum_pub = self.create_publisher(Twist, '/controller/cmd_vel', 1)
         self.image_pub = self.create_publisher(Image, '~/image_result', 1)
+        self.pick_status = self.create_publisher(String, '~/pick_status', 1)
+        self.pick_status = self.create_publisher(String, '~/set_color', 1)
         
         image_topic = '/depth_cam/rgb0/image_raw'#self.get_parameter('depth_camera/camera_name').value
         self.create_subscription(Image, image_topic, self.image_callback, 1)
@@ -104,12 +112,13 @@ class AutomaticPickNode(Node):
 
         self.create_service(Trigger, '~/pick', self.start_pick_callback)
         self.create_service(Trigger, '~/place', self.start_place_callback) 
+        self.create_service(SetString, '~/set_color', self.set_color_srv_callback)
 
         self.controller = ActionGroupController(self.create_publisher(ServosPosition, 'servo_controller', 1), '/home/ubuntu/software/arm_pc/ActionGroups')
         self.client = self.create_client(Trigger, '/controller_manager/init_finish')
         self.client.wait_for_service()
         self.transport_client = self.create_client(SetPose2D, '/navigation_transport/place')
-
+        
         self.mecanum_pub.publish(Twist())
         self.controller.run_action('navigation_pick_init')
         # set_servo_position(self.joints_pub, 2, ((1, 500), (2, 650), (3, 60), (4, 185), (5, 500), (10, 200)))
@@ -147,6 +156,15 @@ class AutomaticPickNode(Node):
         client.call_async(req)
 
 
+    def set_color_srv_callback(self, request, response):
+        self.get_logger().info('\033[1;32m%s\033[0m' % "set_color")
+        self.target_color = request.data
+        self.get_logger().info('\033[1;32m current color is : %s\033[0m' % self.target_color)
+        response.success = True
+        response.message = "set_color"
+        return response
+
+
     def start_pick_callback(self, request, response):
         self.get_logger().info('\033[1;32m%s\033[0m' % "start pick")
         self.set_parameter(self.parameter_client, 'status', 'start_pick')
@@ -168,7 +186,10 @@ class AutomaticPickNode(Node):
         self.place = False
 
         self.status = "approach"
-        self.target_color = 'blue'
+        if self.use_preset_color == True:
+            self.target_color = 'blue'
+        
+
         self.broadcast_status = 'find_target'
         self.count_stop = 0
         self.count_turn = 0
@@ -198,7 +219,10 @@ class AutomaticPickNode(Node):
         self.stop = True
         self.pick = False
         self.place = False
-        self.target_color = 'red'
+
+        if self.use_preset_color == True:
+            self.target_color = 'red'
+
         self.broadcast_status = 'mission_completed'
 
         self.linear_pid.clear()
@@ -283,6 +307,8 @@ class AutomaticPickNode(Node):
                         self.get_logger().info('set place position success')
                     else:
                         self.get_logger().info('set place position failed')
+                self.pick_status.publish(String(data="pick_finish"))
+                
             elif self.place:
                 self.start_place = False
                 self.mecanum_pub.publish(Twist())
@@ -296,6 +322,7 @@ class AutomaticPickNode(Node):
                     self.broadcast_status = ''
                     voice_play.play('mission_completed', language=self.language)
                 self.place = False
+                self.pick_status.publish(String(data="place_finish"))
             else:
                 time.sleep(0.01)
 

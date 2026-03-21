@@ -57,6 +57,7 @@ class RosRobotController(Node):
         # 加载并设置舵机偏移量从 YAML 文件
         self.load_servo_offsets()
 
+        # self.set_arm_sero_pid()
 
         # 初始化电机速度
         self.board.set_motor_speed([[1, 0], [2, 0], [3, 0], [4, 0]])
@@ -66,6 +67,27 @@ class RosRobotController(Node):
         self.create_service(Trigger, '~/init_finish', self.get_node_state)
         self.get_logger().info('\033[1;32m%s\033[0m' % 'start')
 
+    def set_arm_sero_pid(self):
+        # self.get_logger().info("set servo baudrate to 115200 ...")
+        self.board.hx_bus_servo_set_all_baudrate(old_baud_index=0, new_baud_index=4)
+        time.sleep(0.5)
+        # self.get_logger().info("set servo baudrate done")
+
+        self.get_logger().info("scan servo ...")
+        online_ids = self.board.hx_bus_servo_read_id()
+        self.get_logger().info(f"online servo ID: {online_ids}")
+        
+        if online_ids:
+            for sid in online_ids:
+                result = self.board.hx_bus_servo_read_pid(sid)
+                if result:
+                    p, d, i, force = result
+                    self.get_logger().info(f"  servo ID:={sid}: P={p}, D={d}, I={i}, min_start_force={force}")
+
+            for sid in online_ids:
+                self.board.hx_bus_servo_set_pid(sid, p=48, d=48, i=0, min_start_force=16)
+        self.get_logger().info('\033[1;32m%s\033[0m' % 'set servo PID done')
+        
     def load_servo_offsets(self):
         """
         从 YAML 文件中读取舵机偏差设置。

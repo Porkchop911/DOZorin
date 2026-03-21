@@ -452,7 +452,87 @@ class Board:
 
     def bus_servo_read_torque_state(self, servo_id):
         return self.bus_servo_read_and_unpack(servo_id, 0x0D, "<BBbb")
+       
+     
+    def hx_bus_servo_read_id(self, servo_id=254):
+        """
+        通过 HX 新协议扫描所有在线舵机 ID (1~253)。
+        STM32 端会自动扫描全部, 返回在线 ID 列表, 如 [1, 2, 3]。
+        """
+        with self.servo_read_lock:
+            self.buf_write(PacketFunction.PACKET_FUNC_BUS_SERVO, [0x40, 0x00])
+            try:
+                data = self.bus_servo_queue.get(block=True, timeout=10)
+            except queue.Empty:
+                return None
+            # 回复格式: servo_id(0xFF) + cmd(0x40) + count + id_list...
+            if len(data) < 3:
+                return []
+            count = data[2]
+            ids = list(data[3:3 + count])
+            return ids
 
+    def hx_bus_servo_read_pid(self, servo_id):
+        """
+        读取 HX 舵机的 PID 参数和最小启动力。
+        返回 (P, D, I, min_start_force) 或 None。
+        """
+        with self.servo_read_lock:
+            self.buf_write(PacketFunction.PACKET_FUNC_BUS_SERVO, [0x42, servo_id])
+            try:
+                data = self.bus_servo_queue.get(block=True, timeout=10)
+            except queue.Empty:
+                return None
+            # 回复格式: servo_id + cmd(0x42) + success + P + D + I + force_L + force_H
+            if len(data) < 8:
+                return None
+            servo_id_r, cmd_r, success, p, d, i, force = struct.unpack("<BBbBBBH", data[:8])
+            if success == 0:
+                return (p, d, i, force)
+            return None
+
+    def hx_bus_servo_read_min_start_force(self, servo_id):
+        """
+        读取 HX 舵机的最小启动力。
+        内部和 read_pid 用同一个 0x42 命令, 返回 (force,) 或 None。
+        """
+        result = self.hx_bus_servo_read_pid(servo_id)
+        if result is not None:
+            return (result[3],)  # force 是第4个元素
+        return None
+
+    def hx_bus_servo_set_pid(self, servo_id, p, d, i, min_start_force=0):
+        """
+        设置 HX 舵机 PID 参数和最小启动力。
+        通过 0x43 子命令一次性写入 P, D, I, min_start_force。
+        """
+        data = struct.pack("<BBBBBH", 0x43, int(servo_id) & 0xFF,
+                           int(p) & 0xFF, int(d) & 0xFF, int(i) & 0xFF, int(min_start_force) & 0xFFFF)
+        self.buf_write(PacketFunction.PACKET_FUNC_BUS_SERVO, data)
+        time.sleep(0.02)
+
+    def hx_bus_servo_set_min_start_force(self, servo_id, force):
+        """
+        单独设置 HX 舵机的最小启动力。
+        先读取当前 PID, 再和新的 force 一起写入。
+        """
+        current = self.hx_bus_servo_read_pid(servo_id)
+        if current is not None:
+            p, d, i, _ = current
+            self.hx_bus_servo_set_pid(servo_id, p, d, i, force)
+
+    def hx_bus_servo_set_baudrate(self, servo_id, old_baud_index=0, new_baud_index=4):
+        """修改 HX-30HM 舵机的波特率
+        0=1M(默认), 1=500K, 2=250K, 4=115200
+        """
+        data = struct.pack("<BBBB", 0x44, servo_id, int(old_baud_index), int(new_baud_index))
+        self.buf_write(PacketFunction.PACKET_FUNC_BUS_SERVO, data)
+        time.sleep(0.1)
+
+    def hx_bus_servo_set_all_baudrate(self, old_baud_index=0, new_baud_index=4):
+        """广播修改所有 HX-30HM 舵机的波特率"""
+        self.hx_bus_servo_set_baudrate(0xFE, old_baud_index, new_baud_index)
+        
     def set_motor_type(self, motor_type=0x02):
         '''
         MOTOR_TYPE_JGB520 0x00
@@ -537,7 +617,30 @@ class Board:
                 time.sleep(0.01)
         self.port.close()
         print("END...")
+def hx_servo_test(board):
+    # 第一步: 改波特率 (只需执行一次, 改完后注释掉这两行)
+    print("正在修改舵机波特率为 115200 ...")
+    board.hx_bus_servo_set_all_baudrate(old_baud_index=0, new_baud_index=4)
+    time.sleep(0.5)
+    print("波特率修改完成")
 
+    # 第二步: 扫描所有在线舵机 (STM32 端自动扫描 1~253)
+    print("正在扫描舵机 ...")
+    online_ids = board.hx_bus_servo_read_id()
+    print("在线舵机 ID:", online_ids)
+
+    if online_ids:
+        # 第三步: 读取每个舵机的 PID 和最小启动力
+        for sid in online_ids:
+            result = board.hx_bus_servo_read_pid(sid)
+            if result:
+                p, d, i, force = result
+                print(f"  ID={sid}: P={p}, D={d}, I={i}, 最小启动力={force}")
+
+        # 第四步: 设置 PID 和最小启动力 ()
+        for sid in online_ids:
+            board.hx_bus_servo_set_pid(sid, p=48, d=48, i=0, min_start_force=16)
+        print("设置完成")
 def bus_servo_test(board):
     board.bus_servo_set_position(1, [[1, 500], [2, 500]])
     time.sleep(1)
@@ -589,8 +692,9 @@ if __name__ == "__main__":
     board.enable_reception()
     time.sleep(0.1)
     print("START...")
+    # hx_servo_test(board)
     # board.set_led(0.1, 0.9, 1)
-    board.set_buzzer(1900, 0.3, 0.01, 1)
+    # board.set_buzzer(1900, 0.3, 0.01, 1)
     board.set_motor_speed([[1, 0.6], [2, 0.6], [3, -0.6], [4, -0.6]])
     time.sleep(1)
     board.set_motor_speed([[1, 0.0], [2, 0.0], [3, 0.0], [4, 0.0]])

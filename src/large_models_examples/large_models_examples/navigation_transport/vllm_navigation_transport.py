@@ -29,7 +29,7 @@ language = os.environ["ASR_LANGUAGE"]
 if language == 'Chinese':
     position_dict = {
                      "绿色方块": [0.0, 0.45, 0.0, 0.0, 90.0],
-                     "红色盒子": [1.2,  0.55, 0.0, 0.0, 0.0],
+                     "红色盒子": [1.2, 0.55, 0.0, 0.0, 0.0],
                      "红色方块": [0.25, 0.35, 0.0, 0.0, 90.0],
                      "绿色盒子": [1.2, -0.9, 0.0, 0.0, -62.0],
                      "蓝色方块": [0.0, 0.5, 0.0, 0.0, -180.0],
@@ -195,7 +195,7 @@ class VLLMNavigation(Node):
         timer_cb_group = ReentrantCallbackGroup()
         self.client = speech.OpenAIAPI(api_key, base_url)
         self.tts_text_pub = self.create_publisher(String, 'tts_node/tts_text', 1)
-        self.create_subscription(Image, 'usb_cam/image_raw', self.image_callback, 1)
+        self.create_subscription(Image, '/depth_cam/rgb0/image_raw', self.image_callback, 1)
         self.create_subscription(String, 'agent_process/result', self.llm_result_callback, 1)
         self.create_subscription(Bool, 'vocal_detect/wakeup', self.wakeup_callback, 1)
         self.create_subscription(Bool, 'tts_node/play_finish', self.play_audio_finish_callback, 1, callback_group=timer_cb_group)

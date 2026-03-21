@@ -10,24 +10,36 @@ from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument, Opaq
 def launch_setup(context):
     mode = LaunchConfiguration('mode', default=1)
     mode_arg = DeclareLaunchArgument('mode', default_value=mode)
-    camera_topic = LaunchConfiguration('camera_topic', default='/depth_cam/rgb0/image')
+    camera_topic = LaunchConfiguration('camera_topic', default='/depth_cam/rgb0/image_raw')
     camera_topic_arg = DeclareLaunchArgument('camera_topic', default_value=camera_topic)
     large_models_package_path = get_package_share_directory('large_models')
     large_models_examples_package_path = get_package_share_directory('large_models_examples')
  
+    interruption = LaunchConfiguration('interruption', default=False)
+    interruption_arg = DeclareLaunchArgument('interruption', default_value=interruption)
+
+    vocal_detect_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(get_package_share_directory('large_models'), 'launch/vocal_detect.launch.py')),
+        launch_arguments={'mode': mode}.items(),
+    )
+
+    agent_process_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(get_package_share_directory('large_models'), 'launch/agent_process.launch.py')),
+        launch_arguments={'camera_topic': camera_topic}.items(),
+    )
+
+
+    tts_node_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(get_package_share_directory('large_models'), 'launch/tts_node.launch.py')),
+    )
+
 
     object_transport_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(large_models_examples_package_path, 'large_models_examples','object_transport', 'object_transport_node.launch.py')),
-    )
-
-    large_models_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(large_models_package_path, 'launch/start.launch.py')),
-        launch_arguments={
-            'mode': mode,
-            'camera_topic': camera_topic
-            }.items(),
     )
 
     object_transport_node = Node(
@@ -44,7 +56,12 @@ def launch_setup(context):
 
     return [mode_arg,
             camera_topic_arg,
-            large_models_launch,
+            interruption_arg,
+
+            vocal_detect_launch,
+            agent_process_launch,
+            tts_node_launch,
+
             vllm_object_transport_node,
             object_transport_launch
             ]

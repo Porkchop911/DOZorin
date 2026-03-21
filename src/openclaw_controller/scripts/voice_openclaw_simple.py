@@ -13,7 +13,6 @@ sys.path.insert(0, '/home/ubuntu/large_models')
 from config import *
 from speech import speech
 
-# 自动读取配置
 config_path = os.path.expanduser("~/.openclaw/openclaw.json")
 with open(config_path) as f:
     config = json.load(f)

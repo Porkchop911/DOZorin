@@ -105,7 +105,7 @@ class AutomaticPickNode(Node):
 
         self.yaw_pid = PID(P=0.015, I=0, D=0.000)
         # self.linear_pid = PID(P=0, I=0, D=0)
-        self.linear_pid = PID(P=0.0028, I=0, D=0)
+        self.linear_pid = PID(P=0.0018, I=0, D=0)
         # self.angular_pid = PID(P=0, I=0, D=0)
         self.angular_pid = PID(P=0.003, I=0, D=0)
 

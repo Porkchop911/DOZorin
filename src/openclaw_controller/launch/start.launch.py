@@ -10,8 +10,8 @@ from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument, Opaq
 
 def launch_setup(context, *args, **kwargs):
     use_yolo = LaunchConfiguration('use_yolo').perform(context)
-    stream = LaunchConfiguration('stream').perform(context)
-    feishu_enable = LaunchConfiguration('feishu_enable').perform(context)
+    stream = LaunchConfiguration('stream').perform(context).lower() == 'true'
+    feishu_enable = LaunchConfiguration('feishu_enable').perform(context).lower() == 'true'
     
     openclaw_controller_package_path = get_package_share_directory('openclaw_controller')
     large_models_package_path = get_package_share_directory('large_models')
@@ -69,7 +69,7 @@ def generate_launch_description():
             description='Enable YOLO node'),
         DeclareLaunchArgument(
             'stream',
-            default_value=False,
+            default_value='false',
             description='Enable stream mode for voice_openclaw'),
         DeclareLaunchArgument(
             'feishu_enable',

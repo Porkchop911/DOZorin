@@ -278,9 +278,14 @@ class VLLMObjectTransport(Node):
 
         msg = SetModel.Request()
         msg.model_type = 'llm'
-        msg.model = llm_model
-        msg.api_key = api_key
-        msg.base_url = base_url
+        if self.language == 'Chinese':
+            msg.model = 'qwen3-max'
+            msg.api_key = api_key 
+            msg.base_url = base_url
+        else:
+            msg.model =  'qwen/qwen3-max'
+            msg.api_key = vllm_api_key 
+            msg.base_url = vllm_base_url
         self.send_request(self.set_model_client, msg)
 
         msg = SetString.Request()
