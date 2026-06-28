@@ -10,7 +10,7 @@ from geometry_msgs.msg import PoseStamped
 class TfListenerNode(Node):
     def __init__(self):
         super().__init__('tf_listener_node')
-        # 创建一个 TF 2 缓存和监听器
+        # Create a TF2 buffer and listener(创建一个 TF 2 缓存和监听器)
         self.tf_buffer = tf2_ros.Buffer()
         self.tf_listener = tf2_ros.TransformListener(self.tf_buffer, self)
         
@@ -20,7 +20,7 @@ class TfListenerNode(Node):
         self.goal_pose = PoseStamped()
         self.goal_pose.header.frame_id = "map"
         
-        # 创建一个定时器（10Hz），每次获取一次变换
+        # Create a timer at 10Hz, and get the transform on each callback(创建一个定时器（10Hz），每次获取一次变换)
         self.timer = self.create_timer(0.1, self.timer_callback)
         self.rotate_angle = 0
         self.error = 0.0

@@ -48,7 +48,7 @@ def prompt(results, bboxes=None, points=None, labels=None, texts=None, log=None)
         if len(result) == 0:
             prompt_results.append(result)
             continue
-        #强制 Mask 掩码和原始图片一样
+        #Force the mask to be the same as the original image(强制 Mask 掩码和原始图片一样)
         masks = result.masks.data
         if masks.shape[1:] != result.orig_shape:
             masks = scale_masks(masks[None], result.orig_shape)[0]
@@ -81,7 +81,7 @@ class ObjectTransport(Node):
     def __init__(self, name):
         rclpy.init()
         super().__init__(name, allow_undeclared_parameters=True, automatically_declare_parameters_from_overrides=True)
-        self.fps = fps.FPS() # 帧率统计器(frame rate counter)
+        self.fps = fps.FPS() # Frame rate counter(帧率统计器)
         self.image_queue = queue.Queue(maxsize=2)
         self._init_parameters()
 
@@ -150,12 +150,12 @@ class ObjectTransport(Node):
         # try:
         #     transform = tf_buffer.lookup_transform(
         #         'depth_cam_color_frame', 'usb_link', rclpy.time.Time(), timeout=rclpy.duration.Duration(seconds=5.0) )
-        #     self.static_transform = transform  # 保存变换数据
+        #     self.static_transform = transform  # Save transform data(保存变换数据)
         #     self.get_logger().info(f'Static transform: {self.static_transform}')
         # except TransformException as e:
         #     self.get_logger().error(f'Failed to get static transform: {e}')
 
-        # # 提取平移和旋转
+        # # Extract translation and rotation(提取平移和旋转)
         # translation = transform.transform.translation
         # rotation = transform.transform.rotation
 
@@ -170,54 +170,54 @@ class ObjectTransport(Node):
 
 
     def onmouse(self, event, x, y, flags, param):
-        if event == cv2.EVENT_LBUTTONDOWN:  # 按下左键
+        if event == cv2.EVENT_LBUTTONDOWN:  # Press the left button(按下左键)
             self.mouse_click = True
-            self.drag_start = (x, y)  # 记录起始位置
-            self.drag_type = 'pick'   # 记录拖动类型
+            self.drag_start = (x, y)  # Record the starting position(记录起始位置)
+            self.drag_type = 'pick'   # Record the drag type(记录拖动类型)
             self.track_window = None
             self.selection = None
 
-        elif event == cv2.EVENT_RBUTTONDOWN: # 按下右键 (用于 Place)
+        elif event == cv2.EVENT_RBUTTONDOWN: # Press the right button (for Place)(按下右键 (用于 Place))
             self.mouse_click = True
-            self.drag_start = (x, y)  # 记录起始位置
-            self.drag_type = 'place'  # 记录拖动类型
+            self.drag_start = (x, y)  # Record the starting position(记录起始位置)
+            self.drag_type = 'place'  # Record the drag type(记录拖动类型)
             self.track_window = None
             self.selection = None
 
-        elif event == cv2.EVENT_MBUTTONDOWN: # 按下中键 (用于清空)
+        elif event == cv2.EVENT_MBUTTONDOWN: # Press the middle button (for clearing)(按下中键 (用于清空))
             self.mouse_click = False
             self.selection = None
             self.track_window = None
             self.drag_start = None
             self.drag_type = None
         
-        if self.drag_start:  # 如果正在拖动
+        if self.drag_start:  # If dragging(如果正在拖动)
             xmin = min(x, self.drag_start[0])
             ymin = min(y, self.drag_start[1])
             xmax = max(x, self.drag_start[0])
             ymax = max(y, self.drag_start[1])
-            self.selection = (xmin, ymin, xmax, ymax) # 实时更新选框
+            self.selection = (xmin, ymin, xmax, ymax) # Update the selection box in real time(实时更新选框)
         
-        if event == cv2.EVENT_LBUTTONUP:  # 松开左键
+        if event == cv2.EVENT_LBUTTONUP:  # Release the left button(松开左键)
             if self.drag_start and self.selection and self.drag_type == 'pick':
-                self.track_window = self.selection # 最终选框
+                self.track_window = self.selection # Final selection box(最终选框)
                 with self.lock:
-                    # self.get_logger().info(f'鼠标框选, 添加到抓取队列: {self.track_window}')
+                    # self.get_logger().info(f'Mouse selection, add to the grab queue: {self.track_window}(鼠标框选, 添加到抓取队列: {self.track_window})')
                     self.action_list.append(['pick', self.track_window])
             
             self.mouse_click = False
             self.drag_start = None
-            self.selection = None # 拖动选框清空
+            self.selection = None # Clear the drag selection box(拖动选框清空)
             self.drag_type = None
 
 
-        elif event == cv2.EVENT_RBUTTONUP:  # 松开右键
+        elif event == cv2.EVENT_RBUTTONUP:  # Release the right button(松开右键)
             if self.drag_start and self.selection and self.drag_type == 'place':
-                self.track_window = self.selection # 最终选框
+                self.track_window = self.selection # Final selection box(最终选框)
                 with self.lock:
                     default_offset = [0.0, 0.0]
                     self.action_list.append(['place', default_offset,self.track_window])
-            #重置状态
+            #Reset status(重置状态)
             self.mouse_click = False
             self.selection = None
             self.track_window = None
@@ -295,7 +295,7 @@ class ObjectTransport(Node):
         self.get_logger().info('\033[1;32m%s\033[0m' % "enter object transport")
         with self.lock:
             self._init_parameters()
-            self.heart = Heart(self, '~/heartbeat', 5, lambda _: self.exit_srv_callback(request=Trigger.Request(), response=Trigger.Response()))  # Heartbeat package 心跳包
+            self.heart = Heart(self, '~/heartbeat', 5, lambda _: self.exit_srv_callback(request=Trigger.Request(), response=Trigger.Response()))  # Heartbeat package (心跳包)
             cv2.namedWindow('image', 1)
             cv2.setMouseCallback('image', self.onmouse)
 
@@ -303,9 +303,9 @@ class ObjectTransport(Node):
                 self.rgb_sub = message_filters.Subscriber(self, Image, '/depth_cam/rgb0/image_raw')
                 self.info_sub = message_filters.Subscriber(self, CameraInfo, '/depth_cam/rgb0/camera_info')
                 self.sync = message_filters.ApproximateTimeSynchronizer(
-                    [self.rgb_sub,  self.info_sub],   # 需要同步的订阅器列表
-                     3,                               # 队列大小（缓存消息数）
-                     0.2                              # 时间容差（秒）
+                    [self.rgb_sub,  self.info_sub],   # List of subscribers to be synchronized(需要同步的订阅器列表)
+                     3,                               # Queue size (number of cached messages)(队列大小（缓存消息数）)
+                     0.2                              # Time tolerance (seconds)(时间容差（秒）)
                      )
                 self.sync.registerCallback(self.multi_callback)
 
@@ -373,7 +373,7 @@ class ObjectTransport(Node):
         with open(self.config_path + self.config_file, 'r') as f:
             config = yaml.safe_load(f)
 
-            # Convert to numpy array. 转换为 numpy 数组
+            # Convert to numpy array. (转换为 numpy 数组)
             corners = np.array(config['corners']).reshape(-1, 3)
             with self.lock:
                 self.extristric = np.array(config['extristric'])
@@ -386,8 +386,8 @@ class ObjectTransport(Node):
             time.sleep(0.1)
 
         with self.lock:
-            tvec = self.extristric[:1]  # Take the first row. 取第一行
-            rmat = self.extristric[1:]  # Take the last three rows. 取后面三行
+            tvec = self.extristric[:1]  # Take the first row. (取第一行)
+            rmat = self.extristric[1:]  # Take the last three rows. (取后面三行)
 
             tvec, rmat = common.extristric_plane_shift(np.array(tvec).reshape((3, 1)), np.array(rmat), 0.03)
             # self.get_logger().info(f'corners: {corners}')
@@ -396,41 +396,41 @@ class ObjectTransport(Node):
                 np.array(rmat), 
                 np.array(tvec), 
                 self.intrinsic, 
-                None   # 如果用校准后的图像，可传 None self.distortion
+                None   # When using a calibrated image, passing None is allowed(如果用校准后的图像，可传 None) self.distortion
                 )
             imgpts = np.int32(imgpts).reshape(-1, 2)
 
-            # Crop RIO region 裁切出ROI区域
-            x_min = min(imgpts, key=lambda p: p[0])[0] # The minimum value of the X-axis. x轴最小值
-            x_max = max(imgpts, key=lambda p: p[0])[0] # The maximum value of the X-axis. x轴最大值
-            y_min = min(imgpts, key=lambda p: p[1])[1] # The minimum value of the Y-axis. y轴最小值
-            y_max = max(imgpts, key=lambda p: p[1])[1] # The maximum value of the Y-axis. y轴最大值
+            # Crop RIO region (裁切出ROI区域)
+            x_min = min(imgpts, key=lambda p: p[0])[0] # The minimum value of the X-axis. (x轴最小值)
+            x_max = max(imgpts, key=lambda p: p[0])[0] # The maximum value of the X-axis. (x轴最大值)
+            y_min = min(imgpts, key=lambda p: p[1])[1] # The minimum value of the Y-axis. (y轴最小值)
+            y_max = max(imgpts, key=lambda p: p[1])[1] # The maximum value of the Y-axis. (y轴最大值)
             roi = np.maximum(np.array([y_min, y_max, x_min, x_max]), 0)
             self.roi = roi
 
     def cal_grap_point(self, mask, x, y, box, edge_index):
-        # Calculate the direction vector of the edge. 计算边的方向向量
+        # Calculate the direction vector of the edge. (计算边的方向向量)
         edge_vector = box[(edge_index + 1) % 4] - box[edge_index]
         edge_vector = edge_vector / np.linalg.norm(edge_vector)
 
-        # Calculate direction vector perpendicular to the edge. 计算垂直于边的方向向量
+        # Calculate direction vector perpendicular to the edge. (计算垂直于边的方向向量)
         perpendicular_vector = np.array([-edge_vector[1], edge_vector[0]])
 
-        # Define a long line starting from the centroid. 定义一条从质心出发的长线
-        line_length = 1000  # Length of the line. 线的长度
+        # Define a long line starting from the centroid. (定义一条从质心出发的长线)
+        line_length = 1000  # Length of the line. (线的长度)
         line_start = (x - int(perpendicular_vector[0] * line_length), y - int(perpendicular_vector[1] * line_length))
         line_end = (x + int(perpendicular_vector[0] * line_length), y + int(perpendicular_vector[1] * line_length))
 
-        # Draw the line on the ROI image. 在ROI图像上绘制这条线
+        # Draw the line on the ROI image. (在ROI图像上绘制这条线)
         line_image = np.zeros_like(mask)
         cv2.line(line_image, line_start, line_end, 255, 1, cv2.LINE_AA)
 
-        # Find the intersection between the line and the ROI. 找到线与ROI的交点
+        # Find the intersection between the line and the ROI. (找到线与ROI的交点)
         intersection_image = cv2.bitwise_and(mask, line_image)
         intersection_contours, _ = cv2.findContours(intersection_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         areaMaxContour, area_max = common.get_area_max_contour(intersection_contours)
         if areaMaxContour is not None:
-            rect = cv2.minAreaRect(areaMaxContour)  # Obtain the minimum bounding rectangle. 获取最小外接矩形
+            rect = cv2.minAreaRect(areaMaxContour)  # Obtain the minimum bounding rectangle. (获取最小外接矩形)
             center = [rect[0][0], rect[0][1]]
             object_width = max(rect[1])
             return [center, object_width]
@@ -453,7 +453,7 @@ class ObjectTransport(Node):
             mask = scale_masks(mask[None], result.orig_shape)[0]
 
         mask = mask.cpu().numpy()
-        if mask.ndim == 3 and mask.shape[0] == 1:  # Might be (1, H, W), need to remove the first dimension. 可能是 (1, H, W) 需要去掉第一维
+        if mask.ndim == 3 and mask.shape[0] == 1:  # Might be (1, H, W), need to remove the first dimension. (可能是 (1, H, W) 需要去掉第一维)
             mask = mask[0]
 
         mask = (mask * 255).astype(np.uint8)
@@ -470,12 +470,12 @@ class ObjectTransport(Node):
             contours = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)[-2]
             areaMaxContour, area_max = common.get_area_max_contour(contours)
             if areaMaxContour is not None:
-                rect = cv2.minAreaRect(areaMaxContour)  # Obtain the minimum bounding rectangle 获取最小外接矩形
+                rect = cv2.minAreaRect(areaMaxContour)  # Obtain the minimum bounding rectangle (获取最小外接矩形)
                 # In version 4.5, w is defined as the edge that first aligns with the x-axis under clockwise rotation; angle is the clockwise rotation from the x-axis, ranging in (0, 90].
                 rect_center, (width, height), angle = rect
 
                 bbox = np.intp(cv2.boxPoints(rect))
-                cv2.drawContours(image, [bbox], -1, (0, 255, 255), 2, cv2.LINE_AA)  # Draw rectangle contour. 绘制矩形轮廓
+                cv2.drawContours(image, [bbox], -1, (0, 255, 255), 2, cv2.LINE_AA)  # Draw rectangle contour. (绘制矩形轮廓)
                 
                 cv2.rectangle(image, (roi[0], roi[1]), (roi[2], roi[3]), (255, 0, 0), 2, 1)
                 # cv2.imshow('img', image)
@@ -485,8 +485,8 @@ class ObjectTransport(Node):
         return False
 
     def get_object_world_position(self, position, intrinsic, extristric, white_area_center, height=0.025):
-        tvec = extristric[:1].reshape((3, 1))  # 取第1行并塑形为 (3, 1)
-        rmat = extristric[1:]                  # 取后3行，形状为 (3, 3)   
+        tvec = extristric[:1].reshape((3, 1))  # Take the 1st row and reshape to (3, 1)(取第1行并塑形为 (3, 1))(取第1行并塑形为 (3, 1))
+        rmat = extristric[1:]                  # Take the last 3 rows, shape is (3, 3)(取后3行，形状为 (3, 3))(取后3行，形状为 (3, 3))
         stacked_array = np.column_stack((rmat, tvec))  
         projection_matrix = np.row_stack((stacked_array, np.array([[0, 0, 0, 1]])))
 
@@ -514,9 +514,9 @@ class ObjectTransport(Node):
                 except queue.Empty:
                     continue
                 with self.lock:
-                    # 1. 提取内参矩阵
+                    # 1. Extract intrinsic matrix(1. 提取内参矩阵)
                     self.intrinsic = np.matrix(camera_info.k).reshape(1, -1, 3)
-                    # 2. 提取畸变系数
+                    # 2. Extract distortion coefficients(2. 提取畸变系数)
                     self.distortion = np.array(camera_info.d)
                     if self.start_get_roi:
                         self.get_roi()
@@ -541,7 +541,7 @@ class ObjectTransport(Node):
                                                 yaw -= 180
 
                                         # yaw += object_angle
-                                        points = []   #传入空列表
+                                        points = []   #Pass an empty list(传入空列表)
                                         gripper_size = self.gripper_pixel_size
                                         optimal_result = calculate_grasp_yaw.calculate_gripper_yaw_angle(object_angle, points, gripper_size, yaw)
                                         if optimal_result is None:
@@ -550,10 +550,10 @@ class ObjectTransport(Node):
                                             yaw, _, _ = optimal_result
 
 
-                                        # self.get_logger().info(f'[PICK] 最终抓取角度: {yaw} 度')
+                                        # self.get_logger().info(f'[PICK] Final grab angle: {yaw} degrees([PICK] 最终抓取角度: {yaw} 度)')
                                         yaw_servo_value = 500 + int(yaw / 240 * 1000)
 
-                                        gripper_angle = 540  # 固定的爪子张开角度
+                                        gripper_angle = 540  # Fixed claw opening angle(固定的爪子张开角度)
 
                                         self.target = [world_position, grasp_point_pixel, yaw_servo_value, gripper_angle, box_info[0]]
                                         # self.get_logger().info(f'target {self.target}')
@@ -565,7 +565,7 @@ class ObjectTransport(Node):
                                         self.enable_transport = False
                                     cv2.circle(bgr_image, (int(self.target[1][0]), int(self.target[1][1])), 10, (255, 0, 0), -1)
 
-                                #使用cv2.rectangle将大模型返回的最表绘制出框
+                                #Use cv2.rectangle to draw the bounding box returned by the large model(使用cv2.rectangle将大模型返回的最表绘制出框)
                                 cv2.rectangle(bgr_image, (box_info[-1][0], box_info[-1][1]), (box_info[-1][2], box_info[-1][3]), (0, 255, 0), 2, 1)
                             elif box_info[0] == 'place':
                                 if not self.target:
@@ -573,7 +573,7 @@ class ObjectTransport(Node):
                                     # self.get_logger().info(str(object_info))
                                     if grasp_point_pixel:
                                         world_position, _ = self.get_object_world_position(grasp_point_pixel, self.intrinsic, self.extristric, self.white_area_center, height=0.010)
-                                        #加上偏移量 例如 放在盘子左边的情况
+                                        #Add offset, for example, placing it on the left side of the plate(加上偏移量 例如 放在盘子左边的情况)
                                         world_position[0] += box_info[-2][0]
                                         world_position[1] += box_info[-2][1]
                                         yaw = math.degrees(math.atan2(world_position[1], world_position[0]))
@@ -583,7 +583,7 @@ class ObjectTransport(Node):
                                             else:
                                                 yaw -= 180
                                          
-                                        points = []   #传入空列表
+                                        points = []   #Pass an empty list(传入空列表)
                                         gripper_size = self.gripper_pixel_size
                                         optimal_result = calculate_grasp_yaw.calculate_gripper_yaw_angle(object_angle, points, gripper_size, yaw)
                                         if optimal_result is None:
@@ -593,7 +593,7 @@ class ObjectTransport(Node):
 
                                         yaw_servo_value = 500 + int(yaw / 240 * 1000)
                                         gripper_angle = 500
-                                        self.target = [world_position, grasp_point_pixel, yaw_servo_value, gripper_angle, box_info[0]] #把 'place' 动作的标签加到 self.target 列表的末尾
+                                        self.target = [world_position, grasp_point_pixel, yaw_servo_value, gripper_angle, box_info[0]] #Add the label of the 'place' action to the end of the self.target list(把 'place' 动作的标签加到 self.target 列表的末尾)
 
                                         # self.target[0][0] += box_info[-2][0]
                                         # self.target[0][1] += box_info[-2][1] 
@@ -605,7 +605,7 @@ class ObjectTransport(Node):
                                         self.start_stamp = time.time()
                                 else:
                                     if time.time() - self.start_stamp > 2:
-                                        self.start_transport = True       #暂时停止夹取 
+                                        self.start_transport = True       #Temporarily stop grabbing(暂时停止夹取)
                                         self.enable_transport = False
                                     cv2.circle(bgr_image, (int(self.target[1][0]), int(self.target[1][1])), 10, (255, 0, 0), -1)
                                 cv2.rectangle(bgr_image, (box_info[-1][0], box_info[-1][1]), (box_info[-1][2], box_info[-1][3]), (0, 255, 0), 2, 1)
@@ -621,7 +621,7 @@ class ObjectTransport(Node):
                                             yaw -= 180
                                     # yaw += object_angle 
 
-                                    points = []   #传入空列表
+                                    points = []   #Pass an empty list(传入空列表)
                                     gripper_size = self.gripper_pixel_size
                                     optimal_result = calculate_grasp_yaw.calculate_gripper_yaw_angle(object_angle, points, gripper_size, yaw)
                                     if optimal_result is None:
@@ -637,7 +637,7 @@ class ObjectTransport(Node):
                                     self.record_position.append([box_info[1], self.target])
                                     del self.action_list[0]
                                     if not self.action_list:
-                                        speech.play_audio(record_finish_audio_path)  #暂时注释
+                                        speech.play_audio(record_finish_audio_path)  #Temporarily commented out(暂时注释)
                                         self.enable_transport = False
                                         self.target = []
                                 cv2.rectangle(bgr_image, (box_info[-1][0], box_info[-1][1]), (box_info[-1][2], box_info[-1][3]), (0, 255, 0), 2, 1)
@@ -654,10 +654,10 @@ class ObjectTransport(Node):
                             msg = Bool()
                             msg.data = True
                             self.transport_finished_pub.publish(msg)
-                if self.track_window:  # 绘制最终确定的选框 (红色)
+                if self.track_window:  # Draw the finalized selection box (red)(绘制最终确定的选框 (红色))
                     cv2.rectangle(bgr_image, (self.track_window[0], self.track_window[1]),
                                   (self.track_window[2], self.track_window[3]), (0, 0, 255), 2)
-                elif self.selection:  # 绘制正在拖动的选框 (黄色)
+                elif self.selection:  # Draw the selection box being dragged (yellow)(绘制正在拖动的选框 (黄色))
                     cv2.rectangle(bgr_image, (self.selection[0], self.selection[1]), (self.selection[2], self.selection[3]),
                                   (0, 255, 255), 2)
 
@@ -717,9 +717,9 @@ class ObjectTransport(Node):
         cv_image = self.bridge.imgmsg_to_cv2(ros_rgb_image, "bgr8")
         bgr_image = np.array(cv_image, dtype=np.uint8)
         if self.image_queue.full():
-            # # If the queue is full, discard the oldest image. 如果队列已满，丢弃最旧的图像
+            # # If the queue is full, discard the oldest image. (如果队列已满，丢弃最旧的图像)
             self.image_queue.get()
-            # # Put the image into the queue. 将图像放入队列
+            # # Put the image into the queue. (将图像放入队列)
         self.image_queue.put((bgr_image, camera_info))
 
 def main():

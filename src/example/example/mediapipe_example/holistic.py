@@ -30,9 +30,9 @@ class HolisticNode(Node):
         cv_image = self.bridge.imgmsg_to_cv2(ros_image, "rgb8")
         rgb_image = np.array(cv_image, dtype=np.uint8)
         if self.image_queue.full():
-            # 如果队列已满，丢弃最旧的图像(if the queue is full, remove the oldest image)
+            # If the queue is full, remove the oldest image(如果队列已满，丢弃最旧的图像)
             self.image_queue.get()
-            # 将图像放入队列(put the image into the queue)
+            # Put the image into the queue(将图像放入队列)
         self.image_queue.put(rgb_image)
 
     def main(self):
@@ -71,7 +71,7 @@ class HolisticNode(Node):
                 # Flip the image horizontally for a selfie-view display.
                 cv2.imshow('MediaPipe Holistic', result_image)
                 key = cv2.waitKey(1)
-                if key == ord('q') or key == 27:  # 按q或者esc退出(press Q or Esc to quit)
+                if key == ord('q') or key == 27:  # Press Q or Esc to quit(按q或者esc退出)
                     break
         cv2.destroyAllWindows()
         rclpy.shutdown()

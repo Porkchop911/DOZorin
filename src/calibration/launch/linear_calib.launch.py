@@ -6,7 +6,7 @@ from launch.actions import IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 
 def generate_launch_description():
-    # 底盘控制(chassis control)
+    # Chassis control(底盘控制)
     controller_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([
             get_package_share_directory('controller'),
@@ -14,7 +14,7 @@ def generate_launch_description():
         ])
     )
 
-    # 线速度校准(linear velocity calibration)
+    # linear velocity calibration(线速度校准)
     calibrate_linear_node = Node(
         package='calibration',
         executable='calibrate_linear',

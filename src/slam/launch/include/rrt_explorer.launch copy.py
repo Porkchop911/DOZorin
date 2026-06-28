@@ -16,10 +16,10 @@ def launch_setup(context):
     if compiled == 'True':
         navigation_package_path = get_package_share_directory('navigation')
     else:
-        # 注意：硬编码路径在不同机器上可能失效
+        # Note: hardcoded paths may fail on different machines(注意：硬编码路径在不同机器上可能失效)
         navigation_package_path = '/home/ubuntu/ros2_ws/src/navigation'
 
-    # 定义配置
+    # Define configurations(定义配置)
     use_sim_time = LaunchConfiguration('use_sim_time')
     scan_topic = LaunchConfiguration('scan_topic')
     map_frame = LaunchConfiguration('map_frame')
@@ -28,7 +28,7 @@ def launch_setup(context):
     params_file = LaunchConfiguration('params_file')
     use_teb = LaunchConfiguration('use_teb')
 
-    # 定义参数及其默认值
+    # Define parameters and their default values(定义参数及其默认值)
     use_sim_time_arg = DeclareLaunchArgument('use_sim_time', default_value='false')
     scan_topic_arg = DeclareLaunchArgument('scan_topic', default_value='scan')
     map_frame_arg = DeclareLaunchArgument('map_frame', default_value='map')
@@ -39,9 +39,9 @@ def launch_setup(context):
     params_file_arg = DeclareLaunchArgument('params_file', default_value=default_params_path)
     use_teb_arg = DeclareLaunchArgument('use_teb', default_value='true')
 
-    # 使用 get 防止环境变量缺失导致崩溃
+    # Use get to prevent crashes caused by missing environment variables(使用 get 防止环境变量缺失导致崩溃)
     robot_name = LaunchConfiguration('robot_name', default=os.environ.get('HOST', 'default_robot')).perform(context)
-    # master_name 虽然获取了但下面没用到，建议保留或删除
+    # Although master_name is obtained, it is not used below, it is recommended to keep or delete it(master_name 虽然获取了但下面没用到，建议保留或删除)
     master_name = LaunchConfiguration('master_name', default=os.environ.get('MASTER', 'default_master')).perform(context)
 
     remappings = [

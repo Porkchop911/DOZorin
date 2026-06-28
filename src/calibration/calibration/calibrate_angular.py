@@ -12,7 +12,7 @@ from tf2_ros.transform_listener import TransformListener
 from tf2_ros import LookupException, ConnectivityException, ExtrapolationException
 
 def qua2rpy(quat):
-    # 四元数转欧拉角，四元数格式为ros(Quaternion to Euler angles, where the quaternion is in ROS format)
+    # Quaternion to Euler angles, where the quaternion is in ROS format(四元数转欧拉角，四元数格式为ros)
     x = quat.x
     y = quat.y
     z = quat.z
@@ -22,7 +22,7 @@ def qua2rpy(quat):
     pitch = asin(2 * (w * y - x * z))
     yaw = atan2(2 * (w * z + x * y), 1 - 2 * (z * z + y * y))
 
-    # 将角度转换到0-360范围(convert the angle to the range of 0 to 360 degrees)
+    # Convert the angle to the range of 0 to 360 degrees(将角度转换到0-360范围)
     if roll < 0:
         roll += 2 * pi
     
@@ -136,7 +136,7 @@ class CalibrateAngular(Node):
 
 def main():
     node = CalibrateAngular('calibrate_angular')
-    rclpy.spin(node)  # 循环等待ROS2退出(loop waiting for ROS2 to exit)
+    rclpy.spin(node)  # loop waiting for ROS2 to exit(循环等待ROS2退出)
 
 if __name__ == "__main__":
     main()

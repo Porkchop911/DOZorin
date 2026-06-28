@@ -19,14 +19,14 @@ sherpa_onnx_path = os.path.join(Path.home(), 'third_party/sherpa-onnx')
 ###
 
 ###Only in China###
-# 阶跃星辰key
+# StepFun API Key(阶跃星辰key)
 stepfun_api_key = ''
 stepfun_base_url = 'https://api.stepfun.com/v1'
 stepfun_llm_model = ''
 #'step-1v-8k'/'step-1o-vision-32k'/'step-1.5v-mini'
 stepfun_vllm_model = 'step-1o-vision-32k'
 
-# 阿里云key
+# Alibaba Cloud Key(阿里云key)
 aliyun_api_key = ''
 aliyun_base_url = 'https://dashscope.aliyuncs.com/compatible-mode/v1'
 aliyun_llm_model = 'qwen-max-latest'#'qwen-turbo'#'qwen-max-latest'

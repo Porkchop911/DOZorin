@@ -46,42 +46,42 @@ class ASRNode(Node):
         self.awake_flag = msg.data
 
         count_msg = String()
-        count_msg.data = "唤醒成功(wake-up-success)"
+        count_msg.data = "Wake-up-success(唤醒成功)"
         self.control.publish(count_msg)
-        self.get_logger().info('\033[1;32m唤醒成功(wake-up-success)\033[0m') 
+        self.get_logger().info('\033[1;32m Wake-up-success(唤醒成功)\033[0m')
 
     def main(self):
         if self.awake_flag:
             response = self.send_request()
             self.get_logger().info('\033[1;32mresult: %s\033[0m'%response.text)
             count_msg = String()
-            if response.text == "休眠(Sleep)":  # 主动休眠(active sleep)
+            if response.text == "Sleep(休眠)":  # Active sleep(主动休眠)
                 self.awake_flag = 0
-                count_msg.data = "休眠(Sleep)"
+                count_msg.data = "Sleep(休眠)"
                 self.recognize_fail_count = 0
-                self.get_logger().info('\033[1;32m休眠(Sleep)\033[0m')
-            elif response.result == "ok":  # 清零被动休眠相关变量(clear passive sleep relative variable)
+                self.get_logger().info('\033[1;32m Sleep(休眠)\033[0m')
+            elif response.result == "ok":  # Clear passive sleep relative variable(清零被动休眠相关变量)
                 self.awake_flag = 0
                 self.recognize_fail_count = 0
                 count_msg.data = response.text
                 self.control.publish(count_msg)
                 self.get_logger().info('\033[1;32mok\033[0m')
-            elif response.result == "fail":  # 记录识别失败次数(record the number of recognition failures)
+            elif response.result == "fail":  # Record the number of recognition failures(记录识别失败次数)
                 self.recognize_fail_count += 1
-                if self.recognize_fail_count == 5:  # 连续识别失败5次，用户界面显示提醒信息(fail to recognize for consecutive 5 times.Warning occurs on user interface)
-                    count_msg.data = "失败5次(Fail-5-times)"
+                if self.recognize_fail_count == 5:  # Fail to recognize for consecutive 5 times.Warning occurs on user interface(连续识别失败5次，用户界面显示提醒信息)
+                    count_msg.data = "Fail-5-times(失败5次)"
                     self.control.publish(count_msg)
-                    self.get_logger().info('\033[1;32m失败5次(Fail-5-times)\033[0m')
-                elif self.recognize_fail_count == 10:  # 连续识别失败10次，用户界面显示提醒信息(fail to recognize for consecutive 10 times.Warning occurs on user interface)
-                    count_msg.data = "失败10次(Fail-10-times)"
+                    self.get_logger().info('\033[1;32m Fail-5-times(失败5次)\033[0m')
+                elif self.recognize_fail_count == 10:  # Fail to recognize for consecutive 10 times.Warning occurs on user interface(连续识别失败10次，用户界面显示提醒信息)
+                    count_msg.data = "Fail-10-times(失败10次)"
                     self.control.publish(count_msg)
-                    self.get_logger().info('\033[1;32m失败10次(Fail-10-times)\033[0m')
-                elif self.recognize_fail_count >= self.recognize_fail_count_threshold:  # 被动休眠(passive sleep)
+                    self.get_logger().info('\033[1;32m Fail-10-times(失败10次)\033[0m')
+                elif self.recognize_fail_count >= self.recognize_fail_count_threshold:  # Passive sleep(被动休眠)
                     self.awake_flag = 0
-                    count_msg.data = "休眠(Sleep)"
+                    count_msg.data = "Sleep(休眠)"
                     self.control.publish(count_msg)
                     self.recognize_fail_count = 0
-                    self.get_logger().info('\033[1;32m休眠(Sleep)\033[0m')
+                    self.get_logger().info('\033[1;32m Sleep(休眠)\033[0m')
 
     def send_request(self):
         get_result_msg = GetOfflineResult.Request()

@@ -2,7 +2,7 @@
 # encoding: utf-8
 # @data:2023/03/11
 # @author:aiden
-# 无人驾驶车道线提取(lane detection for autonomous driving)
+# Lane detection for autonomous driving(无人驾驶车道线提取)
 import os
 import cv2
 import math
@@ -18,9 +18,9 @@ lab_data = common.get_yaml_data("/home/ubuntu/software/lab_tool/lab_config.yaml"
 
 class LaneDetector(object):
     def __init__(self, color):
-        # 车道线颜色(lane color)
+        # Lane color(车道线颜色)
         self.target_color = color
-        # 车道线识别的区域(ROI for lane detection)
+        # ROI for lane detection(车道线识别的区域)
         self.rois = ((340, 400, 0, 320, 0.7), (290, 310, 0, 320, 0.2), (230, 260, 0, 320, 0.1))
         self.weight_sum = 1.0
 
@@ -30,7 +30,7 @@ class LaneDetector(object):
     @staticmethod
     def get_area_max_contour(contours, threshold=100):
         '''
-        获取最大面积对应的轮廓(obtain the contour corresponding to the maximum area)
+        Obtain the contour corresponding to the maximum area(获取最大面积对应的轮廓)
         :param contours:
         :param threshold:
         :return:
@@ -49,9 +49,9 @@ class LaneDetector(object):
         roi_w_max = w
         roi_h_min = 0
         roi_h_max = h
-        roi = image[roi_h_min:roi_h_max, roi_w_min:roi_w_max]  # 截取右半边(crop the right half)
-        flip_binary = cv2.flip(roi, 0)  # 上下翻转(flip upside down)
-        max_y = cv2.minMaxLoc(flip_binary)[-1][1]  # 提取最上，最左数值为255的点坐标(extract the coordinates of the top-left point with a value of 255)
+        roi = image[roi_h_min:roi_h_max, roi_w_min:roi_w_max]  # Crop the right half(截取右半边)
+        flip_binary = cv2.flip(roi, 0)  # Flip upside down(上下翻转)
+        max_y = cv2.minMaxLoc(flip_binary)[-1][1]  # Extract the coordinates of the top-left point with a value of 255(提取最上，最左数值为255的点坐标)
 
         return h - max_y
 
@@ -62,15 +62,15 @@ class LaneDetector(object):
         roi_h_min = 0
         roi_h_max = h
         roi = image[roi_h_min:roi_h_max, roi_w_min:roi_w_max]
-        flip_binary = cv2.flip(roi, -1)  # 图像左右上下翻转(flip the image horizontally and vertically)
+        flip_binary = cv2.flip(roi, -1)  # Flip the image horizontally and vertically(图像左右上下翻转)
         #cv2.imshow('1', flip_binary)
         # min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(ret)
-        # minVal：最小值(the minimum value)
-        # maxVal：最大值(the maximum value)
-        # minLoc：最小值的位置(the location of the minimum value)
-        # maxLoc：最大值的位置(the location of the maximum value)
-        # 遍历的顺序，先行再列，行从左到右，列从上到下(the order of traversal is: first rows, then columns, with rows from left to right and columns from top to bottom)
-        (x_0, y_0) = cv2.minMaxLoc(flip_binary)[-1]  # 提取最上，最左数值为255的点坐标(extract the coordinates of the top-left point with a value of 255)
+        # minVal：The minimum value(最小值)
+        # maxVal：The maximum value(最大值)
+        # minLoc：The location of the minimum value(最小值的位置)
+        # maxLoc：The location of the maximum value(最大值的位置)
+        # The order of traversal is: first rows, then columns, with rows from left to right and columns from top to bottom(遍历的顺序，先行再列，行从左到右，列从上到下)
+        (x_0, y_0) = cv2.minMaxLoc(flip_binary)[-1]  # Extract the coordinates of the top-left point with a value of 255(提取最上，最左数值为255的点坐标)
         y_center = y_0 + 55
         roi = flip_binary[y_center:, :]
         (x_1, y_1) = cv2.minMaxLoc(roi)[-1]
@@ -98,9 +98,9 @@ class LaneDetector(object):
         roi_h_min = int(h/5)
         roi_h_max = h
         roi = image[roi_h_min:roi_h_max, roi_w_min:roi_w_max]
-        flip_binary = cv2.flip(roi, -1)  # 图像左右上下翻转(flip the image horizontally and vertically)
+        flip_binary = cv2.flip(roi, -1)  # Flip the image horizontally and vertically(图像左右上下翻转)
         #cv2.imshow('1', flip_binary)
-        (x_0, y_0) = cv2.minMaxLoc(flip_binary)[-1]  # 提取最上，最左数值为255的点坐标(extract the coordinates of the top-left point with a value of 255)
+        (x_0, y_0) = cv2.minMaxLoc(flip_binary)[-1]  # Extract the coordinates of the top-left point with a value of 255(提取最上，最左数值为255的点坐标)
         down_p = (roi_w_max - x_0, roi_h_max - y_0)
 
         (x_1, y_1) = cv2.minMaxLoc(roi)[-1]
@@ -118,17 +118,17 @@ class LaneDetector(object):
         return up_point, down_point, y_center
 
     def get_binary(self, image):
-        # 通过lab空间识别颜色(recognize color through LAB space)
-        img_lab = cv2.cvtColor(image, cv2.COLOR_RGB2LAB)  # rgb转lab(convert RGB to LAB)
-        img_blur = cv2.GaussianBlur(img_lab, (3, 3), 3)  # 高斯模糊去噪(Gaussian blur denoising)
-        mask = cv2.inRange(img_blur, tuple(lab_data['lab']['Stereo'][self.target_color]['min']), tuple(lab_data['lab']['Stereo'][self.target_color]['max']))  # 二值化(binarization)
-        eroded = cv2.erode(mask, cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3)))  # 腐蚀(erode)
-        dilated = cv2.dilate(eroded, cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3)))  # 膨胀(dilate)
+        # Recognize color through LAB space(通过lab空间识别颜色)
+        img_lab = cv2.cvtColor(image, cv2.COLOR_RGB2LAB)  # Convert RGB to LAB(rgb转lab)
+        img_blur = cv2.GaussianBlur(img_lab, (3, 3), 3)  # Gaussian blur denoising(高斯模糊去噪)
+        mask = cv2.inRange(img_blur, tuple(lab_data['lab']['Stereo'][self.target_color]['min']), tuple(lab_data['lab']['Stereo'][self.target_color]['max']))  # Binarization(二值化)
+        eroded = cv2.erode(mask, cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3)))  # Erode(腐蚀)
+        dilated = cv2.dilate(eroded, cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3)))  # Dilate(膨胀)
 
         return dilated
 
     def __call__(self, image, result_image):
-        # 按比重提取线中心
+        # Extract the line center by weight(按比重提取线中心)
         centroid_sum = 0
         h, w = image.shape[:2]
         max_center_x = -1
@@ -137,12 +137,12 @@ class LaneDetector(object):
         min_area = h*w
         f = max_area/min_area
         for roi in self.rois:
-            blob = image[roi[0]:roi[1], roi[2]:roi[3]]  # 截取roi(crop ROI)
-            contours = cv2.findContours(blob, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_TC89_L1)[-2]  # 找轮廓(find contours)
-            max_contour_area = self.get_area_max_contour(contours, 30)  # 获取最大面积对应轮廓(obtain the contour with the largest area)
+            blob = image[roi[0]:roi[1], roi[2]:roi[3]]  # Crop ROI(截取roi)
+            contours = cv2.findContours(blob, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_TC89_L1)[-2]  # Find contours(找轮廓)
+            max_contour_area = self.get_area_max_contour(contours, 30)  # Obtain the contour with the largest area(获取最大面积对应轮廓)
             if max_contour_area is not None:
-                rect = cv2.minAreaRect(max_contour_area[0])  # 最小外接矩形(the minimum bounding rectangle)
-                box = np.intp(cv2.boxPoints(rect))  # 四个角(four box points)
+                rect = cv2.minAreaRect(max_contour_area[0])  # The minimum bounding rectangle(最小外接矩形)
+                box = np.intp(cv2.boxPoints(rect))  # Four box points(四个角)
                 area = rect[1][0]*rect[1][1]
                 if area > max_area:
                     max_area = area
@@ -151,15 +151,15 @@ class LaneDetector(object):
                 f = max_area/min_area
                 for j in range(4):
                     box[j, 1] = box[j, 1] + roi[0]
-                cv2.drawContours(result_image, [box], -1, (int(255*roi[-1]), 255, 0), 2)  # 画出四个点组成的矩形(draw the rectangle composed of the four points)
+                cv2.drawContours(result_image, [box], -1, (int(255*roi[-1]), 255, 0), 2)  # Draw the rectangle composed of the four points(画出四个点组成的矩形)
 
-                # 获取矩形对角点(obtain the diagonal points of the rectangle)
+                # Obtain the diagonal points of the rectangle(获取矩形对角点)
                 pt1_x, pt1_y = box[0, 0], box[0, 1]
                 pt3_x, pt3_y = box[2, 0], box[2, 1]
-                # 线的中心点(the center point of the line)
+                # The center point of the line(线的中心点)
                 line_center_x, line_center_y = (pt1_x + pt3_x) / 2, (pt1_y + pt3_y) / 2
 
-                cv2.circle(result_image, (int(line_center_x), int(line_center_y)), 5, (0, 0, 255), -1)  # 画出中心点(draw the center point)
+                cv2.circle(result_image, (int(line_center_x), int(line_center_y)), 5, (0, 0, 255), -1)  # Draw the center point(画出中心点)
                 center_x.append(line_center_x)
             else:
                 center_x.append(-1)
@@ -180,9 +180,9 @@ def image_callback(ros_image):
     cv_image = bridge.imgmsg_to_cv2(ros_image, "bgr8")
     bgr_image = np.array(cv_image, dtype=np.uint8)
     if image_queue.full():
-        # 如果队列已满，丢弃最旧的图像(if the queue is full, remove the oldest image)
+        # If the queue is full, remove the oldest image(如果队列已满，丢弃最旧的图像)
         image_queue.get()
-        # 将图像放入队列(put the image into the queue)
+        # Put the image into the queue(将图像放入队列)
     image_queue.put(bgr_image)
 
 def main():
@@ -200,9 +200,9 @@ def main():
         img = image.copy()
         y = lane_detect.add_horizontal_line(binary_image)
         roi = [(0, y), (640, y), (640, 0), (0, 0)]
-        cv2.fillPoly(binary_image, [np.array(roi)], [0, 0, 0])  # 将上面填充为黑色，防干扰(fill the top with black to avoid interference)
+        cv2.fillPoly(binary_image, [np.array(roi)], [0, 0, 0])  # Fill the top with black to avoid interference(将上面填充为黑色，防干扰)
         min_x = cv2.minMaxLoc(binary_image)[-1][0]
-        cv2.line(img, (min_x, y), (640, y), (255, 255, 255), 50)  # 画虚拟线来驱使转弯(draw a virtual line to guide the turning)
+        cv2.line(img, (min_x, y), (640, y), (255, 255, 255), 50)  # Draw a virtual line to guide the turning(画虚拟线来驱使转弯)
         result_image, angle, x = lane_detect(binary_image, image.copy()) 
         '''
         up, down = lane_detect.add_vertical_line_far(binary_image)
@@ -211,7 +211,7 @@ def main():
         '''
         cv2.imshow('image', img)
         key = cv2.waitKey(1)
-        if key == ord('q') or key == 27:  # 按q或者esc退出(press Q or Esc to quit)
+        if key == ord('q') or key == 27:  # Press Q or Esc to quit(按q或者esc退出)
             break
 
     cv2.destroyAllWindows()

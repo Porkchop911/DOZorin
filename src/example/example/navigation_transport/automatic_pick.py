@@ -383,13 +383,13 @@ class AutomaticPickNode(Node):
                         if self.count_turn > 5:
                             self.count_turn = 5
                             self.status = "align"
-                            if self.count_stop < 10:  # 连续10次都没在移动(Not moving for 10 consecutive times)
-                                if object_angle < 40: # 不取45，因为如果在45时值的不稳定会导致反复移动(Do not use 45, because instability at 45 can cause repeated movements)
+                            if self.count_stop < 10:  # Not moving for 10 consecutive times(连续10次都没在移动)
+                                if object_angle < 40: # Do not use 45, because instability at 45 can cause repeated movementsX(Do not use 45, because instability at 45 can cause repeated movements)
                                     object_angle += 90
                                 self.yaw_pid.SetPoint = 90
                                 if abs(object_angle - 90) <= 1:
                                     object_angle = 90
-                                self.yaw_pid.update(object_angle)  # 更新pid(Update pid)
+                                self.yaw_pid.update(object_angle)  # Update PID(更新pid)
                                 self.yaw_angle = self.yaw_pid.output
                                 if object_angle != 90:
                                     if abs(self.yaw_angle) <=0.038:

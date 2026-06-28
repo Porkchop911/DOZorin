@@ -2,7 +2,7 @@
 # encoding: utf-8
 # @data:2023/11/18
 # @author:aiden
-# 语音控制移动(voice movement control)
+# Voice movement control(语音控制移动)
 import os
 import json
 import math
@@ -21,7 +21,7 @@ from xf_mic_asr_offline import voice_play
 from ros_robot_controller_msgs.msg import BuzzerState
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy
 
-MAX_SCAN_ANGLE = 240  # 激光的扫描角度,去掉总是被遮挡的部分degree(The scanning angle of the laser, with the degree of the always occluded part removed)
+MAX_SCAN_ANGLE = 240  # The scanning angle of the laser, with the degree of the always occluded part removed(激光的扫描角度,去掉总是被遮挡的部分degree)
 CAR_WIDTH = 0.4  # meter
 
 class VoiceControMovelNode(Node):
@@ -51,12 +51,12 @@ class VoiceControMovelNode(Node):
         self.mecanum_pub = self.create_publisher(Twist, '/controller/cmd_vel', 1)
         self.buzzer_pub = self.create_publisher(BuzzerState, '/ros_robot_controller/set_buzzer', 1)
         qos = QoSProfile(depth=1, reliability=QoSReliabilityPolicy.BEST_EFFORT)
-        self.create_subscription(LaserScan, '/scan_raw', self.lidar_callback, qos)  # 订阅雷达数据(subscribe to Lidar data)
+        self.create_subscription(LaserScan, '/scan_raw', self.lidar_callback, qos)  # Subscribe to LiDAR data(订阅雷达数据)
         self.create_subscription(String, '/asr_node/voice_words', self.words_callback, 1)
         self.create_subscription(Int32, '/awake_node/angle', self.angle_callback, 1)
 
         self.client = self.create_client(Trigger, '/asr_node/init_finish')
-        self.client.wait_for_service()  # 阻塞等待(blocking wait)
+        self.client.wait_for_service()  # Blocking wait(阻塞等待)
         self.declare_parameter('delay', 0)
         time.sleep(self.get_parameter('delay').value)
         self.mecanum_pub.publish(Twist())
@@ -64,14 +64,14 @@ class VoiceControMovelNode(Node):
 
         self.produce_type = os.environ.get('PRODUCT_TYPE')
         if self.produce_type == 'OFFLINE':
-            self.get_logger().info('唤醒口令: 小迈小迈(Wake up word: hello hiwonder)')
+            self.get_logger().info('Wake word: hello hiwonder(唤醒口令: 小幻小幻)')
         else:
-            self.get_logger().info('唤醒口令: 小幻小幻(Wake up word: hello hiwonder)')
-        self.get_logger().info('唤醒后15秒内可以不用再唤醒(No need to wake up within 15 seconds after waking up)')
+            self.get_logger().info('Wake word: hello hiwonder(唤醒口令: 小幻小幻)')
+        self.get_logger().info('No need to wake up within 15 seconds after waking up(唤醒后15秒内可以不用再唤醒)')
         if self.machine_type == 'ROSOrin_Acker':
-            self.get_logger().info('控制指令: 左转 右转 前进 后退(Voice command: turn left/turn right/go forward/go backward)')
+            self.get_logger().info('Voice command: turn left/turn right/go forward/go backward(控制指令: 左转 右转 前进 后退)')
         else:
-            self.get_logger().info('控制指令: 左转 右转 前进 后退 过来(Voice command: turn left/turn right/go forward/go backward/come here)')
+            self.get_logger().info('Voice command: turn left/turn right/go forward/go backward/come here(控制指令: 左转 右转 前进 后退 过来)')
         self.time_stamp = time.time()
         self.current_time_stamp = time.time()
         threading.Thread(target=self.main, daemon=True).start()
@@ -90,12 +90,12 @@ class VoiceControMovelNode(Node):
         if self.language == 'Chinese':
             self.words = self.words.replace(' ', '')
         self.get_logger().info('words:%s' % self.words)
-        if self.words is not None and self.words not in ['唤醒成功(wake-up-success)', '休眠(Sleep)', '失败5次(Fail-5-times)',
-                                                         '失败10次(Fail-10-times']:
+        if self.words is not None and self.words not in ['Wake-up-success(唤醒成功)', 'Sleep(休眠)', 'Fail-5-times(失败5次)',
+                                                         'Fail-10-times(失败10次)']:
             pass
-        elif self.words == '唤醒成功(wake-up-success)':
+        elif self.words == 'Wake-up-success(唤醒成功)':
             self.play('awake')
-        elif self.words == '休眠(Sleep)':
+        elif self.words == 'Sleep(休眠)':
             msg = BuzzerState()
             msg.freq = 1000
             msg.on_time = 0.1
@@ -112,12 +112,12 @@ class VoiceControMovelNode(Node):
 
     def lidar_callback(self, lidar_data):
         twist = Twist()
-        # 数据大小 = 扫描角度/每扫描一次增加的角度(data size= scanning angle/ the increased angle per scan)
+        # Data size= scanning angle/ the increased angle per scan(数据大小 = 扫描角度/每扫描一次增加的角度)
         if self.lidar_type != 'G4':
             min_index = int(math.radians(MAX_SCAN_ANGLE / 2.0) / lidar_data.angle_increment)
             max_index = int(math.radians(MAX_SCAN_ANGLE / 2.0) / lidar_data.angle_increment)
-            left_ranges = lidar_data.ranges[:max_index]  # 左半边数据 (the left data)
-            right_ranges = lidar_data.ranges[::-1][:max_index]  # 右半边数据 (the right data)
+            left_ranges = lidar_data.ranges[:max_index]  # The left data (左半边数据)
+            right_ranges = lidar_data.ranges[::-1][:max_index]  # The right data (右半边数据)
         elif self.lidar_type == 'G4':
             '''
                 ranges[right...->left]
@@ -129,18 +129,18 @@ class VoiceControMovelNode(Node):
             '''
             min_index = int(math.radians((360 - MAX_SCAN_ANGLE) / 2.0) / lidar_data.angle_increment)
             max_index = min_index + int(math.radians(MAX_SCAN_ANGLE / 2.0) / lidar_data.angle_increment)
-            left_ranges = lidar_data.ranges[::-1][min_index:max_index][::-1]  # 左半边数据 (the left data)
-            right_ranges = lidar_data.ranges[min_index:max_index][::-1]  # 右半边数据 (the right data)
+            left_ranges = lidar_data.ranges[::-1][min_index:max_index][::-1]  # The left data (左半边数据)
+            right_ranges = lidar_data.ranges[min_index:max_index][::-1]  # The right data (右半边数据)
         # self.get_logger().info(self.lidar_type)
         if self.start_follow:
-            # 根据设定取数据 (get the data according to the settings)
+            # Get the data according to the settings (根据设定取数据)
             angle = self.scan_angle / 2
             angle_index = int(angle / lidar_data.angle_increment + 0.50)
             left_range, right_range = np.array(left_ranges[:angle_index]), np.array(right_ranges[:angle_index])
 
             
             # self.get_logger().info(str(left_range))
-            # 拼合距离数据, 从右半侧逆时针到左半侧(the merged distance data from right half counterclockwise to the left half)
+            # The merged distance data from right half counterclockwise to the left half(拼合距离数据, 从右半侧逆时针到左半侧)
             ranges = np.append(right_range[::-1], left_range)
             nonzero = ranges.nonzero()
             nonan = np.isfinite(ranges[nonzero])
@@ -149,9 +149,9 @@ class VoiceControMovelNode(Node):
             if len(dist_) > 0:
                 dist = dist_.min()
                 min_index = list(ranges).index(dist)
-                angle = -angle + lidar_data.angle_increment * min_index  # 计算最小值对应的角度(calculate the angle corresponding to the minimum value)
+                angle = -angle + lidar_data.angle_increment * min_index  # Calculate the angle corresponding to the minimum value(计算最小值对应的角度)
                 # self.get_logger().info(str([dist, angle]))
-                if dist < self.threshold and abs(math.degrees(angle)) > 8:  # 控制左右(control the left and right)
+                if dist < self.threshold and abs(math.degrees(angle)) > 8:  # Control the left and right(控制左右)
                     if self.lidar_type != 'G4':
                         self.pid_yaw.update(-angle)
                         twist.angular.z = common.set_range(self.pid_yaw.output, -self.speed * 6.0, self.speed * 6.0)
@@ -162,7 +162,7 @@ class VoiceControMovelNode(Node):
                     twist.angular.z = 0.0
                     self.pid_yaw.clear()
 
-                if dist < self.threshold and abs(self.stop_dist - dist) > 0.04:  # 控制前后(control the front and back)
+                if dist < self.threshold and abs(self.stop_dist - dist) > 0.04:  # Control the front and back(控制前后)
                     self.pid_dist.update(self.stop_dist - dist)
                     twist.linear.x = common.set_range(self.pid_dist.output, -self.speed, self.speed)
                 else:
@@ -222,7 +222,7 @@ class VoiceControMovelNode(Node):
                         self.time_stamp = time.time() + abs(math.radians(self.angle) / twist.angular.z)
                     # self.get_logger().info(self.angle)
                     self.lidar_follow = True
-                elif self.words == '休眠(Sleep)':
+                elif self.words == 'Sleep(休眠)':
                     time.sleep(0.01)
                 self.words = None
                 self.haved_stop = False

@@ -55,7 +55,7 @@ def pick_without_back(position, pitch, yaw, gripper_angle, gripper_depth, joints
         time.sleep(0.5)
         
         if not stop:
-            position[2] -= (0.02 + gripper_depth)   #position[2] -= (0.03 + gripper_depth)   修改夹取深度
+            position[2] -= (0.02 + gripper_depth)   #position[2] -= (0.03 + gripper_depth)   Modify the grasping depth(修改夹取深度)
             
             if interpolation:
                 msg = set_pose_target(position, pitch, [-90.0, 90.0], 1.0, duration=0.8)

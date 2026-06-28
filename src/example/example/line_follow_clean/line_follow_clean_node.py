@@ -59,7 +59,7 @@ class LineFollowCleanNode(Node):
         self.lidar_type = os.environ['LIDAR_TYPE']
 
         qos = QoSProfile(depth=1, reliability=QoSReliabilityPolicy.BEST_EFFORT)
-        self.lidar_sub = self.create_subscription(LaserScan, '/scan_raw', self.lidar_callback, qos)  # Subscribe to Lidar data(订阅雷达数据)
+        self.lidar_sub = self.create_subscription(LaserScan, '/scan_raw', self.lidar_callback, qos)  # Subscribe to LiDAR data(订阅雷达数据)
         self.mecanum_pub = self.create_publisher(Twist, '/controller/cmd_vel', 1)
         self.create_subscription(ColorsInfo, '/color_detect/color_info', self.get_color_callback, 1)
         self.create_subscription(Image, '/color_detect/image_result', self.image_callback, 1)
@@ -69,8 +69,8 @@ class LineFollowCleanNode(Node):
         self.client.wait_for_service()
 
         timer_cb_group = ReentrantCallbackGroup()
-        self.create_service(Trigger, '~/start', self.start_srv_callback, callback_group=timer_cb_group) # Enter the game(进入玩法)
-        self.create_service(Trigger, '~/stop', self.stop_srv_callback, callback_group=timer_cb_group) # Exit the game(退出玩法)
+        self.create_service(Trigger, '~/start', self.start_srv_callback, callback_group=timer_cb_group) # Enter the feature(进入玩法)
+        self.create_service(Trigger, '~/stop', self.stop_srv_callback, callback_group=timer_cb_group) # Exit the feature(退出玩法)
         self.set_line_client = self.create_client(SetLineROI, '/color_detect/set_line_roi', callback_group=timer_cb_group)
         self.set_line_client.wait_for_service()
         self.set_circle_client = self.create_client(SetCircleROI, '/color_detect/set_circle_roi', callback_group=timer_cb_group)

@@ -1,13 +1,13 @@
 #!/usr/bin/python3
 # coding=utf8
-# 麦克纳姆轮底盘运动学(Mecanum wheel chassis kinematic)
+# Mecanum wheel chassis kinematic(麦克纳姆轮底盘运动学)
 import math
 from ros_robot_controller_msgs.msg import MotorState, MotorsState
 
 class MecanumChassis:
-    # wheelbase = 0.1368   # 前后轴距(distance between front and real axles)
-    # track_width = 0.1446 # 左右轴距(distance between left and right axles)
-    # wheel_diameter = 0.065  # 轮子直径(wheel diameter)
+    # wheelbase = 0.1368   # Distance between front and real axles(前后轴距)
+    # track_width = 0.1446 # Distance between left and right axles(左右轴距)
+    # wheel_diameter = 0.065  # Wheel diameter(轮子直径)
     def __init__(self, wheelbase=0.206, track_width=0.194, wheel_diameter=0.0065):
         self.wheelbase = wheelbase
         self.track_width = track_width

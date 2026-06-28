@@ -26,9 +26,9 @@ class QRCodeDetectNode(Node):
         cv_image = self.bridge.imgmsg_to_cv2(ros_image, "bgr8")
         bgr_image = np.array(cv_image, dtype=np.uint8)
         if self.image_queue.full():
-            # 如果队列已满，丢弃最旧的图像(if the queue is full, discard the oldest image)
+            # If the queue is full, remove the oldest image(如果队列已满，丢弃最旧的图像)
             self.image_queue.get()
-            # 将图像放入队列(put the image into the queue)
+            # Put the image into the queue(将图像放入队列)
         self.image_queue.put(bgr_image)
 
     def main(self):
@@ -51,7 +51,7 @@ class QRCodeDetectNode(Node):
                     image = cv2.polylines(image, [p.astype(int)], True, color, 8)
             cv2.imshow('image', image)
             key = cv2.waitKey(1)
-            if key == ord('q') or key == 27:  # 按q或者esc退出(press q or esc to exit)
+            if key == ord('q') or key == 27:  # Press Q or Esc to quit(按q或者esc退出)
                 break
         
         cv2.destroyAllWindows()

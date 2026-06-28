@@ -214,7 +214,7 @@ class VLLMObjectTransport(Node):
         rclpy.init()
         super().__init__(name)
         self.llm_result = ''
-        # self.vllm_result = '''json{"object":"香蕉","xyxy":[243, 441, 842, 552], "response": "香蕉"}'''
+        # self.vllm_result = '''json{"object":"banana（香蕉）","xyxy":[243, 441, 842, 552], "response": "banana（香蕉）"}'''
         self.running = True
         self.transport_finished = True
         self.lock = threading.RLock()
@@ -339,7 +339,7 @@ class VLLMObjectTransport(Node):
             xyxy = initial_position[i]
             if self.language == 'Chinese':
                 # msg.box = self.client.data_process(xyxy, 640, 480)
-                msg.box = [int(x) for x in xyxy]  #千问
+                msg.box = [int(x) for x in xyxy]  #Qwen（千问）
             else:
                 msg.box = [int(xyxy[0] * 640), int(xyxy[1] * 480), int(xyxy[2] * 640), int(xyxy[3] * 480)]
             self.send_request(self.record_position_client, msg)
@@ -394,7 +394,7 @@ class VLLMObjectTransport(Node):
         xyxy = position['pick']['xyxy']
         if self.language == 'Chinese':
             # msg.box = self.client.data_process(xyxy, 640, 480)
-            msg.box = [int(x) for x in xyxy]  #千问
+            msg.box = [int(x) for x in xyxy]  #Qwen（千问）
         else:
             msg.box = [int(xyxy[0] * 640), int(xyxy[1] * 480), int(xyxy[2] * 640), int(xyxy[3] * 480)]
         self.send_request(self.set_pick_client, msg)
@@ -403,7 +403,7 @@ class VLLMObjectTransport(Node):
         self.send_request(self.set_place_client, msg)
         # self.get_logger().info(f'msg: {msg}')
 
-        # Enable sorting. 开启分拣
+        # Enable sorting. （开启分拣）
         msg = SetBool.Request()
         msg.data = True
         self.send_request(self.start_client, msg)
@@ -443,8 +443,8 @@ class VLLMObjectTransport(Node):
         if xyxy:
             msg = SetBox.Request()
             if self.language == 'Chinese':
-                # msg.box = self.client.data_process(xyxy, 640, 480) #阶跃星辰
-                msg.box = [int(x) for x in xyxy]  #千问
+                # msg.box = self.client.data_process(xyxy, 640, 480) #StepFun（阶跃星辰）
+                msg.box = [int(x) for x in xyxy]  #Qwen（千问）
             else:
                 msg.box = [int(xyxy[0] * 640), int(xyxy[1] * 480), int(xyxy[2] * 640), int(xyxy[3] * 480)]
             # msg.box = position['pick']['xyxy']
@@ -455,16 +455,16 @@ class VLLMObjectTransport(Node):
             msg = SetBox.Request()
             # msg.label = label
             if self.language == 'Chinese':
-                # msg.box = self.client.data_process(xyxy, 640, 480) #阶跃星辰
-                msg.box = [int(x) for x in xyxy]  #千问
+                # msg.box = self.client.data_process(xyxy, 640, 480) #StepFun（阶跃星辰）
+                msg.box = [int(x) for x in xyxy]  #Qwen（千问）
 
             else:
                 msg.box = [int(xyxy[0] * 640), int(xyxy[1] * 480), int(xyxy[2] * 640), int(xyxy[3] * 480)]
             # msg.box = position['place']['xyxy']
-            msg.offset = offset   #例如: 放在盘子左边的偏移量
+            msg.offset = offset   #Example: offset to the left of the plate（例如: 放在盘子左边的偏移量）
             self.send_request(self.set_place_client, msg)
 
-        # Enable sorting. 开启分拣
+        # Enable sorting. （开启分拣）
         msg = SetBool.Request()
         msg.data = True
         self.send_request(self.start_client, msg)
@@ -484,7 +484,7 @@ class VLLMObjectTransport(Node):
             if self.llm_result:
                 try:
                     self.get_logger().info(f'llm_result: {self.llm_result}')
-                    if 'action' in self.llm_result: # 如果有对应的行为返回那么就提取处理
+                    if 'action' in self.llm_result: # Extract and process the action if a corresponding one is returned（如果有对应的行为返回那么就提取处理）
                         if self.llm_result.startswith("```") and self.llm_result.endswith("```"):
                             self.llm_result = self.llm_result.strip("```").replace("json\n", "").strip()
                         action_list = json.loads(self.llm_result)['action']

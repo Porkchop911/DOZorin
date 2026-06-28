@@ -2,7 +2,7 @@
 # encoding: utf-8
 # @data:2022/11/04
 # @author:aiden
-# 自检程序(self-test program)
+# Self-test program(自检程序)
 import os
 import time
 import rclpy

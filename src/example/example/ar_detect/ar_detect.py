@@ -2,7 +2,7 @@
 # encoding: utf-8
 # @data:2022/03/24
 # @author:aiden
-# ar增强(augmented reality)
+# Augmented reality(ar增强)
 import os
 import cv2
 import rclpy
@@ -84,14 +84,14 @@ class ARNode(Node):
         self.lock = threading.RLock()  # Thread lock(线程锁)
         
         self.result_publisher = self.create_publisher(Image, '~/image_result', 1)  # Publish the final image(发布最终图像)
-        self.create_service(Trigger, '~/enter', self.enter_srv_callback)  # Enter the game service(进入发玩法服务)
-        self.create_service(Trigger, '~/exit', self.exit_srv_callback)  # Exit the game service(退出玩法服务)
+        self.create_service(Trigger, '~/enter', self.enter_srv_callback)  # Enter the feature service(进入玩法服务)
+        self.create_service(Trigger, '~/exit', self.exit_srv_callback)  # Exit the feature service(退出玩法服务)
         Heart(self, self.name + '/heartbeat', 5, lambda _: self.exit_srv_callback(request=Trigger.Request(), response=Trigger.Response()))  # Heartbeat package(心跳包)
         self.create_service(SetString, '~/set_model', self.set_model_srv_callback)  # Set the model service.(设置模型服务)
         self.debug = self.get_parameter('debug').value
         self.create_service(Trigger, '~/init_finish', self.get_node_state)
         self.get_logger().info('\033[1;32m%s\033[0m' % 'start')
-        # 进入玩法(Enter)
+        # Enter the feature(进入玩法)
         if self.debug:
             self.enter_srv_callback(Trigger.Request(), Trigger.Response())
 
@@ -120,7 +120,7 @@ class ARNode(Node):
     def exit_srv_callback(self, request, response):
         # Exit the service(退出服务)
         self.get_logger().info('\033[1;32m%s\033[0m' % "ar exit")
-        # Cancel the subscribtion when exiting the service to save the expenditure.(退出服务时注销订阅，节省开销)
+        # Cancel the subscription when exiting the service to save the expenditure.(退出服务时注销订阅，节省开销)
         try:
             if self.image_sub is not None:
                 self.destroy_subscription(self.image_sub)
@@ -218,7 +218,7 @@ class ARNode(Node):
                     rb = tag_corners[1]
                     rt = tag_corners[2]
                     lt = tag_corners[3]
-                    # 绘制四个角点(draw four angular points)
+                    # Draw four angular points(绘制四个角点)
                     cv2.circle(result_image, (int(lb[0]), int(lb[1])), 2, (0, 255, 255), -1)
                     cv2.circle(result_image, (int(lt[0]), int(lt[1])), 2, (0, 255, 255), -1)
                     cv2.circle(result_image, (int(rb[0]), int(rb[1])), 2, (0, 255, 255), -1)

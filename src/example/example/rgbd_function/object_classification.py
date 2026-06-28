@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 # coding=utf8
-# Objects are identified and classified through depth maps. 通过深度图识别物体进行分类
-# The robotic arm identifies downward. 机械臂向下识别
-# It can identify cuboids, spheres, cylinders and their colors. 可以识别长方体，球，圆柱体，以及他们的颜色
+# Objects are identified and classified through depth maps. (通过深度图识别物体进行分类)
+# The robotic arm identifies downward. (机械臂向下识别)
+# It can identify cuboids, spheres, cylinders and their colors. (可以识别长方体，球，圆柱体，以及他们的颜色)
 import os
 import cv2
 import time
@@ -48,7 +48,7 @@ class ObjectClassificationNode(Node):
         [0.0, -1.0, 0.0, 0.045],
         [0.0, 0.0, 0.0, 1.0]
     ]
-    # pick_offset参数将通过ROS2参数动态配置
+    # The pick_offset parameters will be dynamically configured through ROS2 parameters(pick_offset参数将通过ROS2参数动态配置)
     # [x1, x2, y1, y2, z]  # x1(+), x2(+), y1(+), y2(-), z
     '''
 
@@ -100,7 +100,7 @@ class ObjectClassificationNode(Node):
         self.create_service(Trigger, '~/start', self.start_srv_callback)
         self.create_service(Trigger, '~/stop', self.stop_srv_callback)
 
-        # 添加参数变化回调
+        # Add parameter change callback(添加参数变化回调)
         self.add_on_set_parameters_callback(self.parameters_callback)
         self.create_service(SetStringList, '~/set_shape', self.set_shape_srv_callback)
         
@@ -108,7 +108,7 @@ class ObjectClassificationNode(Node):
         depth_sub = message_filters.Subscriber(self, Image, '/depth_cam/depth0/image_raw')
         info_sub = message_filters.Subscriber(self, CameraInfo, '/depth_cam/depth0/camera_info')
 
-        # Synchronize the timestamp. The time is allowed to have an error of 0.02 seconds. 同步时间戳, 时间允许有误差在0.03s
+        # Synchronize the timestamp. The time is allowed to have an error of 0.02 seconds. (同步时间戳, 时间允许有误差在0.03s)
         sync = message_filters.ApproximateTimeSynchronizer([rgb_sub, depth_sub, info_sub], 3, 0.2)
         sync.registerCallback(self.multi_callback)
         self.client = self.create_client(Trigger, '/controller_manager/init_finish')
@@ -183,7 +183,7 @@ class ObjectClassificationNode(Node):
         return response
 
     def parameters_callback(self, params):
-        """参数变化回调函数"""
+        """Parameter change callback function(参数变化回调函数)"""
         for param in params:
             if param.name == 'pick_offset_x1':
                 self.pick_offset[0] = param.value
@@ -299,9 +299,9 @@ class ObjectClassificationNode(Node):
 
     def multi_callback(self, ros_rgb_image, ros_depth_image, depth_camera_info):
         if self.image_queue.full():
-            # If the queue is full, discard the oldest image. 如果队列已满，丢弃最旧的图像
+            # If the queue is full, discard the oldest image. (如果队列已满，丢弃最旧的图像)
             self.image_queue.get()
-        # Put the image into the queue. 将图像放入队列
+        # Put the image into the queue. (将图像放入队列)
         self.image_queue.put((ros_rgb_image, ros_depth_image, depth_camera_info))
 
     def cal_position(self, x, y, depth, intrinsic_matrix):
@@ -320,18 +320,18 @@ class ObjectClassificationNode(Node):
         depth_image[self.roi[1]:, :] = np.array([[1000, ] * iw] * (ih - self.roi[1]))
         depth_image[:self.roi[0], :] = np.array([[1000, ] * iw] * self.roi[0])
         depth = np.copy(depth_image).reshape((-1,))
-        depth[depth <= 0] = 55555  # A distance of 0 might indicate entering a dead zone. Assign a large value to the distance. 距离为0可能是进入死区，将距离赋一个大值
+        depth[depth <= 0] = 55555  # A distance of 0 might indicate entering a dead zone. Assign a large value to the distance. (距离为0可能是进入死区，将距离赋一个大值)
 
-        min_index = np.argmin(depth)  # The pixel with the smallest distance. 距离最小的像素
+        min_index = np.argmin(depth)  # The pixel with the smallest distance. (距离最小的像素)
         min_y = min_index // iw
         min_x = min_index - min_y * iw
 
-        min_dist = depth_image[min_y, min_x]  # Obtain the distance of the object closest to the camera. 获取距离摄像头最近的物体的距离
+        min_dist = depth_image[min_y, min_x]  # Obtain the distance of the object closest to the camera. (获取距离摄像头最近的物体的距离)
         return min_dist
 
     def get_contours(self, depth_image, min_dist):
         depth_image = np.where(depth_image > 260, 0, depth_image)  
-        depth_image = np.where(depth_image > min_dist + 70, 0, depth_image)  # Set the pixels with a depth value greater than the minimum distance of 15mm to 0. 将深度值大于最小距离15mm的像素置0
+        depth_image = np.where(depth_image > min_dist + 70, 0, depth_image)  # Set the pixels with a depth value greater than the minimum distance of 15mm to 0. (将深度值大于最小距离15mm的像素置0)
         sim_depth_image_sort = np.clip(depth_image, 0, min_dist - 10).astype(np.float64) / (min_dist - 10) * 255
         depth_gray = sim_depth_image_sort.astype(np.uint8)
         _, depth_bit = cv2.threshold(depth_gray, 1, 255, cv2.THRESH_BINARY)
@@ -342,7 +342,7 @@ class ObjectClassificationNode(Node):
         object_info_list = []
         image_height, image_width = depth_image.shape[:2]
         self.get_logger().info('\033[1;32m%s\033[0m' % str(min_dist))
-        if min_dist <= 270:  # The initial position of the robotic arm is not level with the desktop. If it exceeds this value, it indicates that it is already below the desktop, which may result in an incorrect detection and no recognition will be made. 机械臂初始位置并不是与桌面水平，大于这个值说明已经低于桌面了，可能检测有误，不进行识别
+        if min_dist <= 270:  # The initial position of the robotic arm is not level with the desktop. If it exceeds this value, it indicates that it is already below the desktop, which may result in an incorrect detection and no recognition will be made. (机械臂初始位置并不是与桌面水平，大于这个值说明已经低于桌面了，可能检测有误，不进行识别)
             sphere_index = 0
             cuboid_index = 0
             cylinder_index = 0
@@ -354,8 +354,8 @@ class ObjectClassificationNode(Node):
                 self.get_logger().info('\033[1;32m%s\033[0m' % 'area: ' + str(area))
                 if area < 300:
                     continue
-                perimeter = cv2.arcLength(obj, True)  # Calculate the perimeter of the contour. 计算轮廓周长
-                approx = cv2.approxPolyDP(obj, 0.035 * perimeter, True)  # Obtain the coordinates of the contour corner points. 获取轮廓角点坐标
+                perimeter = cv2.arcLength(obj, True)  # Calculate the perimeter of the contour. (计算轮廓周长)
+                approx = cv2.approxPolyDP(obj, 0.035 * perimeter, True)  # Obtain the coordinates of the contour corner points. (获取轮廓角点坐标)
 
                 CornerNum = len(approx)
                 (cx, cy), r = cv2.minEnclosingCircle(obj)
@@ -371,7 +371,7 @@ class ObjectClassificationNode(Node):
                 
                 cv2.drawContours(mask, [obj], -1, (255), cv2.FILLED)
                 
-                # Calculate the standard deviation of the pixel values within the contour area. 计算轮廓区域内像素值的标准差
+                # Calculate the standard deviation of the pixel values within the contour area. (计算轮廓区域内像素值的标准差)
                 depth_image_mask = np.where(depth_image == 0, np.nan, depth_image)
                 depth_std = np.nanstd(mask)
                 self.get_logger().info('\033[1;32m%s\033[0m' % 'depth_std: ' + str(depth_std))
@@ -432,7 +432,7 @@ class ObjectClassificationNode(Node):
                         self.buzzer_pub.publish(msg)
                         self.debug = False
                 else:
-                    # The pixel values are limited within the range of 0 to 350, and the pixel values of the depth image are limited and normalized to the range of 0 to 255. 像素值限制在0到350的范围内, 将深度图像的像素值限制和归一化到0到255的范围内
+                    # The pixel values are limited within the range of 0 to 350, and the pixel values of the depth image are limited and normalized to the range of 0 to 255. (像素值限制在0到350的范围内, 将深度图像的像素值限制和归一化到0到255的范围内)
                     sim_depth_image = np.clip(depth_image, 0, 350).astype(np.float64) / 350 * 255
                     
                     depth_color_map = cv2.applyColorMap(sim_depth_image.astype(np.uint8), cv2.COLORMAP_JET)
@@ -442,7 +442,7 @@ class ObjectClassificationNode(Node):
                             reorder_object_info_list = object_info_list
                             if object_info_list:
                                 if self.last_object_info_list:
-                                    # Reorder by comparing the positions of the objects from the last time. 对比上一次的物体的位置来重新排序
+                                    # Reorder by comparing the positions of the objects from the last time. (对比上一次的物体的位置来重新排序)
                                     reorder_object_info_list = position_reorder(object_info_list, self.last_object_info_list, 20)
                             if reorder_object_info_list:
                                 if not self.target_shapes:
@@ -489,15 +489,15 @@ class ObjectClassificationNode(Node):
                     cv2.rectangle(bgr_image, (self.roi[2], self.roi[0]), (self.roi[3], self.roi[1]), (0, 255, 255), 1)
                     bgr_image = self.fps.show_fps(bgr_image)
 
-                    # 确保两个图像尺寸一致后再拼接
+                    # Ensure the two images have the same size before concatenating(确保两个图像尺寸一致后再拼接)
                     if bgr_image.shape[0] != depth_color_map.shape[0] or bgr_image.shape[1] != depth_color_map.shape[1]:
-                        # 调整深度图像尺寸以匹配RGB图像
+                        # Adjust the depth image size to match the RGB image(调整深度图像尺寸以匹配RGB图像)
                         depth_color_map = cv2.resize(depth_color_map, (bgr_image.shape[1], bgr_image.shape[0]))
 
                     result_image = np.concatenate([bgr_image, depth_color_map], axis=1)
                     cv2.imshow("depth", result_image)
                     key = cv2.waitKey(1)
-                    if key == ord('q') or key == 27:  # Press q or esc to exit. 按q或者esc退出
+                    if key == ord('q') or key == 27:  # Press q or esc to exit. (按q或者esc退出)
                         self.running = False
             except Exception as e:
                 self.get_logger().info(str(e))

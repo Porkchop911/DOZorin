@@ -96,7 +96,7 @@ class VLLMTrack(Node):
         self.fps = fps.FPS() # Frame rate counter (帧率统计器)
         self.image_queue = queue.Queue(maxsize=2)
         self.vllm_result = ''
-        # self.vllm_result = '''json{"object":"red cube", "xyxy":[521, 508, 637, 683]}''' (self.vllm_result = '''json{"object":"红色方块", "xyxy":[521, 508, 637, 683]}''')
+        # self.vllm_result = '''json{"object":"red cube", "xyxy":[521, 508, 637, 683]}''' (self.vllm_result = '''json{"object":"Red square(红色方块)", "xyxy":[521, 508, 637, 683]}''')
         self.set_above = False
         self.running = True
         self.data = []

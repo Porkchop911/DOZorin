@@ -2,7 +2,7 @@
 # encoding: utf-8
 # @data:2022/11/19
 # @author:aiden
-# 手势控制(gesture control)
+# Gesture control(手势控制)
 import os
 import cv2
 import math
@@ -44,7 +44,7 @@ class HandGestureControlNode(Node):
         self.mecanum_pub.publish(Twist())
         
         if 'Pro' in self.machine_type:
-            self.joints_pub = self.create_publisher(ServosPosition, '/servo_controller', 1)  # 舵机控制(servo control)
+            self.joints_pub = self.create_publisher(ServosPosition, '/servo_controller', 1)  # Servo control(舵机控制)
             self.controller = ActionGroupController(self.create_publisher(ServosPosition, 'servo_controller', 1), '/home/ubuntu/software/arm_pc/ActionGroups')
             self.controller.run_action('camera_up')
             threading.Thread(target=self.hand_gesture_control_arm, daemon=True).start()

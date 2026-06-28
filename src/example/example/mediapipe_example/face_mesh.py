@@ -40,9 +40,9 @@ class FaceMeshNode(Node):
         cv_image = self.bridge.imgmsg_to_cv2(ros_image, "rgb8")
         rgb_image = np.array(cv_image, dtype=np.uint8)
         if self.image_queue.full():
-            # 如果队列已满，丢弃最旧的图像(if the queue is full, discard the oldest image)
+            # If the queue is full, remove the oldest image(如果队列已满，丢弃最旧的图像)
             self.image_queue.get()
-            # 将图像放入队列(put the image into the queue)
+            # Put the image into the queue(将图像放入队列)
         self.image_queue.put(rgb_image)
 
     def main(self):
@@ -62,14 +62,14 @@ class FaceMeshNode(Node):
             annotated_black_image = draw_face_landmarks_on_image(black_background, detection_result)
             annotated_image = draw_face_landmarks_on_image(image, detection_result)
             self.fps.update()
-            # 水平(HORIZONTAL)
+            # HORIZONTAL(水平)
             combined_image = np.hstack((image, annotated_black_image))
-            # 垂直(VERTICAL)
+            # VERTICAL(垂直)
             # combined_image = np.vstack((image, annotated_black_image))
             result_image = self.fps.show_fps(cv2.cvtColor(combined_image, cv2.COLOR_RGB2BGR))
             cv2.imshow('face_landmarker', result_image)
             key = cv2.waitKey(1)
-            if key == ord('q') or key == 27:  # 按q或者esc退出(press Q or Esc to quit)
+            if key == ord('q') or key == 27:  # Press Q or Esc to quit(按q或者esc退出)
                 break
         cv2.destroyAllWindows()
         rclpy.shutdown()

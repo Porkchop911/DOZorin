@@ -1,13 +1,13 @@
 #!/usr/bin/python3
 # coding=utf8
-# 阿克曼底盘运动学(Ackermann wheel chassis kinematic)
+# Ackermann wheel chassis kinematic(阿克曼底盘运动学)
 import math
 from ros_robot_controller_msgs.msg import MotorState, MotorsState
 
 class AckermannChassis:
-    # wheelbase = 0.213  # 前后轴距(distance between front and real axles)
-    # track_width = 0.222  # 左右轴距(distance between left and right axles)
-    # wheel_diameter = 0.101  # 轮子直径(wheel diameter)
+    # wheelbase = 0.213  # Distance between front and real axles(前后轴距)
+    # track_width = 0.222  # Distance between left and right axles(左右轴距)
+    # wheel_diameter = 0.101  # Wheel diameter(轮子直径)
 
     def __init__(self, wheelbase=0.213, track_width=0.222, wheel_diameter=0.101):
         self.wheelbase = wheelbase

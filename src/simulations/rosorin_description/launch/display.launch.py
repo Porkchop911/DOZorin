@@ -28,14 +28,14 @@ def generate_launch_description():
 
     robot_description = Command(['xacro ', urdf_path])
 
-    # 动态TF转换(dynamic TF conversion)
+    # Dynamic TF conversion(动态TF转换)
     joint_state_publisher_node = Node(
         package='joint_state_publisher',
         executable='joint_state_publisher',
         output='screen',
     )
     
-    # 静态TF(static TF)
+    # Static TF(静态TF)
     robot_state_publisher_node = Node(
         package='robot_state_publisher',
         executable='robot_state_publisher',
@@ -69,7 +69,7 @@ def generate_launch_description():
     ])
 
 if __name__ == '__main__':
-    # 创建一个LaunchDescription对象(create a LaunchDescription object)
+    # Create a LaunchDescription object(创建一个LaunchDescription对象)
     ld = generate_launch_description()
 
     ls = LaunchService()

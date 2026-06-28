@@ -2,7 +2,7 @@
 # encoding: utf-8
 # @data:2023/03/28
 # @author:aiden
-# 无人驾驶(autonomous driving)
+# Autonomous driving(无人驾驶)
 import os
 import cv2
 import math
@@ -56,13 +56,13 @@ class SelfDrivingNode(Node):
         self.mecanum_pub = self.create_publisher(Twist, '%s' % self.cmd_vel_topic, 1)
         self.servo_state_pub = self.create_publisher(SetPWMServoState, 'ros_robot_controller/pwm_servo/set_state', 10)
         
-        self.joints_pub = self.create_publisher(ServosPosition, '/servo_controller', 1) # 舵机控制(servo control)
+        self.joints_pub = self.create_publisher(ServosPosition, '/servo_controller', 1) # Servo control(舵机控制)
         self.result_publisher = self.create_publisher(Image, '~/image_result', 1)
 
-        self.create_service(Trigger, '~/enter', self.enter_srv_callback) # 进入玩法(enter the game)
-        self.create_service(Trigger, '~/exit', self.exit_srv_callback) # 退出玩法(exit the game)
+        self.create_service(Trigger, '~/enter', self.enter_srv_callback) # Enter the feature(进入玩法)
+        self.create_service(Trigger, '~/exit', self.exit_srv_callback) # Exit the feature(退出玩法)
         self.create_service(SetBool, '~/set_running', self.set_running_srv_callback)
-        self.heartbeat = Heart(self, self.name + '/heartbeat', 5, lambda _: self.exit_srv_callback(request=Trigger.Request(), response=Trigger.Response())) # 心跳包(heartbeat package)
+        self.heartbeat = Heart(self, self.name + '/heartbeat', 5, lambda _: self.exit_srv_callback(request=Trigger.Request(), response=Trigger.Response())) # Heartbeat package(心跳包)
         timer_cb_group = ReentrantCallbackGroup()
         self.client = self.create_client(Trigger, '/controller_manager/init_finish')
         self.client.wait_for_service()
@@ -118,31 +118,31 @@ class SelfDrivingNode(Node):
         self.have_turn_right = False
         self.detect_turn_right = False
         self.detect_far_lane = False
-        self.park_x = -1  # 停车标识的x像素坐标(obtain the x-pixel coordinate of a parking sign)
-        self.park_y = -1  # 停车标识的y像素坐标(obtain the y-pixel coordinate of a parking sign)
+        self.park_x = -1  # Obtain the x-pixel coordinate of a parking sign(停车标识的x像素坐标)
+        self.park_y = -1  # Obtain the y-pixel coordinate of a parking sign(停车标识的y像素坐标)
 
         self.start_turn_time_stamp = 0
         self.count_turn = 0
-        self.start_turn = False  # 开始转弯(start to turn)
+        self.start_turn = False  # Start to turn(开始转弯)
 
         self.count_right = 0
         self.count_right_miss = 0
-        self.turn_right = False  # 右转标志(right turning sign)
+        self.turn_right = False  # Right turning sign(右转标志)
 
         self.last_park_detect = False
         self.count_park = 0
-        self.stop = False  # 停下标识(stopping sign)
-        self.start_park = False  # 开始泊车标识(start parking sign)
+        self.stop = False  # Stopping sign(停下标识)
+        self.start_park = False  # Start parking sign(开始泊车标识)
 
         self.count_crosswalk = 0
-        self.crosswalk_distance = 0  # 离斑马线距离(distance to the zebra crossing)
-        self.crosswalk_length = 0.1 + 0.3  # 斑马线长度 + 车长(the length of zebra crossing and the robot)
+        self.crosswalk_distance = 0  # Distance to the zebra crossing(离斑马线距离)
+        self.crosswalk_length = 0.1 + 0.3  # The length of zebra crossing and the robot(斑马线长度 + 车长)
 
-        self.start_slow_down = False  # 减速标识(slowing down sign)
-        self.normal_speed = 0.15  # 正常前进速度(normal driving speed)
-        self.slow_down_speed = 0.1  # 减速行驶的速度(slowing down speed)
+        self.start_slow_down = False  # Sign for slowing down(减速标识)
+        self.normal_speed = 0.15  # Normal driving speed(正常前进速度)
+        self.slow_down_speed = 0.1  # Slowing down speed(减速行驶的速度)
 
-        self.traffic_signs_status = None  # 记录红绿灯状态(record the state of the traffic lights)
+        self.traffic_signs_status = None  # Record the state of the traffic lights(记录红绿灯状态)
         self.red_loss_count = 0
 
         self.object_sub = None
@@ -167,10 +167,10 @@ class SelfDrivingNode(Node):
             self.start = False
             if self.get_parameter('use_depth_cam').value:
                 self.camera = 'depth_cam'
-                self.image_sub = self.create_subscription(Image, '/%s/rgb0/image_raw' % self.camera, self.image_callback, 1)  # 摄像头订阅(subscribe to the camera)
+                self.image_sub = self.create_subscription(Image, '/%s/rgb0/image_raw' % self.camera, self.image_callback, 1)  # Subscribe to the camera(摄像头订阅)
             else:
                 self.camera = 'usb_cam'
-                self.image_sub = self.create_subscription(Image, '/%s/image_raw' % self.camera, self.image_callback, 1)  # 摄像头订阅(subscribe to the camera)
+                self.image_sub = self.create_subscription(Image, '/%s/image_raw' % self.camera, self.image_callback, 1)  # Subscribe to the camera(摄像头订阅)
             self.create_subscription(ObjectsInfo, '/yolo/object_detect', self.get_object_callback, 1)
             self.mecanum_pub.publish(Twist())
             self.enter = True
@@ -206,19 +206,19 @@ class SelfDrivingNode(Node):
         response.message = "set_running"
         return response
 
-    def shutdown(self, signum, frame):  # ctrl+c关闭处理(press 'ctrl+c' to close the program)
+    def shutdown(self, signum, frame):  # Press 'ctrl+c' to close the program(ctrl+c关闭处理)
         self.is_running = False
 
-    def image_callback(self, ros_image):  # 目标检查回调(callback target checking)
+    def image_callback(self, ros_image):  # Callback target checking(目标检查回调)
         cv_image = self.bridge.imgmsg_to_cv2(ros_image, "rgb8")
         rgb_image = np.array(cv_image, dtype=np.uint8)
         if self.image_queue.full():
-            # 如果队列已满，丢弃最旧的图像(if the queue is full, remove the oldest image)
+            # If the queue is full, remove the oldest image(如果队列已满，丢弃最旧的图像)
             self.image_queue.get()
-        # 将图像放入队列(put the image into the queue)
+        # Put the image into the queue(将图像放入队列)
         self.image_queue.put(rgb_image)
     
-    # 泊车处理(parking processing)
+    # Parking processing(泊车处理)
     def park_action(self):
         if 'Mecanum' in self.machine_type:
             twist = Twist()
@@ -279,7 +279,7 @@ class SelfDrivingNode(Node):
 
             self.mecanum_pub.publish(Twist())
 
-    # 摄像头角度调节(Camera angle adjustment)
+    # Camera angle adjustment(摄像头角度调节)
     def debug_function(self):
         debug_y_thre = 112
         debug_count = 0
@@ -298,7 +298,7 @@ class SelfDrivingNode(Node):
             if self.start:
                 h, w = image.shape[:2]
                 if self.park_y > 0:
-                    if  abs(self.park_y - debug_y_thre) < 20: # 在范围内
+                    if  abs(self.park_y - debug_y_thre) < 20: # Within range(在范围内)
                         debug_count += 1
                         cv2.putText(result_image,
                                     'Hold the Camera Angle'
@@ -346,85 +346,85 @@ class SelfDrivingNode(Node):
             result_image = image.copy()
             if self.start:
                 h, w = image.shape[:2]
-                # self.get_logger().info('\033[1;32m%d,%d\033[0m' %(h, w))  # 输出图像的高和宽(output the height and width, w)
-                # 获取车道线的二值化图(obtain the binary image of the lane)
+                # self.get_logger().info('\033[1;32m%d,%d\033[0m' %(h, w))  # Output the height and width(输出图像的高和宽)
+                # Obtain the binary image of the lane(获取车道线的二值化图)
                 binary_image = self.lane_detect.get_binary(image)
                 # cv2.imshow('binary', binary_image)
-                # 检测到斑马线,开启减速标志(if detecting the zebra crossing, start to slow down)
-                if 300 < self.crosswalk_distance and not self.start_slow_down:  # 只有离斑马线足够近时才开始减速，通过判断斑马线的y轴像素距离(The robot starts to slow down only when it is close enough to the zebra crossing, which is determined by judging the y-axis pixel distance of the zebra crossing)
+                # If detecting the zebra crossing, start to slow down(检测到斑马线,开启减速标志)
+                if 300 < self.crosswalk_distance and not self.start_slow_down:  # The robot starts to slow down only when it is close enough to the zebra crossing, which is determined by judging the y-axis pixel distance of the zebra crossing(只有离斑马线足够近时才开始减速，通过判断斑马线的y轴像素距离)
                     self.count_crosswalk += 1
-                    if self.count_crosswalk == 3:  # 多次判断，防止误检测(judge multiple times to prevent false detection)
+                    if self.count_crosswalk == 3:  # Judge multiple times to prevent false detection(多次判断，防止误检测)
                         self.count_crosswalk = 0
-                        self.start_slow_down = True  # 减速标识(sign for slowing down)
-                        self.count_slow_down = time.time()  # 减速开始时间戳(start timestamp for slowing down)
-                else:  # 需要连续检测，否则重置(need to detect continuously, otherwise reset)
+                        self.start_slow_down = True  # Sign for slowing down(减速标识)
+                        self.count_slow_down = time.time()  # Start timestamp for slowing down(减速开始时间戳)
+                else:  # Need to detect continuously, otherwise reset(需要连续检测，否则重置)
                     self.count_crosswalk = 0
 
                 twist = Twist()
-                # 减速行驶处理(deceleration processing)
+                # Deceleration processing(减速行驶处理)
                 if self.start_slow_down:
                     if self.traffic_signs_status is not None:
-                        # 通过面积判断离灯灯远近，如果太近那么即使是红灯也不会停(Determine the distance to the traffic lights through the area; if the distance is too close, the robot will not stop even if the traffic light is red)
+                        # Determine the distance to the traffic lights through the area; if the distance is too close, the robot will not stop even if the traffic light is red(通过面积判断离灯灯远近，如果太近那么即使是红灯也不会停)
                         area = abs(self.traffic_signs_status.box[0] - self.traffic_signs_status.box[2])*abs(self.traffic_signs_status.box[1] - self.traffic_signs_status.box[3])
                         # self.get_logger().info('\033[1;32m red light area %d\033[0m' %area)
-                        if self.traffic_signs_status.class_name == 'red' and area > 700:  # 如果遇到红灯就停车, 如果太近不停(If the robot detects a red traffic light, it will stop; if the distance is too close, it will not stop)
+                        if self.traffic_signs_status.class_name == 'red' and area > 700:  # If the robot detects a red traffic light, it will stop; if the distance is too close, it will not stop(如果遇到红灯就停车, 如果太近不停)
                             self.mecanum_pub.publish(Twist())
                             self.stop = True
-                        elif self.traffic_signs_status.class_name == 'green':  # 遇到绿灯，速度放缓通过(If the traffic light is green, the robot will slow down and pass through)
+                        elif self.traffic_signs_status.class_name == 'green':  # If the traffic light is green, the robot will slow down and pass through(遇到绿灯，速度放缓通过)
                             twist.linear.x = self.slow_down_speed
                             self.stop = False
-                    if not self.stop:  # 其他非停止的情况速度放缓， 同时计时，时间=斑马线的长度/行驶速度(In other cases where the robot is not stopped, slow down the speed and calculate the time needed to pass through the crosswalk. The time needed is equal to the length of the crosswalk divided by the driving speed)
+                    if not self.stop:  # In other cases where the robot is not stopped, slow down the speed and calculate the time needed to pass through the crosswalk. The time needed is equal to the length of the crosswalk divided by the driving speed(其他非停止的情况速度放缓， 同时计时，时间=斑马线的长度/行驶速度)
                         twist.linear.x = self.slow_down_speed
                         if time.time() - self.count_slow_down > self.crosswalk_length/twist.linear.x:
                             self.start_slow_down = False
                 else:
-                    twist.linear.x = self.normal_speed  # 正常速度(normal speed)
+                    twist.linear.x = self.normal_speed  # Normal speed(正常速度)
 
-                # 检测到 停车标识+斑马线 就减速, 让识别稳定(If the robot detects a stop sign and a crosswalk, it will slow down to ensure stable recognition)
+                # If the robot detects a stop sign and a crosswalk, it will slow down to ensure stable recognition(检测到 停车标识+斑马线 就减速, 让识别稳定)
                 # self.get_logger().info('crosswalk_distance: ' + str(self.crosswalk_distance))
                 if 0 < self.park_x and 160 < self.crosswalk_distance:
                     twist.linear.x = self.slow_down_speed
-                    if not self.start_park and 225 < self.crosswalk_distance:  # 离斑马线足够近时就开启停车(When the robot is close enough to the crosswalk, it will start parking)
+                    if not self.start_park and 225 < self.crosswalk_distance:  # When the robot is close enough to the crosswalk, it will start parking(离斑马线足够近时就开启停车)
                         self.mecanum_pub.publish(Twist())
                         self.start_park = True
                         self.stop = True
-                        threading.Thread(target=self.park_action).start() #开启停车线程(start the parking thread)
+                        threading.Thread(target=self.park_action).start() #Start the parking thread(开启停车线程)
                 
-                # 右转及停车补线策略(turning right and parking line correction strategy)
-                if self.detect_turn_right: #检测到右转标识且离斑马线足够近，就开启右转策略(If the robot detects a right turn sign and is close enough to the crosswalk, it will activate the right turn strategy)
+                # Turning right and parking line correction strategy(右转及停车补线策略)
+                if self.detect_turn_right: #If the robot detects a right turn sign and is close enough to the crosswalk, it will activate the right turn strategy(检测到右转标识且离斑马线足够近，就开启右转策略)
                     if 365 < self.crosswalk_distance:
                         self.detect_turn_right = False
                         self.turn_right = True
                 # self.get_logger().info(str(self.turn_right))
                 if self.turn_right:
-                    #设置检测线的roi(set the ROI of the dectecion line)
+                    #Set the ROI of the detection line(设置检测线的roi)
                     self.lane_detect.set_roi(((370, 400, 0, 320, 0.7), (310, 340, 0, 320, 0.2), (250, 280, 0, 320, 0.1)))
                     y = self.lane_detect.add_horizontal_line(binary_image)
                     if 0 < y < 350 :
                         roi = [(0, y), (w, y), (w, 0), (0, 0)]
-                        cv2.fillPoly(binary_image, [np.array(roi)], [0, 0, 0])  # 将上面填充为黑色，防干扰(fill the above area with black to prevent interference)
-                        min_x = cv2.minMaxLoc(binary_image)[-1][0]  #获取最左边的点坐标(get the coordinates of the leftmost point)
-                        cv2.line(binary_image, (min_x, y - 60), (w, y - 60), (255, 255, 255), 50)  # 画虚拟线来驱使转弯, 可以通过调整y的大小来控制转弯的时机(Draw a virtual line to drive the turn, the timing of the turn can be controlled by adjusting the value of y)
+                        cv2.fillPoly(binary_image, [np.array(roi)], [0, 0, 0])  # Fill the above area with black to prevent interference(将上面填充为黑色，防干扰)
+                        min_x = cv2.minMaxLoc(binary_image)[-1][0]  #Get the coordinates of the leftmost point(获取最左边的点坐标)
+                        cv2.line(binary_image, (min_x, y - 60), (w, y - 60), (255, 255, 255), 50)  # Draw a virtual line to drive the turn, the timing of the turn can be controlled by adjusting the value of y(画虚拟线来驱使转弯, 可以通过调整y的大小来控制转弯的时机)
                         # cv2.imshow('bin_image_turn_right',binary_image)
                     self.lane_detect.set_roi(((320, 350, 0, 320, 0.7), (260, 290, 0, 320, 0.2), (200, 230, 0, 320, 0.1)))
-                elif (0 < self.park_x or self.have_turn_right) and not self.start_turn:  # 检测到停车标识需要填补线，使其保持直走(If the robot detects a stop sign and needs to fill in the line to keep going straight, it will do so)
+                elif (0 < self.park_x or self.have_turn_right) and not self.start_turn:  # If the robot detects a stop sign and needs to fill in the line to keep going straight, it will do so(检测到停车标识需要填补线，使其保持直走)
                     if not self.detect_far_lane:
                         up, down, center = self.lane_detect.add_vertical_line_near(binary_image)
                         self.get_logger().info('detect far lane' + str([center]))
-                        binary_image[:, :] = 0  # 全置黑，防止干扰(set all to black to prevent interference)
-                        if 100 < center < 150:  # 当将要看不到车道线时切换到识别较远车道线(When the lane is about to be out of sight, switch to detecting the far lane)
+                        binary_image[:, :] = 0  # Set all to black to prevent interference(全置黑，防止干扰)
+                        if 100 < center < 150:  # When the lane is about to be out of sight, switch to detecting the far lane(当将要看不到车道线时切换到识别较远车道线)
                             self.detect_far_lane = True
                     else:
                         up, down = self.lane_detect.add_vertical_line_far(binary_image)
                         binary_image[:, :] = 0
                     # self.get_logger().info('up,down' + str(up) + str(down))
                     if up != down:
-                        cv2.line(binary_image, up, down, (255, 255, 255), 20)  # 手动画车道线(manually draw the lane)
+                        cv2.line(binary_image, up, down, (255, 255, 255), 20)  # Manually draw the lane(手动画车道线)
 
-                result_image, lane_angle, lane_x, max_area = self.lane_detect(binary_image, image.copy())  # 在处理后的图上提取车道线中心(Obtain the center of the lane on the processed image)
+                result_image, lane_angle, lane_x, max_area = self.lane_detect(binary_image, image.copy())  # Obtain the center of the lane on the processed image(在处理后的图上提取车道线中心)
                 # self.get_logger().info('lane_x' + str(lane_x))
                 # cv2.imshow('image', image)
-                # 巡线处理(line following processing)
+                # line following processing(巡线处理)
                 if not self.stop:
                     if self.turn_right:
                         # self.get_logger().info('lane_x,max_area' + str([lane_x, max_area]))
@@ -432,13 +432,13 @@ class SelfDrivingNode(Node):
                             if self.count_turn == 1:
                                 self.lane_detect.set_roi(((370, 400, 0, 320, 0.7), (320, 350, 0, 320, 0.2), (270, 290, 0, 320, 0.1)))
                             self.count_turn += 1
-                            if self.count_turn > 1 and not self.start_turn:  # 稳定转弯(stable turning)
+                            if self.count_turn > 1 and not self.start_turn:  # Stable turning(稳定转弯)
                                 self.start_turn = True
                                 self.turn_right = False
                                 self.count_turn = 0
                                 self.start_turn_time_stamp = time.time()
-                            twist.angular.z = -0.60  # 转弯速度(turning speed)
-                        else:  # 直道由pid计算转弯修正(use PID algorithm to correct turns on a straight road)
+                            twist.angular.z = -0.60  # Turning speed(转弯速度)
+                        else:  # Use PID algorithm to correct turns on a straight road(直道由pid计算转弯修正)
                             self.count_turn = 0
                             if time.time() - self.start_turn_time_stamp > 2 and self.start_turn:
                                 if 'Acker' in self.machine_type:
@@ -449,7 +449,7 @@ class SelfDrivingNode(Node):
                                     self.turn_right = False
                                     self.start_turn = False
                             if not self.start_turn:
-                                self.pid.SetPoint = 90  # 在车道中间时线的坐标(the coordinate of the line while the robot is in the middle of the lane)
+                                self.pid.SetPoint = 90  # The coordinate of the line while the robot is in the middle of the lane(在车道中间时线的坐标)
                                 if abs(lane_x - 90) < 20:
                                     lane_x = 90
                                 self.pid.update(lane_x)
@@ -458,17 +458,17 @@ class SelfDrivingNode(Node):
                         # self.get_logger().info('lane_x' + str(lane_x))
                         if lane_x > 115:
                             self.count_turn += 1
-                            if self.count_turn > 5 and not self.start_turn:  # 稳定转弯(stable turning)
+                            if self.count_turn > 5 and not self.start_turn:  # Stable turning(稳定转弯)
                                 self.start_turn = True
                                 self.count_turn = 0
                                 self.start_turn_time_stamp = time.time()
-                            twist.angular.z = -0.50  # 转弯速度(turning speed)
-                        else:  # 直道由pid计算转弯修正(use PID algorithm to correct turns on a straight road)
+                            twist.angular.z = -0.50  # Turning speed(转弯速度)
+                        else:  # Use PID algorithm to correct turns on a straight road(直道由pid计算转弯修正)
                             self.count_turn = 0
                             if time.time() - self.start_turn_time_stamp > 2 and self.start_turn:
                                 self.start_turn = False
                             if not self.start_turn:
-                                self.pid.SetPoint = 90  # 在车道中间时线的坐标(the coordinate of the line while the robot is in the middle of the lane)
+                                self.pid.SetPoint = 90  # The coordinate of the line while the robot is in the middle of the lane(在车道中间时线的坐标)
                                 if abs(lane_x - 90) < 20:
                                     lane_x = 90
                                 self.pid.update(lane_x)
@@ -479,7 +479,7 @@ class SelfDrivingNode(Node):
                 else:
                     self.pid.clear()
 
-                # 绘制识别的物体，由于物体检测的速度小于线检测的速度，所以绘制的框会有所偏离(When drawing the recognized object, the drawn box may deviate from the actual position due to the slower speed of object detection compared to line detection)
+                # When drawing the recognized object, the drawn box may deviate from the actual position due to the slower speed of object detection compared to line detection(绘制识别的物体，由于物体检测的速度小于线检测的速度，所以绘制的框会有所偏离)
                 if self.objects_info != []:
                     for i in self.objects_info:
                         box = i.box
@@ -500,7 +500,7 @@ class SelfDrivingNode(Node):
             if self.display:
                 cv2.imshow('result', bgr_image)
                 key = cv2.waitKey(1)
-                if key == ord('q') or key == 27:  # 按q或者esc退出(press Q or Esc to quit)
+                if key == ord('q') or key == 27:  # Press Q or Esc to quit(按q或者esc退出)
                     self.is_running = False
             self.result_publisher.publish(self.bridge.cv2_to_imgmsg(bgr_image, "bgr8"))
             time_d = 0.03 - (time.time() - time_start)
@@ -509,10 +509,10 @@ class SelfDrivingNode(Node):
         self.mecanum_pub.publish(Twist())
         rclpy.shutdown()
 
-    # 获取目标检测结果(Obtain the target detection result)
+    # Obtain the target detection result(获取目标检测结果)
     def get_object_callback(self, msg):
         self.objects_info = msg.objects
-        if self.objects_info == []:  # 没有识别到时重置变量(If it is not recognized, reset the variable)
+        if self.objects_info == []:  # If it is not recognized, reset the variable(没有识别到时重置变量)
             self.traffic_signs_status = None
             self.crosswalk_distance = 0
             self.park_y = -1
@@ -522,26 +522,26 @@ class SelfDrivingNode(Node):
                 class_name = i.class_name
                 center = (int((i.box[0] + i.box[2])/2), int((i.box[1] + i.box[3])/2))
                 if class_name == 'crosswalk':  
-                    if center[1] > min_distance:  # 获取最近的人行道y轴像素坐标(Obtain recent y-axis pixel coordinate of the crosswalk)
+                    if center[1] > min_distance:  # Obtain recent y-axis pixel coordinate of the crosswalk(获取最近的人行道y轴像素坐标)
                         min_distance = center[1]
-                elif class_name == 'right':  # 获取右转标识(obtain the right turning sign)
+                elif class_name == 'right':  # Obtain the right turning sign(获取右转标识)
                     area = abs(i.box[0] - i.box[2])*abs(i.box[1] - i.box[3])
                     if area > 200:
                         if not self.turn_right:
                             self.count_right += 1
                             self.count_right_miss = 0
-                            if self.count_right >= 1:  # 检测到多次就将右转标志至真(If it is detected multiple times, take the right turning sign to true)
+                            if self.count_right >= 1:  # If it is detected multiple times, take the right turning sign to true(检测到多次就将右转标志至真)
                                 self.have_turn_right = True
                                 self.detect_turn_right = True
                                 self.count_right = 0
                     else:
                         self.get_logger().info('right tag too far')
-                elif class_name == 'park':  # 获取停车标识中心坐标(obtain the center coordinate of the parking sign)
+                elif class_name == 'park':  # Obtain the center coordinate of the parking sign(获取停车标识中心坐标)
                     area = abs(i.box[0] - i.box[2])*abs(i.box[1] - i.box[3])
                     if area > 150:
                         self.park_x = center[0]
                     self.park_y = center[1]
-                elif class_name == 'red' or class_name == 'green':  # 获取红绿灯状态(obtain the status of the traffic light)
+                elif class_name == 'red' or class_name == 'green':  # Obtain the status of the traffic light(获取红绿灯状态)
                     self.traffic_signs_status = i
         
             self.crosswalk_distance = min_distance

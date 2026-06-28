@@ -49,8 +49,8 @@ zh_cmd = ['拔个萝卜',
         '回原点',
         '导航搬运']
 
-zh_asr_dict = {"aa550300fb": '唤醒成功(wake-up-success)',
-               "aa550200fb": '休眠(Sleep)'}
+zh_asr_dict = {"aa550300fb": 'Wake-up-success(唤醒成功)',
+               "aa550200fb": 'Sleep(休眠)'}
 
 start = 0
 frame = "aa550001fb"
@@ -91,8 +91,8 @@ en_cmd = ['pick a carrot',
         'go back to the start',
         'navigate and transport']
 
-en_asr_dict = {'aa550300fb': '唤醒成功(wake-up-success)',
-               'aa550200fb': '休眠(Sleep)'}
+en_asr_dict = {'aa550300fb': 'Wake-up-success(唤醒成功)',
+               'aa550200fb': 'Sleep(休眠)'}
 
 start = 0
 frame = "aa550001fb"
@@ -108,7 +108,7 @@ class ASRNode(Node):
 
         self.running = True
 
-        # 声明参数
+        # Declare parameters（声明参数）
         self.declare_parameter('port', '/dev/ring_mic')
         port = self.get_parameter('port').value
         self.ser = serial.Serial(port, 115200, timeout=1)

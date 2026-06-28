@@ -32,9 +32,9 @@ from servo_controller.bus_servo_control import set_servo_position
 from servo_controller_msgs.msg import ServosPosition, ServoPosition
 from large_models_examples.tracker import Tracker
 import pycuda.driver as cuda
-cuda.init()  # 确保CUDA已经初始化
+cuda.init()  # Ensure CUDA has been initialized(确保CUDA已经初始化)
 
-# (import_module) 导入机械臂控制相关模块
+# (import_module) Import robotic arm control related modules ((import_module) 导入机械臂控制相关模块)
 import signal
 import sdk.pid as pid
 from kinematics import transform
@@ -108,7 +108,7 @@ class VLLMArmTrack(Node):
         rclpy.init()
         super().__init__(name, allow_undeclared_parameters=True, automatically_declare_parameters_from_overrides=True)
         
-        # initialization arm control parameters(初始化机械臂控制参数)
+        # Initialization arm control parameters(初始化机械臂控制参数)
         self.z_dis = 0.22
         self.y_dis = 500
         self.x_init = transform.link3 + transform.tool_link
@@ -117,7 +117,7 @@ class VLLMArmTrack(Node):
         self.running = True
         self.arm_start = False
 
-        # initialization PID controller(初始化PID控制器)
+        # Initialization PID controller(初始化PID控制器)
         self.pid_z = pid.PID(0.00004, 0.0, 0.0)
         self.pid_y = pid.PID(0.05, 0.0, 0.0)
 
@@ -164,11 +164,11 @@ class VLLMArmTrack(Node):
         self.image_sub = self.create_subscription(Image, '/%s/rgb0/image_raw' % self.camera, self.image_callback, 1)  # Subscribe to the camera(摄像头订阅)
         self.bridge = CvBridge()
 
-        # arm_control(机械臂控制服务)
+        # arm_control (robotic arm control service) (arm_control(机械臂控制服务))
         self.kinematics_client = self.create_client(SetRobotPose, '/kinematics/set_pose_target')
         self.kinematics_client.wait_for_service()
 
-        # create service to start/stop arm tracking (创建服务用于启动/停止机械臂追踪)
+        # Create service to start/stop arm tracking (创建服务用于启动/停止机械臂追踪)
         self.create_service(Trigger, '~/start_arm_track', self.start_arm_track_callback)
         self.create_service(Trigger, '~/stop_arm_track', self.stop_arm_track_callback, callback_group=timer_cb_group)
 

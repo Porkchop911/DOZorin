@@ -2,7 +2,7 @@
 # encoding: utf-8
 # @data:2022/11/18
 # @author:aiden
-# 语音控制颜色追踪(voice control color tracking)
+# Voice control color tracking(语音控制颜色追踪)
 import os
 import json
 import rclpy
@@ -44,9 +44,9 @@ class VoiceControlColorTrackNode(Node):
         else:
             self.get_logger().info('open color_track fail')
         self.play('running')
-        self.get_logger().info('唤醒口令: 小幻小幻(Wake up word: hello hiwonder)')
-        self.get_logger().info('唤醒后15秒内可以不用再唤醒(No need to wake up within 15 seconds after waking up)')
-        self.get_logger().info('控制指令: 追踪红色 追踪绿色 追踪蓝色 停止追踪(Voice command: track red/green/blue object)')
+        self.get_logger().info('Wake word: hello hiwonder(唤醒口令: 小幻小幻)')
+        self.get_logger().info('No need to wake up within 15 seconds after waking up(唤醒后15秒内可以不用再唤醒)')
+        self.get_logger().info('Voice command: track red/green/blue object(控制指令: 追踪红色 追踪绿色 追踪蓝色 停止追踪)')
 
         self.create_service(Trigger, '~/init_finish', self.get_node_state)
         self.get_logger().info('\033[1;32m%s\033[0m' % 'start')
@@ -69,8 +69,8 @@ class VoiceControlColorTrackNode(Node):
         if self.language == 'Chinese':
             words = words.replace(' ', '')
         self.get_logger().info('words: %s'%words)
-        if words is not None and words not in ['唤醒成功(wake-up-success)', '休眠(Sleep)', '失败5次(Fail-5-times)',
-                                               '失败10次(Fail-10-times']:
+        if words is not None and words not in ['Wake-up-success(唤醒成功)', 'Sleep(休眠)', 'Fail-5-times(失败5次)',
+                                               'Fail-10-times(失败10次)']:
             if words == '追踪红色' or words == 'track red object':
                 msg = SetString.Request()
                 msg.data = 'red'
@@ -102,9 +102,9 @@ class VoiceControlColorTrackNode(Node):
                     self.play('stop_track')
                 else:
                     self.play('stop_fail')
-        elif words == '唤醒成功(wake-up-success)':
+        elif words == 'Wake-up-success(唤醒成功)':
             self.play('awake')
-        elif words == '休眠(Sleep)':
+        elif words == 'Sleep(休眠)':
             msg = BuzzerState()
             msg.freq = 1900
             msg.on_time = 0.05

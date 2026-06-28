@@ -61,4 +61,4 @@ class ActionGroupController:
                 ag.close()
         else:
             self.running_action = False
-            print("未能找到动作组文件: ", action_name)
+            print("Failed to find action group file: (未能找到动作组文件:) ", action_name)

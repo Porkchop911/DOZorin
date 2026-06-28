@@ -2,7 +2,7 @@
 # encoding: utf-8
 # @data:2023/12/18
 # @author:aiden
-# 防跌落（Fall prevention）
+# Fall prevention（防跌落）
 import os
 import cv2
 import time
@@ -36,8 +36,8 @@ class PreventFallingNode(Node):
         self.right_roi = [290, 300, 395, 405]
 
         self.debug = self.get_parameter('debug').value
-        self.joints_pub = self.create_publisher(ServosPosition, '/servo_controller', 1) # 舵机控制(servo control)
-        self.mecanum_pub = self.create_publisher(Twist, '/controller/cmd_vel', 1)  # 底盘控制(Chassis control)
+        self.joints_pub = self.create_publisher(ServosPosition, '/servo_controller', 1) # Servo control(舵机控制)
+        self.mecanum_pub = self.create_publisher(Twist, '/controller/cmd_vel', 1)  # Chassis control(底盘控制)
         self.create_subscription(Image, '/depth_cam/depth0/image_raw', self.depth_callback, 1)
 
         self.client = self.create_client(Trigger, '/controller_manager/init_finish')
@@ -58,23 +58,23 @@ class PreventFallingNode(Node):
     def depth_callback(self, ros_depth_image):
         depth_image = np.ndarray(shape=(ros_depth_image.height, ros_depth_image.width), dtype=np.uint16, buffer=ros_depth_image.data)
         if self.image_queue.full():
-            # 如果队列已满，丢弃最旧的图像(If the queue is full, discard the oldest image.)
+            # If the queue is full, remove the oldest image(如果队列已满，丢弃最旧的图像)
             self.image_queue.get()
-        # 将图像放入队列(Add the image into the queue)
+        # Put the image into the queue(将图像放入队列)
         self.image_queue.put(depth_image)
           
     def shutdown(self, signum, frame):
         self.running = False        
-        # 停止机器人移动
-        twist = Twist()  # 创建一个空的Twist消息，所有速度都为0
+        # Stop the robot's movement(停止机器人移动)
+        twist = Twist()  # Create an empty Twist message with all velocities set to 0(创建一个空的Twist消息，所有速度都为0)
         self.mecanum_pub.publish(twist)
         
         self.get_logger().info('\033[1;32m%s\033[0m' % "shutdown")
-        # 确保程序能够正常退出
-        cv2.destroyAllWindows()  # 关闭所有OpenCV窗口
-        rclpy.shutdown()  # 关闭ROS2
+        # Ensure the program exits properly(确保程序能够正常退出)
+        cv2.destroyAllWindows()  # Close all OpenCV windows(关闭所有OpenCV窗口)
+        rclpy.shutdown()  # Shutdown ROS2(关闭ROS2)
         import sys
-        sys.exit(0)  # 强制退出程序
+        sys.exit(0)  # Force exit the program(强制退出程序)
 
     def get_roi_distance(self, depth_image, roi):
         roi_image = depth_image[roi[0]:roi[1], roi[2]:roi[3]]

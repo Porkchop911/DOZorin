@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-OpenClaw 语音对话程序 (纯 Python 版本)
+OpenClaw Voice Conversation Program (Pure Python Version)(OpenClaw 语音对话程序 (纯 Python 版本))
 """
 
 import sys

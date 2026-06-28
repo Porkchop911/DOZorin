@@ -33,7 +33,7 @@ class IMUTransformBroadcaster(Node):
     def __init__(self, name):
         rclpy.init()
         super().__init__(name)
-        # 声明参数
+        # Declare parameter(声明参数)
         self.declare_parameter('imu_link', 'imu_link')
         self.declare_parameter('imu_frame', 'imu_frame')
         self.declare_parameter('imu_topic', 'imu')
@@ -43,7 +43,7 @@ class IMUTransformBroadcaster(Node):
         self.imu_topic = self.get_parameter('imu_topic').value
         
         self.trans = TransformStamped()
-        self.imu_broadcaster = tf2_ros.TransformBroadcaster(self)  # 定义TF变换广播者(define TF transform broadcaster)
+        self.imu_broadcaster = tf2_ros.TransformBroadcaster(self)  # Define TF transform broadcaster(定义TF变换广播者)
         self.create_subscription(Imu, self.imu_topic, self.handle_imu_pose, 1)
         self.clock = self.get_clock()
         self.get_logger().info('\033[1;32m%s\033[0m' % 'start')
@@ -67,7 +67,7 @@ class IMUTransformBroadcaster(Node):
 
 def main():
     node = IMUTransformBroadcaster('tf_broadcaster_imu')
-    rclpy.spin(node)  # 循环等待ROS2退出(loop waiting for ROS2 to exit)
+    rclpy.spin(node)  # loop waiting for ROS2 to exit(循环等待ROS2退出)
 
 if __name__ == "__main__":
     main()

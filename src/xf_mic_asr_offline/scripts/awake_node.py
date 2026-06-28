@@ -2,7 +2,7 @@
 # coding=utf-8
 # @Author: Aiden
 # @Date: 2023/11/16
-# 环形麦克风阵列Python SDK(microphone array Python SDK)
+# Microphone array Python SDK(环形麦克风阵列Python SDK)
 import re
 import time
 import json
@@ -28,9 +28,9 @@ class CircleMic:
         self.flag_pub = flag_pub
         self.angle_pub = angle_pub
 
-    # 麦克风阵列切换(microphone array switching)
+    # Microphone array switching(麦克风阵列切换)
     def switch_mic(self, mic="mic6_circle"):
-        # mic：麦克风阵列类型(type of microphone array)，mic4：线性4麦(linear 4-mic)，mic6：线性6麦(linear 6-mic)， mic6_circle：环形6麦(circular 6-mic)
+        # mic：type of microphone array(麦克风阵列类型)，mic4：linear 4-mic(线性4麦)，mic6：linear 6-mic(线性6麦)， mic6_circle：circular 6-mic(环形6麦)
         param ={
             "type": "switch_mic",
             "content": {
@@ -50,7 +50,7 @@ class CircleMic:
         
         return False
 
-    # 获取版本信息(Obtain version information)
+    # Obtain version information(获取版本信息)
     def get_setting(self):
         param ={
             "type": "version"
@@ -68,10 +68,10 @@ class CircleMic:
         
         return False
 
-    # 唤醒词更换（浅定制）(change wakeup word) (shallow customization)
+    # change wake word (shallow customization)(唤醒词更换（浅定制）)
     def set_wakeup_word(self, str_pinyin="xiao3 huan4 xiao3 huan4"):
-        # 参数为中文拼音(the parameter is Chinese pinyin)
-        # 更多参数请参考https://aiui.xfyun.cn/doc/aiui/3_access_service/access_hardware/r818/protocol.html (For more parameters, please access: https://aiui.xfyun.cn/doc/aiui/3_access_service/access_hardware/r818/protocol.html)
+        # The parameter is Chinese pinyin(参数为中文拼音)
+        # For more parameters, please access: https://aiui.xfyun.cn/doc/aiui/3_access_service/access_hardware/r818/protocol.html (更多参数请参考: https://aiui.xfyun.cn/doc/aiui/3_access_service/access_hardware/r818/protocol.html)
         param = {
             "type": "wakeup_keywords",
             "content": {
@@ -88,13 +88,13 @@ class CircleMic:
         while time.time() - self.start_time < 30:
             time.sleep(0.1)
 
-    # 计算校验和(calculate checksum)
+    # Calculate checksum(计算校验和)
     def calculate_checksum(self, bytes_list):
         checksum = sum(bytes_list) & 0xFF
         checksum = (~checksum + 1) & 0xFF
         return checksum
 
-    # 数据串口发送(send data via serial port)
+    # Send data via serial port(数据串口发送)
     def send_data(self, header, args):
         packet = header
 
@@ -111,11 +111,11 @@ class CircleMic:
         checksum = self.calculate_checksum(packet)
         packet.append(checksum)
 
-        self.serialHandle.write(packet)  # 发送主控消息(Send messages to the main controller)
+        self.serialHandle.write(packet)  # Send messages to the main controller(发送主控消息)
 
-    # 发送数据(send data)
+    # Send data(发送数据)
     def send(self, header, args):
-        self.serialHandle.write([0xa5, 0x01, 0x01, 0x04, 0x00, 0x00, 0x00, 0xa5, 0x00, 0x00, 0x00, 0xb0])  # 发送握手请求(send handshake request)
+        self.serialHandle.write([0xa5, 0x01, 0x01, 0x04, 0x00, 0x00, 0x00, 0xa5, 0x00, 0x00, 0x00, 0xb0])  # Send handshake request(发送握手请求)
         while True:
             result = None
             recv_data = self.serialHandle.read()
@@ -131,13 +131,13 @@ class CircleMic:
                         self.start_time = time.time()
                         break
 
-                    else:  # 没有收到确认(confirmation is not received)
+                    else:  # Confirmation is not received(没有收到确认)
                         recv_data = self.serialHandle.read(4)
                         self.serialHandle.read((recv_data[1] << 8 | recv_data[0]) + 1)
 
                         time.sleep(0.1)
                         self.serialHandle.write(
-                            [0xa5, 0x01, 0x01, 0x04, 0x00, 0x00, 0x00, 0xa5, 0x00, 0x00, 0x00, 0xb0])  # 继续发送发送握手请求(send the handshake request again)
+                            [0xa5, 0x01, 0x01, 0x04, 0x00, 0x00, 0x00, 0xa5, 0x00, 0x00, 0x00, 0xb0])  # Send the handshake request again(继续发送发送握手请求)
 
         result = None
         while True:
@@ -156,7 +156,7 @@ class CircleMic:
     def val_map(self, x, in_min, in_max, out_min, out_max):
         return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
 
-    # 检测是否唤醒以及唤醒对应角度(detect whether the robot has been woken up and the corresponding angle of the wakeup signal)
+    # Detect whether the robot has been woken up and the corresponding angle of the wakeup signal(检测是否唤醒以及唤醒对应角度)
     def get_awake_result(self):
         while True:
             recv_data = self.serialHandle.read()
@@ -177,7 +177,7 @@ class CircleMic:
                                         msg = Bool()
                                         msg.data = True
                                         self.flag_pub.publish(msg)
-                                        angle = self.val_map(angle, 0, 360, 360, 0) + 240  # 和圆形兼容(compatible with the circle)
+                                        angle = self.val_map(angle, 0, 360, 360, 0) + 240  # Compatible with the circle(和圆形兼容)
                                         if angle >= 360:
                                             angle -= 360
                                         msg = Int32()
@@ -222,19 +222,19 @@ class AwakeNode(Node):
         response.success = True
         return response
 
-    # 设置麦克风类型(set the type of the microphone)
+    # Set the type of the microphone(设置麦克风类型)
     def set_mic_type_srv(self, resquest, response):
         res = self.mic.switch_mic(resquest.data)
         response.message = str(res)
         return response
 
-    # 获取麦克风版本信息(obtain the version information of the microphone)
+    # Obtain the version information of the microphone(获取麦克风版本信息)
     def get_setting_srv(self, request, response):
         res = self.mic.get_setting()
         response.message = str(res)
         return response
 
-    # 设置唤醒词服务(set wakeup word service)
+    # Set wakeup word service(设置唤醒词服务)
     def set_wakeup_word_srv(self, request, response):
         self.mic.set_wakeup_word(request.data)
         return response

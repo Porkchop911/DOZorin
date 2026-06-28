@@ -54,12 +54,12 @@ class RosRobotController(Node):
         self.create_service(GetPWMServoState, '~/pwm_servo/get_state', self.get_pwm_servo_state)
         self.create_subscription(RGBStates, '~/set_rgb', self.set_rgb_states, 10)
 
-        # 加载并设置舵机偏移量从 YAML 文件
+        # Load and set the servo offset from the YAML file(加载并设置舵机偏移量从 YAML 文件)
         self.load_servo_offsets()
 
         # self.set_arm_sero_pid()
 
-        # 初始化电机速度
+        # Initialize the motor speed(初始化电机速度)
         self.board.set_motor_speed([[1, 0], [2, 0], [3, 0], [4, 0]])
 
         self.clock = self.get_clock()
@@ -90,33 +90,33 @@ class RosRobotController(Node):
         
     def load_servo_offsets(self):
         """
-        从 YAML 文件中读取舵机偏差设置。
+        Read the servo deviation settings from the YAML file.(从 YAML 文件中读取舵机偏差设置。)
         """
         config_path = '/home/ubuntu/software/Servo_upper_computer/servo_config.yaml'
         try:
             with open(config_path, 'r') as file:
                 config = yaml.safe_load(file)
 
-            # 确保config是字典
+            # Make sure config is a dictionary(确保config是字典)
             if not isinstance(config, dict):
-                self.get_logger().error(f"YAML 配置文件格式错误: {config_path}，应为字典格式。")
+                self.get_logger().error(f"YAML configuration file format error: {config_path}, expected a dictionary format.(YAML 配置文件格式错误: {config_path}，应为字典格式。)")
                 return
 
-            # 遍历ID1到ID4并设置偏移量
+            # Iterate through ID1 to ID4 and set the offset(遍历ID1到ID4并设置偏移量)
             for servo_id in range(1, 5):
-                offset = config.get(servo_id, 0)  # 如果未找到，默认偏移量为0
+                offset = config.get(servo_id, 0)  # If not found, the default offset is 0(如果未找到，默认偏移量为0)
                 try:
                     self.board.pwm_servo_set_offset(servo_id, offset)
-                    self.get_logger().info(f"已设置舵机 {servo_id} 的偏移量为 {offset}")
+                    self.get_logger().info(f"Offset for servo {servo_id} has been set to {offset}(已设置舵机 {servo_id} 的偏移量为 {offset})")
                 except Exception as e:
-                    self.get_logger().error(f"设置舵机 {servo_id} 偏移量时出错: {e}")
+                    self.get_logger().error(f"Error setting offset for servo {servo_id}: {e}(设置舵机 {servo_id} 偏移量时出错: {e})")
 
         except FileNotFoundError:
-            self.get_logger().error(f"配置文件未找到: {config_path}")
+            self.get_logger().error(f"Configuration file not found: {config_path}(配置文件未找到: {config_path})")
         except yaml.YAMLError as e:
-            self.get_logger().error(f"解析 YAML 文件时出错: {e}")
+            self.get_logger().error(f"An error occurred while parsing the YAML file: {e}(解析 YAML 文件时出错: {e})")
         except Exception as e:
-            self.get_logger().error(f"读取配置文件时出错: {e}")
+            self.get_logger().error(f"An error occurred while reading the configuration file: {e}(读取配置文件时出错: {e})")
 
     def get_node_state(self, request, response):
         response.success = True
@@ -362,7 +362,7 @@ def main():
     try:
         rclpy.spin(node)
     except KeyboardInterrupt:
-        # 安全关闭电机速度
+        # Safely turn off the motor speed(安全关闭电机速度)
         node.board.set_motor_speed([[1, 0], [2, 0], [3, 0], [4, 0]])
         node.destroy_node()
         rclpy.shutdown()

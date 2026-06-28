@@ -38,7 +38,7 @@ from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSDurabilityPolicy
 
 # 物体追踪(Object tracking)
 import pycuda.driver as cuda
-cuda.init()  # 确保CUDA已经初始化(Ensure CUDA is initialized)
+cuda.init()  # Ensure CUDA is initialized(确保CUDA已经初始化)
 from large_models_examples.track_anything import ObjectTracker
 from large_models_examples.tracker import Tracker
 
@@ -51,13 +51,13 @@ tools = [
         "type": "function",
         "function": {
             "name": "get_pixel_distance",
-            "description": "获取一个或多个指定位置像素的深度距离(Get depth distance of one or more specified pixel positions)",
+            "description": "Get depth distance of one or more specified pixel positions(获取一个或多个指定位置像素的深度距离)",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "pixel_position": {
                         "type": "string",
-                        "description": "包含一个或多个像素坐标列表的JSON字符串(JSON string containing one or more pixel coordinate lists)",
+                        "description": "JSON string containing one or more pixel coordinate lists(包含一个或多个像素坐标列表的JSON字符串)",
                     }
                 },
                 "required": ["pixel_position"],
@@ -68,13 +68,13 @@ tools = [
         "type": "function",
         "function": {
             "name": "get_obejct_pixel",
-            "description": "识别物体，并获取他的像素位置(Identify objects and get their pixel positions)",
+            "description": "Identify objects and get their pixel positions(识别物体，并获取他的像素位置)",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "content": {
                         "type": "string",
-                        "description": "用户的问题(User's question)",
+                        "description": "User's question(用户的问题)",
                     }
                 },
                 "required": ["content"],
@@ -85,7 +85,7 @@ tools = [
         "type": "function",
         "function": {
             "name": "get_available_locations",
-            "description": "查询并列出机器人可以导航前往的所有预定义地点的位置列表(Query and list all predefined locations the robot can navigate to)",
+            "description": "Query and list all predefined locations the robot can navigate to(查询并列出机器人可以导航前往的所有预定义地点的位置列表)",
             "parameters": {
                 "type": "object",
                 "properties": {}
@@ -96,7 +96,7 @@ tools = [
         "type": "function",
         "function": {
             "name": "get_current_location",
-            "description": "查询并获取机器人当前在地图中的精确位置坐标和朝向(Query and get the robot's current precise position and orientation on the map)",
+            "description": "Query and get the robot's current precise position and orientation on the map(查询并获取机器人当前在地图中的精确位置坐标和朝向)",
             "parameters": {
                 "type": "object",
                 "properties": {}
@@ -107,13 +107,13 @@ tools = [
         "type": "function",
         "function": {
             "name": "describe_current_view",
-            "description": "详细描述机器人摄像头当前看到的画面内容，以回答用户提出的具体问题,一般用在移动到某个地点之后(Describe in detail what the robot camera currently sees to answer user's specific questions)",
+            "description": "Describe in detail what the robot camera currently sees to answer user's specific questions(详细描述机器人摄像头当前看到的画面内容，以回答用户提出的具体问题,一般用在移动到某个地点之后)",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "question": {
                         "type": "string",
-                        "description": "关于当前画面的具体问题(Specific questions about the current view)",
+                        "description": "Specific questions about the current view(关于当前画面的具体问题)",
                     }
                 },
                 "required": ["question"]
@@ -123,14 +123,14 @@ tools = [
     {   "type": "function",
         "function": {
             "name": "move_to_location",
-            "description": "将机器人移动到指定位置(Move the robot to specified location)",
+            "description": "Move the robot to specified location(将机器人移动到指定位置)",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "destination": {
                         "type": "string",
-                        "description": "要去的目标地点名称(Target location name)",
-                        "enum": ["书房(study_room)","卧室(bedroom)","水果超市(fruit_supermarket)","厨房(kitchen)","3号分拣台(sorting_station_3)","原点(Origin Point)"]
+                        "description": "Target location name(要去的目标地点名称)",
+                        "enum": ["Study_room(书房)","Bedroom(卧室)","Fruit_supermarket(水果超市)","Kitchen(厨房)","Sorting_station_3(3号分拣台)","Origin Point(原点)"]
                     }
                 },
                 "required": ["destination"],
@@ -141,13 +141,13 @@ tools = [
         "type": "function",
         "function": {
             "name": "line_following",
-            "description": "命令机器人沿着指定颜色的线进行巡线,或者寻检任务(Command robot to follow line of specified color)",
+            "description": "Command robot to follow line of specified color(命令机器人沿着指定颜色的线进行巡线,或者寻检任务)",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "color": {
                         "type": "string",
-                        "description": "要巡线的颜色(Color to follow)",
+                        "description": "Color to follow(要巡线的颜色)",
                         "enum": ["red", "green", "blue", "black", "yellow"]
                     }
                 },
@@ -159,13 +159,13 @@ tools = [
         "type": "function",
         "function": {
             "name": "lidar_scan_detect",
-            "description": "巡线过程当中，根据激光雷达扫描结果进行障碍物检测(Obstacle detection during line following based on LiDAR scan)",
+            "description": "Obstacle detection during line following based on LiDAR scan(巡线过程当中，根据激光雷达扫描结果进行障碍物检测)",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "scan_detect": {
                         "type": "string",
-                        "description": "障碍物检测结果(Obstacle detection result)",
+                        "description": "Obstacle detection result(障碍物检测结果)",
                     }
                 },
                 "required": ["scan_detect"],
@@ -176,13 +176,13 @@ tools = [
         "type": "function",
         "function": {
             "name": "object_track_detect",
-            "description": "命令机器人追踪目标物体，注意：只有是确定追踪时才进行调用,而且不需要指定特定的颜色，前提是需要获取目标在图线上的像素方框位置(Object tracking command, note that only when the robot is sure to track the object, and no need to specify a specific color. Need to get the target object position in the image line pixel square.)",
+            "description": "Object tracking command, note that only when the robot is sure to track the object, and no need to specify a specific color. Need to get the target object position in the image line pixel square.(命令机器人追踪目标物体，注意：只有是确定追踪时才进行调用,而且不需要指定特定的颜色，前提是需要获取目标在图线上的像素方框位置)",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "box": {
                         "type": "string",
-                        "description": "返回目标在画面的方框定位，例如[xmin, ymin, xmax, ymax]",
+                        "description": "Return the bounding box localization of the target in the scene, e.g., [xmin, ymin, xmax, ymax](返回目标在画面的方框定位，例如[xmin, ymin, xmax, ymax])",
                     }
                 },
                 "required": ["box"]
@@ -193,13 +193,13 @@ tools = [
         "type": "function",
         "function": {
             "name": "color_track",
-            "description": "命令机器人追踪指定颜色的物体(Command robot to track object of specified color)",
+            "description": "Command robot to track object of specified color(命令机器人追踪指定颜色的物体)",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "color": {
                         "type": "string",
-                        "description": "要追踪的物体的颜色(Color of object to track)",
+                        "description": "Color of object to track(要追踪的物体的颜色)",
                         "enum": ["red", "green", "blue", "black", "yellow"]
                     }
                 },
@@ -211,25 +211,25 @@ tools = [
         "type": "function",
         "function": {
             "name": "robot_move_control",
-            "description": "以指定的线速度和角速度，控制机器人移动一段特定的时间,旋转90°所用时是4s(Move robot with specified linear speed and angular speed for a certain time, it takes 8s to rotate 90°)",
+            "description": "Move robot with specified linear speed and angular speed for a certain time, it takes 8s to rotate 90°(以指定的线速度和角速度，控制机器人移动一段特定的时间,旋转90°所用时是4s)",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "linear_x": {
                         "type": "number",
-                        "description": "X轴方向的线速度,默认是0.1m/s(Linear velocity in X direction)",
+                        "description": "Linear velocity in X direction(X轴方向的线速度,默认是0.1m/s)",
                     },
                     "linear_y": {
                         "type": "number",
-                        "description": "Y轴方向的线速度,默认是0.1m/s(Linear velocity in Y direction)",
+                        "description": "Linear velocity in Y direction(Y轴方向的线速度,默认是0.1m/s)",
                     },
                     "angular_z": {
                         "type": "number",
-                        "description": "Z轴的角速度,默认是0.5m/s(Angular velocity in Z direction)",
+                        "description": "Angular velocity in Z direction(Z轴的角速度,默认是0.5m/s)",
                     },
                     "duration": {
                         "type": "number",
-                        "description": "移动的持续时间(Movement duration)",
+                        "description": "Movement duration(移动的持续时间)",
                     }
                 },
                 "required": ["linear_x", "linear_y", "angular_z", "duration"]
@@ -240,13 +240,13 @@ tools = [
         "type": "function",
         "function": {
             "name": "get_object_box",
-            "description": "命令机器人追踪特定的目标物体(Command robot to track specific target object)",
+            "description": "Command robot to track specific target object(命令机器人追踪特定的目标物体)",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "obj_track": {
                         "type": "string",
-                        "description": "用户的问题(User's question)"
+                        "description": "User's question(用户的问题)"
                     }
                 },
                 "required": ["obj_track"]
@@ -256,12 +256,12 @@ tools = [
 ]
 
 position_dict = {
-    "书房(study_room)": [1.2, -0.8, 0.0, 0.0, 80.0],
-    "卧室(bedroom)": [1.38, 0.50, 0.0, 0.0, 10.0],
-    "水果超市(fruit_supermarket)": [3.02, -0.49, 0.0, 0.0, -90.0],
-    "厨房(kitchen)": [0.05, 0.0, 0.0, 0.0, 0.0],
-    "3号分拣台(sorting_station_3)": [1.15, 0.1, 0.0, 0.0, 0.0],
-    "原点(Origin Point)": [0.0, 0.0, 0.0, 0.0, 0.0],
+    "Study_room(书房)": [1.2, -0.8, 0.0, 0.0, 80.0],
+    "Bedroom(卧室)": [1.38, 0.50, 0.0, 0.0, 10.0],
+    "Fruit_supermarket(水果超市)": [3.02, -0.49, 0.0, 0.0, -90.0],
+    "Kitchen(厨房)": [0.05, 0.0, 0.0, 0.0, 0.0],
+    "Sorting_station_3(3号分拣台)": [1.15, 0.1, 0.0, 0.0, 0.0],
+    "Origin Point(原点)": [0.0, 0.0, 0.0, 0.0, 0.0],
 }
 
 if os.environ.get('ASR_LANGUAGE') == 'English':
@@ -373,14 +373,14 @@ class LogColors:
 class LLMControlMove(Node):
     def __init__(self, name):
         super().__init__(name)
-        self.initialize_variables()       # 初始化变量(initialization of variables)
-        self.setup_ros_components()       # 设置ROS组件(setup of ROS components)
-        self.setup_services_and_clients() # 设置服务客户端(setup of services and clients)
-        self.setup_subs_and_pubs()        # 设置订阅者和发布者(setup of subscribers and publishers)
-        self.setup_timers()               # 设置计时器(setup of timers)
+        self.initialize_variables()       # Initialize variables(初始化变量)
+        self.setup_ros_components()       # Configure ROS components(设置ROS组件)
+        self.setup_services_and_clients() # Configure service clients(设置服务客户端)
+        self.setup_subs_and_pubs()        # Configure subscribers and publishers(设置订阅者和发布者)
+        self.setup_timers()               # Configure timers(设置计时器)
 
     def initialize_variables(self):
-        """初始化所有类变量(Initialize all class variables)"""
+        """Initialize all class variables(初始化所有类变量)"""
         self.language = os.environ.get('ASR_LANGUAGE')
         self.machine_type = os.environ.get('MACHINE_TYPE')
 
@@ -402,17 +402,17 @@ class LLMControlMove(Node):
 
         self.cb_group = ReentrantCallbackGroup()
 
-        # 线程安全锁(lock)
+        # Thread-safe lock(线程安全锁)
         self.draw_lock = threading.Lock()
         self.draw_flag = False
 
-        # 巡线相关变量(Line following related variables)
+        # Line following related variables(巡线相关变量)
         self.line_following_count = 0
         self.line_following_start = True
         self.current_left = 0.0
         self.current_right = 0.0
 
-        # 物体追踪相关变量(Object tracking related variables)
+        # Object tracking related variables(物体追踪相关变量)
         self.start_track = False
         self.track_box_p1 = None
         self.track_box_p2 = None
@@ -421,7 +421,7 @@ class LLMControlMove(Node):
         self.box = None
         self.set_above = False
 
-        # 图像队列(Image queue)
+        # Image queue(图像队列)
         self.image_pair_queue = queue.Queue(maxsize=2)
         self.image_queue = queue.Queue(maxsize=2)
 
@@ -432,11 +432,11 @@ class LLMControlMove(Node):
 
 
     def setup_ros_components(self):
-        """设置ROS2组件(Setup ROS2 components)"""
-        # 物体追踪器(Object tracker)
+        """Configure ROS2 components(设置ROS2组件)"""
+        # Object tracker(物体追踪器)
         self.track = ObjectTracker(use_mouse=True, automatic=True, log=self.get_logger())
         
-        # PID参数(PID parameters)
+        # PID parameters(PID参数)
         self.pid_params = {
             'kp1': 0.05, 'ki1': 0.0, 'kd1': 0.00,
             'kp2': 0.002, 'ki2': 0.0, 'kd2': 0.0,
@@ -452,8 +452,8 @@ class LLMControlMove(Node):
         )
 
     def setup_services_and_clients(self):
-        """设置服务和服务客户端(Setup services and clients)"""
-        # LLM相关客户端(LLM related clients)
+        """Configure services and service clients(设置服务和服务客户端)"""
+        # LLM related clients(LLM相关客户端)
         if self.language == 'English':
             self.client = speech.OpenAIAPI(vllm_api_key, vllm_base_url)
         else:
@@ -462,55 +462,55 @@ class LLMControlMove(Node):
         self.set_model_client = self.create_client(SetModel, 'agent_process/set_model')
         self.set_prompt_client = self.create_client(SetString, 'agent_process/set_prompt')
         
-        # 导航客户端(Navigation client)
+        # Navigation client(导航客户端)
         self.set_pose_client = self.create_client(SetPose2D, 'navigation_controller/set_pose')
         
-        # 巡线客户端(Line following clients)
+        # Line following clients(巡线客户端)
         self.line_follower_enter_client = self.create_client(Trigger, 'line_following/enter')
         self.line_follower_exit_client = self.create_client(Trigger, 'line_following/exit')
         self.line_follower_start_client = self.create_client(SetBool, 'line_following/set_running')
         self.line_follower_set_target_client = self.create_client(SetColor, 'line_following/set_color')
         
-        # 颜色追踪客户端(Color tracking clients)
+        # Color tracking clients(颜色追踪客户端)
         self.object_tracker_enter_client = self.create_client(Trigger, 'object_tracking/enter')
         self.object_tracker_start_client = self.create_client(SetBool, 'object_tracking/set_running')
         self.object_tracker_set_target_client = self.create_client(SetColor, 'object_tracking/set_color')
         
-        # 语音唤醒客户端(Voice wake-up client)
+        # Voice wake-up client(语音唤醒客户端)
         self.awake_client = self.create_client(SetBool, 'vocal_detect/enable_wakeup')
 
     def setup_subs_and_pubs(self):
-        """设置订阅者和发布者(Setup subscribers and publishers)"""
-        # LLM相关(LLM related)
+        """Configure subscribers and publishers(设置订阅者和发布者)"""
+        # LLM related(LLM相关)
         self.create_subscription(Tools, 'agent_process/tools', self.tools_callback, 1, callback_group=self.cb_group)
         self.create_subscription(String, 'agent_process/result', self.llm_result_callback, 1)
         self.tools_result_pub = self.create_publisher(Tools, 'agent_process/tools_result', 1)
 
-        # 导航相关(Navigation related)
+        # Navigation related(导航相关)
         qos_profile = QoSProfile(depth=10)
         qos_profile.durability = QoSDurabilityPolicy.TRANSIENT_LOCAL
         qos_profile.reliability = QoSReliabilityPolicy.RELIABLE
         self.create_subscription(PoseWithCovarianceStamped, '/amcl_pose', self.amcl_pose_callback, qos_profile)
         self.create_subscription(Bool, 'navigation_controller/reach_goal', self.reach_goal_callback, 1, callback_group=self.cb_group)
 
-        # 语音相关(Voice related)
+        # Voice related(语音相关)
         self.create_subscription(Bool, 'vocal_detect/wakeup', self.wakeup_callback, 1, callback_group=self.cb_group)
         self.tts_text_pub = self.create_publisher(String, 'tts_node/tts_text', 1)
         self.create_subscription(Bool, 'tts_node/play_finish', self.play_audio_finish_callback, 1, callback_group=self.cb_group)
 
-        # 底盘控制(Chassis control)
+        # Chassis control(底盘控制)
         self.cmd_vel_pub = self.create_publisher(Twist, '/controller/cmd_vel', 1)
 
-        # 巡线相关(Line following)
+        # Line following related(巡线相关)
         self.cmd_vel_subscription = self.create_subscription(Twist,'/controller/cmd_vel',self.cmd_vel_callback,10)
 
 
-        # 初始化姿态(Initial posture)
+        # Initialize posture(初始化姿态)
         if 'Pro' in self.machine_type:
             self.joints_pub = self.create_publisher(ServosPosition, 'servo_controller', 1)
-            set_servo_position(self.joints_pub, 1, ((10, 500), (5, 500), (4, 200), (3, 50), (2, 750), (1, 500)))  # 初始姿态
+            set_servo_position(self.joints_pub, 1, ((10, 500), (5, 500), (4, 200), (3, 50), (2, 750), (1, 500)))  # Initial posture(初始姿态)
         
-        # 图像同步(Image synchronization)
+        # Image synchronization(图像同步)
         self.camera = os.environ.get('DEPTH_CAMERA_TYPE','depth_cam')
         if self.camera != 'usb_cam':
             depth_sub = message_filters.Subscriber(self, Image, '/depth_cam/depth0/image_raw')
@@ -521,11 +521,11 @@ class LLMControlMove(Node):
             self.create_subscription(Image, '/depth_cam/depth0/image_raw', self.image_callback, 1)
 
     def setup_timers(self):
-        """设置定时器(Setup timers)"""
+        """Configure timers(设置计时器)"""
         self.timer = self.create_timer(0.0, self.init_process, callback_group=self.cb_group)
 
     def wait_for_services(self, timeout_sec=5.0):
-        """等待关键服务就绪(Wait for key services to be ready)"""
+        """Wait for critical services to be ready(等待关键服务就绪)"""
         services = [
             (self.set_model_client, 'set_model'),
             (self.set_prompt_client, 'set_prompt'),
@@ -543,11 +543,11 @@ class LLMControlMove(Node):
                 self.get_logger().warn(f'Service {name} not available after {timeout_sec} seconds')
 
     def amcl_pose_callback(self, msg):
-        """处理AMCL位姿信息(Process AMCL pose information)"""
+        """Process AMCL pose information(处理AMCL位姿信息)"""
         position = msg.pose.pose.position
         orientation_q = msg.pose.pose.orientation
         
-        # 四元数转欧拉角(Quaternion to Euler angles)
+        # Convert quaternion to Euler angles(四元数转欧拉角)
         t3 = +2.0 * (orientation_q.w * orientation_q.z + orientation_q.x * orientation_q.y)
         t4 = +1.0 - 2.0 * (orientation_q.y * orientation_q.y + orientation_q.z * orientation_q.z)
         yaw_z = math.atan2(t3, t4)
@@ -560,16 +560,16 @@ class LLMControlMove(Node):
         }
 
     def reach_goal_callback(self, msg):
-        """到达目标回调(Reach goal callback)"""
+        """Target reached callback(到达目标回调)"""
         self.get_logger().info('Reached goal')
         self.reach_goal = msg.data
 
     def llm_result_callback(self, msg):
-        """LLM结果回调(LLM result callback)"""
+        """LLM result callback(LLM结果回调)"""
         self.llm_result = msg.data
         self.get_logger().info(f'{LogColors.YELLOW}{LogColors.BOLD}LLM Reply: {self.llm_result}{LogColors.RESET}')
 
-        # 非列表响应才进行语音播报(Only non-list responses are spoken)
+        # Broadcast voice only for non-list responses(非列表响应才进行语音播报)
         text_to_speak = self.llm_result
         is_list_response = re.search(r'^\s*\d+\.', text_to_speak, re.MULTILINE)
         if not is_list_response:
@@ -578,7 +578,7 @@ class LLMControlMove(Node):
             self.tts_text_pub.publish(tts_msg)
 
     def image_sync_callback(self, ros_image, ros_depth_image):
-        """同步图像回调(Synchronized image callback)"""
+        """Synchronized image callback(同步图像回调)"""
         try:
             bgr_image = self.bridge.imgmsg_to_cv2(ros_image, "bgr8")
             depth_image = np.ndarray(
@@ -603,12 +603,12 @@ class LLMControlMove(Node):
         self.image_queue.put(bgr_image)
 
     def get_pixel_distance(self, pixel_coords_list):
-        """获取像素距离(Get pixel distance)"""
+        """Obtain pixel distance(获取像素距离)"""
         try:
             if self.camera != 'usb_cam':
                 _, depth_image = self.image_pair_queue.get()
             else:
-                return '请使用深度摄像头(Please use a depth camera)'
+                return 'Please use a depth camera(请使用深度摄像头)'
             distances = []
             
             for pixel_xy in pixel_coords_list:
@@ -638,12 +638,12 @@ class LLMControlMove(Node):
             return "[]"
 
     def get_obejct_pixel(self, user_query):
-        """获取物体像素位置(Get object pixel position)"""
+        """Obtain object pixel position(获取物体像素位置)"""
         try:
             rgb_image, _ = self.image_pair_queue.get()
             vllm_result_str = self.client.vllm(user_query, rgb_image, prompt=PROMPT, model=self.vllm_model_name)
 
-            # 提取JSON部分(Extract JSON part)
+            # Extract JSON segment(提取JSON部分)
             if "```json" in vllm_result_str:
                 json_part = vllm_result_str.split("```json")[1].split("```")[0]
             else:
@@ -656,9 +656,9 @@ class LLMControlMove(Node):
             return "[]"
 
     def move_to_location(self, destination):
-        """移动到指定位置(Move to specified location)"""
+        """Navigate to specified location(移动到指定位置)"""
         if destination not in position_dict:
-            return f"移动失败：未知的目标地点 '{destination}'。(Move failed: Unknown destination '{destination}'.)"
+            return f"Move failed: Unknown destination '{destination}'.(移动失败：未知的目标地点 '{destination}'。)"
 
         self.reach_goal = False
         msg = SetPose2D.Request()
@@ -672,17 +672,17 @@ class LLMControlMove(Node):
         self.send_request(self.set_pose_client, msg)
         self.get_logger().info(f"Navigation goal '{destination}' sent. Waiting for arrival...")
 
-        # 等待到达目标(Wait for reaching goal)
+        # Wait for reaching goal(等待到达目标)
         while not self.reach_goal:
             time.sleep(0.1)
 
         if self.reach_goal:
-            return f"已成功抵达{destination}(Arrived at {destination})"
+            return f"Arrived at {destination}(已成功抵达{destination})"
         else:
-            return f"移动超时，未能到达{destination}(Timeout, failed to reach {destination})"
+            return f"Timeout, failed to reach {destination}(移动超时，未能到达{destination})"
 
     def get_current_location(self):
-        """获取当前位置(Get current location)"""
+        """Obtain current location(获取当前位置)"""
         timeout_sec = 10.0
         start_time = time.time()
 
@@ -700,10 +700,10 @@ class LLMControlMove(Node):
             location_string = self.find_nearest_location(x, y, position_dict)
             return location_string
         else:
-            return "抱歉，我现在还无法确定自己的位置信息。(Sorry, I can't find my location now.)"
+            return "Sorry, I can't find my location now.(抱歉，我现在还无法确定自己的位置信息。)"
 
     def find_nearest_location(self, current_x, current_y, position_dict):
-        """查找最近的位置(Find nearest location)"""
+        """Search for nearest location(查找最近的位置)"""
         min_distance = float('inf')
         nearest_location_name = None
 
@@ -717,14 +717,14 @@ class LLMControlMove(Node):
 
         if nearest_location_name:
             if min_distance < 0.2:
-                return f'我现在在{nearest_location_name}(I am at {nearest_location_name})'
+                return f'I am at {nearest_location_name}(我现在在{nearest_location_name})'
             else:
-                return f'我现在在{nearest_location_name}附近(I am near {nearest_location_name})'
+                return f'I am near {nearest_location_name}(我现在在{nearest_location_name}附近)'
         else:
-            return '我现在暂时不知道在哪里(I do not know where I am now)'
+            return 'I do not know where I am now(我现在暂时不知道在哪里)'
 
     def describe_current_view(self, question):
-        """描述当前视图(Describe current view)"""
+        """Describe current view(描述当前视图)"""
         try:
             if self.camera != 'usb_cam':
                 rgb_image, _ = self.image_pair_queue.get(block=True)
@@ -747,37 +747,37 @@ class LLMControlMove(Node):
 
             self.get_logger().info(f'{LogColors.YELLOW}{LogColors.BOLD}LLM Reply: {description}{LogColors.RESET}')
 
-            # 直接发布到TTS进行语音播报
+            # Publish directly to TTS for voice broadcast(直接发布到TTS进行语音播报)
             tts_msg = String()
             tts_msg.data = description
             self.tts_text_pub.publish(tts_msg)
 
-            return f"画面描述任务已成功执行。得到的结果是{description}(The description of the view has been successfully executed. The result is {description})"
+            return f"The description of the view has been successfully executed. The result is {description}(画面描述任务已成功执行。得到的结果是{description})"
 
         except Exception as e:
             self.get_logger().error(f"Describe current view error: {str(e)}")
-            return "无法描述当前画面(Unable to describe the current view)"
+            return "Unable to describe the current view(无法描述当前画面)"
 
     def line_following(self, color):
-        """巡线功能(Line following function)"""
+        """Line following functionality(巡线功能)"""
         self.line_follower_enter_client.call_async(Trigger.Request())
         self.line_following_start = True
 
-        # 设置目标颜色(Set target color)
+        # Configure target color(设置目标颜色)
         color_msg = SetColor.Request()
         color_msg.data = color
         self.line_follower_set_target_client.call_async(color_msg)
 
-        # 启动巡线(Start line following)
+        # Initiate line following(启动巡线)
         start_msg = SetBool.Request()
         start_msg.data = True
         self.line_follower_start_client.call_async(start_msg)
 
         self.is_task_running = True
-        return f"好的，马上开始沿着{color}线行驶。(Okay, I will follow the {color} line.)"
+        return f"Okay, I will follow the {color} line.(好的，马上开始沿着{color}线行驶。)"
 
     def lidar_scan_detect(self, scan_detect):
-        """激光雷达障碍物检测(LiDAR obstacle detection)"""
+        """LiDAR obstacle detection(激光雷达障碍物检测)"""
         self.get_logger().info(f'{LogColors.GREEN}{LogColors.BOLD}start lidar_scan_detect{LogColors.RESET}')
         time.sleep(2)
 
@@ -798,43 +798,43 @@ class LLMControlMove(Node):
                     time.sleep(2)
                     self.line_follower_exit_client.call_async(Trigger.Request())
                     time.sleep(1)
-                    return '检测到速度为0,已停止巡线(Detected zero velocity, stop line following)'
+                    return 'Detected zero velocity, stop line following(检测到速度为0,已停止巡线)'
             else:
                 self.line_following_count = 0
 
             time.sleep(0.01)
 
         if not self.line_following_start:
-            return '已停止巡线(Stop line following)'
+            return 'Line following stopped.(已停止巡线)'
         else:
-            return '巡线检测超时(Line following timeout)'
+            return 'Line following detection timeout.(巡线检测超时)'
 
 
     def cmd_vel_callback(self, msg):
-        """cmd_vel话题回调函数(cmd_vel topic callback function)"""
+        """cmd_vel topic callback function(cmd_vel话题回调函数)"""
         if self.line_following_start:
             self.current_linear_x = msg.linear.x
             self.current_angular_z = msg.angular.z
 
     def color_track(self, color):
-        """颜色追踪(Color tracking)"""
+        """Color tracking(颜色追踪)"""
         self.object_tracker_enter_client.call_async(Trigger.Request())
 
-        # 设置要追踪的颜色(Set color to track)
+        # Configure tracking color(设置要追踪的颜色)
         color_msg = SetColor.Request()
         color_msg.data = color
         self.object_tracker_set_target_client.call_async(color_msg)
 
-        # 启动追踪(Start tracking)
+        # Initiate tracking(启动追踪)
         start_msg = SetBool.Request()
         start_msg.data = True
         self.object_tracker_start_client.call_async(start_msg)
         
         self.is_task_running = True
-        return f"好的,马上开始追踪{color}的物体。(Okay, I'll start tracking {color} objects.)"
+        return f"Okay, I'll start tracking {color} objects.(好的,马上开始追踪{color}的物体。)"
 
     def robot_move_control(self, linear_x, linear_y, angular_z, duration):
-        """机器人移动控制(Robot movement control)"""
+        """Robot movement control(机器人移动控制)"""
         self.get_logger().info(f"Executing move: x={linear_x}, y={linear_y}, z={angular_z} for {duration}s")
         self.is_task_running = True
 
@@ -854,7 +854,7 @@ class LLMControlMove(Node):
         return f"move: x={linear_x}, y={linear_y}, z={angular_z}, duration {duration}s"
 
     def get_object_box(self, user_query):
-        """获取物体边界框(Get object bounding box)"""
+        """Obtain object bounding box(获取物体边界框)"""
         self.get_logger().info(f"ObjTracking: {user_query}")
 
         try:
@@ -883,7 +883,7 @@ class LLMControlMove(Node):
 
 
     def object_track_detect(self, box):
-        """物体追踪(Object Track)"""
+        """Object tracking(物体追踪)"""
         self.get_logger().info('Object Tracking: %s' % str(box))
         with self.draw_lock:
             self.draw_flag = True
@@ -893,20 +893,20 @@ class LLMControlMove(Node):
 
 
     def get_available_locations(self):
-        """获取可用位置(Get available locations)"""
+        """Obtain available locations(获取可用位置)"""
         self.get_logger().info("Querying available locations.")
         return json.dumps(position_dict, ensure_ascii=False, indent=2)
 
     def get_node_state(self, request, response):
-        """获取节点状态(Get node state)"""
+        """Obtain node state(获取节点状态)"""
         return response
 
     def init_process(self):
-        """初始化过程(Initialization process)"""
+        """Initialization sequence(初始化过程)"""
         self.timer.cancel()
         self.wait_for_services()
 
-        # 设置模型(Set model)
+        # Configure model(设置模型)
         msg = SetModel.Request()
         msg.model_type = 'llm_tools'
         if self.language == 'Chinese':
@@ -919,31 +919,31 @@ class LLMControlMove(Node):
             msg.base_url = vllm_base_url
         self.send_request(self.set_model_client, msg)
 
-        # 设置提示词(Set prompt)
+        # Configure prompt(设置提示词)
         msg = SetString.Request()
         msg.data = content_string
         self.send_request(self.set_prompt_client, msg)
 
-        # 设置工具(Set tools)
+        # Configure tools(设置工具)
         tools_json = [json.dumps(tool, ensure_ascii=False) for tool in tools]
         msg = SetTools.Request()
         msg.tools = tools_json
         self.send_request(self.set_tool_client, msg)
 
 
-        # 启动处理线程(Start processin threads)
+        # Initialize processing threads(启动处理线程)
         threading.Thread(target=self.process, daemon=True).start()
         threading.Thread(target=self.display_thread, daemon=True).start()
         threading.Thread(target=self.object_track_thread, daemon=True).start()
 
-        # 启动功能开启语音提示(Start function opening voice prompt)
+        # Trigger initialization voice prompt(启动功能开启语音提示)
         speech.play_audio(start_audio_path)
 
         self.create_service(Empty, '~/init_finish', self.get_node_state)
         self.get_logger().info('\033[1;32m%s\033[0m' % 'start')
 
     def send_request(self, client, msg):
-        """发送请求并等待响应(Send request and wait for response)"""
+        """Transmit request and await response(发送请求并等待响应)"""
         future = client.call_async(msg)
         while rclpy.ok():
             if future.done():
@@ -956,7 +956,7 @@ class LLMControlMove(Node):
         return None
 
     def tools_callback(self, msg):
-        """工具回调(Tools callback)"""
+        """Tools callback(工具回调)"""
         self.get_logger().info(f'{LogColors.GREEN}{LogColors.BOLD}AI Decision-Making:{LogColors.RESET}')
         self.get_logger().info(f'{LogColors.GREEN}{LogColors.BOLD}Tools id [{msg.id}]:{LogColors.RESET}')
         self.get_logger().info(f'{LogColors.GREEN}{LogColors.BOLD}Tools name [{msg.name}]:{LogColors.RESET}')
@@ -965,7 +965,7 @@ class LLMControlMove(Node):
         self.tools = [msg.id, msg.name, json.loads(msg.data)]
 
     def play_audio_finish_callback(self, msg):
-        """音频播放完成回调(Audio playback finished callback)"""
+        """Audio playback completion callback(音频播放完成回调)"""
         if msg.data:
             self.play_audio_finish = True
             awake_msg = SetBool.Request()
@@ -973,25 +973,25 @@ class LLMControlMove(Node):
             self.send_request(self.awake_client, awake_msg)
 
     def wakeup_callback(self, msg):
-        """唤醒回调(Wakeup callback)"""
+        """Wakeup callback(唤醒回调)"""
         if msg.data and self.is_task_running:
-            self.get_logger().info('唤醒中断(Wakeup interrupt)')
+            self.get_logger().info('Wakeup interrupt(唤醒中断)')
             
-            # 停止巡线(Stop line following)
+            # Stop line following(停止巡线)
             if self.line_following_start:
                 request = SetBool.Request()
                 request.data = False
                 self.line_follower_start_client.call_async(request)
                 self.line_following_start = False
 
-            # 停止颜色追踪(Stop color tracking)
+            # Stop color tracking(停止颜色追踪)
             if self.start_track:
                 request = SetBool.Request()
                 request.data = False
                 self.object_tracker_start_client.call_async(request)
                 self.start_track = False
 
-            # 停止运动(Stop movement)
+            # Stop movement(停止运动)
             self.cmd_vel_pub.publish(Twist())
             self.track.stop()
             self.is_task_running = False
@@ -1000,7 +1000,7 @@ class LLMControlMove(Node):
             self.get_logger().info('Wakeup received, but no interruptible task is running.')
 
     def process(self):
-        """主处理循环(Main processing loop)"""
+        """Main processing loop(主处理循环)"""
         while rclpy.ok():
             if self.tools:
                 tool_id, tool_name, args_dict = self.tools
@@ -1064,7 +1064,7 @@ class LLMControlMove(Node):
                         
                 except Exception as e:
                     self.get_logger().error(f"Tool {tool_name} execution error: {str(e)}")
-                    res = f"工具执行错误: {str(e)}(The tool execution error: {str(e)})"
+                    res = f"The tool execution error: {str(e)}(工具执行错误: {str(e)})"
                     self.tools_result_pub.publish(Tools(id=tool_id, name=tool_name, data=res))
                 
                 self.tools = []
@@ -1074,7 +1074,7 @@ class LLMControlMove(Node):
 
 
     def display_thread(self):
-        """显示线程(show thread)"""
+        """Display thread(显示线程)"""
         while self.running:
             try:
                 if self.camera != 'usb_cam':
@@ -1085,7 +1085,7 @@ class LLMControlMove(Node):
 
                 with self.draw_lock:
                     if self.draw_flag:
-                        # 物体追踪绘制(object tracking drawing)
+                        # Render object tracking(物体追踪绘制)
                         if self.start_track and self.track_box_p1 is not None and self.track_box_p2 is not None:
                             cv2.rectangle(result_image, self.track_box_p1, self.track_box_p2, (0, 255, 0), 2)
                 if self.camera != 'usb_cam':
@@ -1110,8 +1110,8 @@ class LLMControlMove(Node):
 
 
     def object_track_thread(self):
-        """物体追踪线程(Object tracking thread)"""
-        # 在当前线程创建一个新的 CUDA 上下文(Create new CUDA context in current thread)
+        """Object tracking thread(物体追踪线程)"""
+        # Instantiate new CUDA context in current thread(在当前线程创建一个新的 CUDA 上下文)
         dev = cuda.Device(0)
         ctx = dev.make_context()
         try:
@@ -1130,7 +1130,7 @@ class LLMControlMove(Node):
                         image = self.image_queue.get(block=True)
                     img_h, img_w, _ = image.shape
                     if self.box is not None and len(self.box) > 0 and self.object_detect_box:
-                        # 转换为 [x, y, width, height] 格式(Convert to [x, y, width, height] format)
+                        # Convert to [x, y, width, height] format(转换为 [x, y, width, height] 格式)
                         box_wh = [self.box[0], self.box[1], self.box[2] - self.box[0], self.box[3] - self.box[1]]
                         self.track.set_track_target(tracker, box_wh, image)
                         self.start_track = True
@@ -1167,7 +1167,7 @@ class LLMControlMove(Node):
 
             cv2.destroyAllWindows()
         finally:
-            # 确保上下文被正确释放(Ensure context is properly released)
+            # Ensure proper context release(确保上下文被正确释放)
             ctx.pop()
 
 def main():

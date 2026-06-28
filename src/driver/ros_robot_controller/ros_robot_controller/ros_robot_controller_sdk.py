@@ -9,7 +9,7 @@ import serial
 import threading
 
 class PacketControllerState(enum.IntEnum):
-    # 通信协议的格式(the format of the communication protocol)
+    # The format of the communication protocol(通信协议的格式)
     # 0xAA 0x55 Length Function ID Data Checksum
     PACKET_CONTROLLER_STATE_STARTBYTE1 = 0
     PACKET_CONTROLLER_STATE_STARTBYTE2 = 1
@@ -20,22 +20,22 @@ class PacketControllerState(enum.IntEnum):
     PACKET_CONTROLLER_STATE_CHECKSUM = 6
 
 class PacketFunction(enum.IntEnum):
-    # 可通过串口实现的控制功能(achieve control function via the serial port)
+    # Achieve control function via the serial port(可通过串口实现的控制功能)
     PACKET_FUNC_SYS = 0
-    PACKET_FUNC_LED = 1  # LED控制(LED control)
-    PACKET_FUNC_BUZZER = 2  # 蜂鸣器控制(buzzer control)
-    PACKET_FUNC_MOTOR = 3  # 电机控制(motor control)
-    PACKET_FUNC_PWM_SERVO = 4  # PWM舵机控制, 板子上从里到外依次为1-4(PWM servo control. The servos on the board are numbered 1 to 4 from inside to outside)
-    PACKET_FUNC_BUS_SERVO = 5  # 总线舵机控制(bus servo control)
-    PACKET_FUNC_KEY = 6  # 按键获取(obtain button)
-    PACKET_FUNC_IMU = 7  # IMU获取(obtain IMU)
-    PACKET_FUNC_GAMEPAD = 8  # 手柄获取(obtain handle)
-    PACKET_FUNC_SBUS = 9  # 航模遥控获取(obtain model aircraft remote control)
-    PACKET_FUNC_OLED = 10 # OLED 显示内容设置(set OLED display content)
+    PACKET_FUNC_LED = 1  # LED control(LED控制)
+    PACKET_FUNC_BUZZER = 2  # Buzzer control(蜂鸣器控制)
+    PACKET_FUNC_MOTOR = 3  # Motor control(电机控制)
+    PACKET_FUNC_PWM_SERVO = 4  # PWM servo control. The servos on the board are numbered 1 to 4 from inside to outside(PWM舵机控制, 板子上从里到外依次为1-4)
+    PACKET_FUNC_BUS_SERVO = 5  # Bus servo control(总线舵机控制)
+    PACKET_FUNC_KEY = 6  # Obtain button(按键获取)
+    PACKET_FUNC_IMU = 7  # Obtain IMU(IMU获取)
+    PACKET_FUNC_GAMEPAD = 8  # Obtain handle(手柄获取)
+    PACKET_FUNC_SBUS = 9  # Obtain model aircraft remote control(航模遥控获取)
+    PACKET_FUNC_OLED = 10 # Set OLED display content(OLED 显示内容设置)
     PACKET_FUNC_NONE = 11
 
 class PacketReportKeyEvents(enum.IntEnum):
-    # 按键的不同状态(different button status)
+    # Different button status(按键的不同状态)
     KEY_EVENT_PRESSED = 0x01
     KEY_EVENT_LONGPRESS = 0x02
     KEY_EVENT_LONGPRESS_REPEAT = 0x04
@@ -65,7 +65,7 @@ crc8_table = [
 ]
 
 def checksum_crc8(data):
-    # 校验(check)
+    # Check(校验)
     check = 0
     for b in data:
         check = crc8_table[check ^ b]
@@ -110,7 +110,7 @@ class Board:
         self.servo_read_lock = threading.Lock()
         self.pwm_servo_read_lock = threading.Lock()
 
-        # 队列用来存储数据(use queue to store data)
+        # Use queue to store data(队列用来存储数据)
         self.sys_queue = queue.Queue(maxsize=1)
         self.bus_servo_queue = queue.Queue(maxsize=1)
         self.pwm_servo_queue = queue.Queue(maxsize=1)
@@ -176,7 +176,7 @@ class Board:
             pass
 
     def get_battery(self):
-        # 获取电压，单位mAh(obtain voltage, which is in the unit of mAh)
+        # Obtain voltage, which is in the unit of mAh(获取电压，单位mAh)
         if self.enable_recv:
             try:
                 data = self.sys_queue.get(block=False)
@@ -191,7 +191,7 @@ class Board:
             return None
 
     def get_button(self):
-        # 获取按键key1， key2状态，返回按键ID(1表示按键1，2表示按键2)和状态(0表示按下，1表示松开)(Get the status of buttons 1 and 2, and return the button ID (1 for key1, and 2 for key2) and status (0 for pressed, and 1 for released))
+        # Get the status of buttons 1 and 2, and return the button ID (1 for key1, and 2 for key2) and status (0 for pressed, and 1 for released)(获取按键key1， key2状态，返回按键ID(1表示按键1，2表示按键2)和状态(0表示按下，1表示松开))
         if self.enable_recv:
             try:
                 data = self.key_queue.get(block=False)
@@ -208,7 +208,7 @@ class Board:
             return None
 
     def get_imu(self):
-        # 获取IMU数据，返回ax, ay, az, gx, gy, gz(obtain IMU data to return ax, ay, az, gx, gy, and gz)
+        # Obtain IMU data to return ax, ay, az, gx, gy, and gz(获取IMU数据，返回ax, ay, az, gx, gy, gz)
         if self.enable_recv:
             try:
                 # ax, ay, az, gx, gy, gz
@@ -220,7 +220,7 @@ class Board:
             return None
 
     def get_gamepad(self):
-        # 获取手柄数据(obtain handle data)
+        # Obtain handle data(获取手柄数据)
         if self.enable_recv:
             try:
                 # buttons, hat, lx, ly, rx, ry
@@ -339,7 +339,7 @@ class Board:
         self.buf_write(PacketFunction.PACKET_FUNC_MOTOR, data)
 
     def set_oled_text(self, line, text):
-        data = [line, len(text)] # 子命令为 0x01 设置 SSID, 第二个字节是字符串长度，该长度包含'\0'字符串结束符(The sub-command 0x01 is used to set the SSID. The second byte is the length of the string, which includes the '\0' string termination character)
+        data = [line, len(text)] # The sub-command 0x01 is used to set the SSID. The second byte is the length of the string, which includes the '\0' string termination character(子命令为 0x01 设置 SSID, 第二个字节是字符串长度，该长度包含'\0'字符串结束符)
         data.extend(bytes(text, encoding='utf-8'))
         self.buf_write(PacketFunction.PACKET_FUNC_OLED, data)
 
@@ -456,8 +456,8 @@ class Board:
      
     def hx_bus_servo_read_id(self, servo_id=254):
         """
-        通过 HX 新协议扫描所有在线舵机 ID (1~253)。
-        STM32 端会自动扫描全部, 返回在线 ID 列表, 如 [1, 2, 3]。
+        Scan all online servo IDs (1~253) through the new HX protocol.(通过 HX 新协议扫描所有在线舵机 ID (1~253)。)
+        The STM32 end will automatically scan all of them and return a list of online IDs, such as [1, 2, 3].(STM32 端会自动扫描全部, 返回在线 ID 列表, 如 [1, 2, 3]。)
         """
         with self.servo_read_lock:
             self.buf_write(PacketFunction.PACKET_FUNC_BUS_SERVO, [0x40, 0x00])
@@ -465,7 +465,7 @@ class Board:
                 data = self.bus_servo_queue.get(block=True, timeout=10)
             except queue.Empty:
                 return None
-            # 回复格式: servo_id(0xFF) + cmd(0x40) + count + id_list...
+            # Reply format: servo_id(0xFF) + cmd(0x40) + count + id_list...(回复格式: servo_id(0xFF) + cmd(0x40) + count + id_list...)
             if len(data) < 3:
                 return []
             count = data[2]
@@ -474,8 +474,8 @@ class Board:
 
     def hx_bus_servo_read_pid(self, servo_id):
         """
-        读取 HX 舵机的 PID 参数和最小启动力。
-        返回 (P, D, I, min_start_force) 或 None。
+        Read the PID parameters and minimum starting force of the HX servo.(读取 HX 舵机的 PID 参数和最小启动力。)
+        Return (P, D, I, min_start_force) or None.(读取 HX 舵机的 PID 参数和最小启动力。返回 (P, D, I, min_start_force) 或 None。)(返回 (P, D, I, min_start_force) 或 None。)
         """
         with self.servo_read_lock:
             self.buf_write(PacketFunction.PACKET_FUNC_BUS_SERVO, [0x42, servo_id])
@@ -483,7 +483,7 @@ class Board:
                 data = self.bus_servo_queue.get(block=True, timeout=10)
             except queue.Empty:
                 return None
-            # 回复格式: servo_id + cmd(0x42) + success + P + D + I + force_L + force_H
+            # Reply format: servo_id + cmd(0x42) + success + P + D + I + force_L + force_H(回复格式: servo_id + cmd(0x42) + success + P + D + I + force_L + force_H)
             if len(data) < 8:
                 return None
             servo_id_r, cmd_r, success, p, d, i, force = struct.unpack("<BBbBBBH", data[:8])
@@ -493,18 +493,18 @@ class Board:
 
     def hx_bus_servo_read_min_start_force(self, servo_id):
         """
-        读取 HX 舵机的最小启动力。
-        内部和 read_pid 用同一个 0x42 命令, 返回 (force,) 或 None。
+        Read the minimum starting force of the HX servo.(读取 HX 舵机的最小启动力。)
+        Internally uses the same 0x42 command as read_pid, and returns (force,) or None.(内部和 read_pid 用同一个 0x42 命令, 返回 (force,) 或 None。)
         """
         result = self.hx_bus_servo_read_pid(servo_id)
         if result is not None:
-            return (result[3],)  # force 是第4个元素
+            return (result[3],)  # Force is the 4th element(force 是第4个元素)
         return None
 
     def hx_bus_servo_set_pid(self, servo_id, p, d, i, min_start_force=0):
         """
-        设置 HX 舵机 PID 参数和最小启动力。
-        通过 0x43 子命令一次性写入 P, D, I, min_start_force。
+        Set the PID parameters and minimum starting force of the HX servo.(设置 HX 舵机 PID 参数和最小启动力。)
+        Write P, D, I, and min_start_force at once through the 0x43 sub-command.(通过 0x43 子命令一次性写入 P, D, I, min_start_force。)
         """
         data = struct.pack("<BBBBBH", 0x43, int(servo_id) & 0xFF,
                            int(p) & 0xFF, int(d) & 0xFF, int(i) & 0xFF, int(min_start_force) & 0xFFFF)
@@ -513,8 +513,8 @@ class Board:
 
     def hx_bus_servo_set_min_start_force(self, servo_id, force):
         """
-        单独设置 HX 舵机的最小启动力。
-        先读取当前 PID, 再和新的 force 一起写入。
+        Set the minimum starting force of the HX servo separately.(单独设置 HX 舵机的最小启动力。)
+        First read the current PID, and then write it together with the new force.(先读取当前 PID, 再和新的 force 一起写入。)
         """
         current = self.hx_bus_servo_read_pid(servo_id)
         if current is not None:
@@ -522,15 +522,15 @@ class Board:
             self.hx_bus_servo_set_pid(servo_id, p, d, i, force)
 
     def hx_bus_servo_set_baudrate(self, servo_id, old_baud_index=0, new_baud_index=4):
-        """修改 HX-30HM 舵机的波特率
-        0=1M(默认), 1=500K, 2=250K, 4=115200
+        """Modify the baud rate of the HX-30HM servo(修改 HX-30HM 舵机的波特率)
+        0=1M (default), 1=500K, 2=250K, 4=115200(0=1M(默认), 1=500K, 2=250K, 4=115200)
         """
         data = struct.pack("<BBBB", 0x44, servo_id, int(old_baud_index), int(new_baud_index))
         self.buf_write(PacketFunction.PACKET_FUNC_BUS_SERVO, data)
         time.sleep(0.1)
 
     def hx_bus_servo_set_all_baudrate(self, old_baud_index=0, new_baud_index=4):
-        """广播修改所有 HX-30HM 舵机的波特率"""
+        """Broadcast to modify the baud rate of all HX-30HM servos.(广播修改所有 HX-30HM 舵机的波特率)"""
         self.hx_bus_servo_set_baudrate(0xFE, old_baud_index, new_baud_index)
         
     def set_motor_type(self, motor_type=0x02):
@@ -610,7 +610,7 @@ class Board:
                                 if func in self.parsers:
                                     self.parsers[func](data)
                             else:
-                                print("校验失败")
+                                print("Validation failed(校验失败)")
                             self.state = PacketControllerState.PACKET_CONTROLLER_STATE_STARTBYTE1
                             continue
             else:
@@ -618,29 +618,29 @@ class Board:
         self.port.close()
         print("END...")
 def hx_servo_test(board):
-    # 第一步: 改波特率 (只需执行一次, 改完后注释掉这两行)
-    print("正在修改舵机波特率为 115200 ...")
+    # Step 1: Change the baud rate (only need to be executed once, comment out these two lines after modification)(第一步: 改波特率 (只需执行一次, 改完后注释掉这两行))
+    print("Modifying servo baud rate to 115200 ...(正在修改舵机波特率为 115200 ...)")
     board.hx_bus_servo_set_all_baudrate(old_baud_index=0, new_baud_index=4)
     time.sleep(0.5)
-    print("波特率修改完成")
+    print("Baud rate modification complete(波特率修改完成)")
 
-    # 第二步: 扫描所有在线舵机 (STM32 端自动扫描 1~253)
-    print("正在扫描舵机 ...")
+    # Step 2: Scan all online servos (STM32 end automatically scans 1~253)(第二步: 扫描所有在线舵机 (STM32 端自动扫描 1~253))
+    print("Scanning for servos...(正在扫描舵机 ...)")
     online_ids = board.hx_bus_servo_read_id()
-    print("在线舵机 ID:", online_ids)
+    print("Online servo ID: (在线舵机 ID:)", online_ids)
 
     if online_ids:
-        # 第三步: 读取每个舵机的 PID 和最小启动力
+        # Step 3: Read the PID and minimum starting force of each servo(第三步: 读取每个舵机的 PID 和最小启动力)
         for sid in online_ids:
             result = board.hx_bus_servo_read_pid(sid)
             if result:
                 p, d, i, force = result
-                print(f"  ID={sid}: P={p}, D={d}, I={i}, 最小启动力={force}")
+                print(f"  ID={sid}: P={p}, D={d}, I={i}, Minimum starting force={force} (最小启动力={force})")
 
-        # 第四步: 设置 PID 和最小启动力 ()
+        # Step 4: Set PID and minimum starting force ()(第四步: 设置 PID 和最小启动力 ())
         for sid in online_ids:
             board.hx_bus_servo_set_pid(sid, p=48, d=48, i=0, min_start_force=16)
-        print("设置完成")
+        print("Setup complete(设置完成)")
 def bus_servo_test(board):
     board.bus_servo_set_position(1, [[1, 500], [2, 500]])
     time.sleep(1)

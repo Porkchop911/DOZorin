@@ -51,28 +51,28 @@ def save_yaml_data(data, yaml_file):
 
 def distance(point_1, point_2):
     """
-    计算两个点间的距离(calculate the distance between two points)
-    :param point_1: 点1(point 1)
-    :param point_2: 点2(point 2)
-    :return: 两点间的距离(distance between two points)
+    Calculate the distance between two points(计算两个点间的距离)
+    :param point_1: Point 1(点1)
+    :param point_2: Point 2(点2)
+    :return: Distance between two points(两点间的距离)
     """
     return math.sqrt((point_1[0] - point_2[0]) ** 2 + (point_1[1] - point_2[1]) ** 2)
 
 
 def box_center(box):
     """
-    计算四边形box的中心(calculate the center of quadrangle box)
-    :param box: box （x1, y1, x2, y2)形式(box （x1, y1, x2, y2)type)
-    :return:  中心坐标（x, y)(center coordinate（x, y))
+    Calculate the center of quadrangle box(计算四边形box的中心)
+    :param box: Box (x1, y1, x2, y2) type(box （x1, y1, x2, y2)形式)
+    :return:  Center coordinate (x, y)(中心坐标（x, y))
     """
     return (box[0] + box[2]) / 2, (box[1] + box[3]) / 2
 
 
 def bgr8_to_jpeg(value, quality=75):
     """
-    将cv bgr8格式数据转换为jpg格式(convert data in the format of cv bgr8 into jpg)
-    :param value: 原始数据(original data)
-    :param quality:  jpg质量 最大值100(jpg quality. Maximum value is 100)
+    Convert data in the format of cv bgr8 into jpg(将cv bgr8格式数据转换为jpg格式)
+    :param value: Original data(原始数据)
+    :param quality:  Jpg quality, maximum value is 100(jpg质量 最大值100)
     :return:
     """
     return bytes(cv2.imencode('.jpg', value)[1])
@@ -80,11 +80,11 @@ def bgr8_to_jpeg(value, quality=75):
 
 def point_remapped(point, now, new, data_type=float):
     """
-    将一个点的坐标从一个图片尺寸映射的新的图片上(map the coordinate of one point from a picture to a new picture of different size)
-    :param point: 点的坐标(coordinate of point)
-    :param now: 现在图片的尺寸(size of current picture)
-    :param new: 新的图片尺寸(new picture size)
-    :return: 新的点坐标(new point coordinate)
+    Map the coordinate of one point from a picture to a new picture of different size(将一个点的坐标从一个图片尺寸映射的新的图片上)
+    :param point: Coordinate of point(点的坐标)
+    :param now: Size of current picture(现在图片的尺寸)
+    :param new: New picture size(新的图片尺寸)
+    :return: New point coordinate(新的点坐标)
     """
     x, y = point
     now_w, now_h = now
@@ -96,31 +96,31 @@ def point_remapped(point, now, new, data_type=float):
 
 def get_area_max_contour(contours, threshold=50):
     """
-    获取轮廓中面积最重大的一个, 过滤掉面积过小的情况(get the contour whose area is the largest. Filter out those whose area is too small)
-    :param contours: 轮廓列表(contour list)
-    :param threshold: 面积阈值, 小于这个面积的轮廓会被过滤(area threshold. Contour whose area is less than this value will be filtered out)
-    :return: 如果最大的轮廓面积大于阈值则返回最大的轮廓, 否则返回None(if the maximum contour area is greater than this threshold, return the
-    largest contour, otherwise return None)
+    Get the contour whose area is the largest and filter out those whose area is too small(获取轮廓中面积最重大的一个, 过滤掉面积过小的情况)
+    :param contours: Contour list(轮廓列表)
+    :param threshold: Area threshold, contour whose area is less than this value will be filtered out(面积阈值, 小于这个面积的轮廓会被过滤)
+    :return: If the maximum contour area is greater than this threshold, return the
+    largest contour, otherwise return None(如果最大的轮廓面积大于阈值则返回最大的轮廓, 否则返回None)
     """
     contour_area_max = 0
     area_max_contour = None
 
-    for c in contours:  # 历遍所有轮廓(iterate all contours)
-        contour_area_temp = math.fabs(cv2.contourArea(c))  # 计算轮廓面积(calculate contour area)
+    for c in contours:  # Iterate all contours(历遍所有轮廓)
+        contour_area_temp = math.fabs(cv2.contourArea(c))  # Calculate contour area(计算轮廓面积)
         if contour_area_temp > contour_area_max:
             contour_area_max = contour_area_temp
-            if contour_area_temp > threshold:  # 过滤干扰(filter interference)
+            if contour_area_temp > threshold:  # Filter interference(过滤干扰)
                 area_max_contour = c
 
-    return area_max_contour,  contour_area_max  # 返回最大的轮廓(return the contour with the largest area)
+    return area_max_contour,  contour_area_max  # Return the contour with the largest area(返回最大的轮廓)
 
 
 def vector_2d_angle(v1, v2):
     """
-    计算两向量间的夹角 -pi ~ pi(calculate the angle between two vectors -pi ~ pi)
-    :param v1: 第一个向量(first vector)
-    :param v2: 第二个向量(second vector)
-    :return: 角度(angle)
+    Calculate the angle between two vectors -pi ~ pi(计算两向量间的夹角 -pi ~ pi)
+    :param v1: First vector(第一个向量)
+    :param v2: Second vector(第二个向量)
+    :return: Angle(角度)
     """
     d_v1_v2 = np.linalg.norm(v1) * np.linalg.norm(v2)
     cos = v1.dot(v2) / (d_v1_v2)
@@ -131,19 +131,19 @@ def vector_2d_angle(v1, v2):
 
 def warp_affine(image, points, scale=1.0):
     """
-     简单的对齐，计算两个点的连线的角度，以图片中心为原点旋转图片，使线水平(Simple alignment. Calculate the angle of the line connecting the two points.
-     Rotate the picture around the image center to make the line horizontal)
-    可以用在人脸对齐上(can be used to align the face)
+     Simple alignment. Calculate the angle of the line connecting the two points.
+     Rotate the picture around the image center to make the line horizontal
+     can be used to align the face(简单的对齐，计算两个点的连线的角度，以图片中心为原点旋转图片，使线水平 可以用在人脸对齐上)
 
-    :param image: 要选择的人脸图片(select face picture)
-    :param points: 两个点的坐标 ((x1, y1), (x2, y2))(coordinate of two points ((x1, y1), (x2, y2)))
-    :param scale: 缩放比例(scaling)
-    :return: 旋转后的图片(rotated picture)
+    :param image: Select face picture(要选择的人脸图片)
+    :param points: Coordinate of two points ((x1, y1), (x2, y2))(两个点的坐标 ((x1, y1), (x2, y2)))
+    :param scale: Scaling(缩放比例)
+    :return: Rotated picture(旋转后的图片)
     """
     w, h = image.shape[:2]
     dy = points[1][1] - points[0][1]
     dx = points[1][0] - points[0][0]
-    # 计算旋转角度并旋转图片(calculate the rotation angle and rotate picture)
+    # Calculate the rotation angle and rotate picture(计算旋转角度并旋转图片)
     angle = cv2.fastAtan2(dy, dx)
     rot = cv2.getRotationMatrix2D((int(w / 2), int(h / 2)), angle, scale=scale)
     return cv2.warpAffine(image, rot, dsize=(h, w))

@@ -2,7 +2,7 @@
 # encoding: utf-8
 # @data:2022/11/07
 # @author:aiden
-# 人体跟踪(body tracking)
+# Body tracking(人体跟踪)
 import os
 import cv2
 import time
@@ -42,7 +42,7 @@ class BodyControlNode(Node):
         self.go_speed, self.turn_speed = 0.007, 0.04
         self.linear_x, self.angular = 0, 0
         self.running = True
-        self.fps = fps.FPS()  # fps计算器(FPS calculator)
+        self.fps = fps.FPS()  # FPS calculator(fps计算器)
         signal.signal(signal.SIGINT, self.shutdown)
         self.image_queue = queue.Queue(maxsize=2)
 
@@ -59,7 +59,7 @@ class BodyControlNode(Node):
         self.create_subscription(Image, '/yolo/object_image', self.image_callback, 1)
         self.create_subscription(Image, '/depth_cam/rgb0/image_raw' , self.depth_image_callback, 1)
         self.create_subscription(ObjectsInfo, '/yolo/object_detect', self.get_object_callback, 1)
-        self.mecanum_pub = self.create_publisher(Twist, '/controller/cmd_vel', 1)  # 底盘控制(chassis control)
+        self.mecanum_pub = self.create_publisher(Twist, '/controller/cmd_vel', 1)  # Chassis control(底盘控制)
 
 
         self.client = self.create_client(Trigger, '/controller_manager/init_finish')
@@ -88,7 +88,7 @@ class BodyControlNode(Node):
     def shutdown(self, signum, frame):
         self.running = False
 
-    # 获取目标检测结果(obtain target detection result)
+    # Obtain target detection result(获取目标检测结果)
     def get_object_callback(self, msg):
         for i in msg.objects:
             class_name = i.class_name
@@ -105,9 +105,9 @@ class BodyControlNode(Node):
         cv_image = self.bridge.imgmsg_to_cv2(ros_image, "rgb8")
         rgb_image = np.array(cv_image, dtype=np.uint8)
         if self.image_queue.full():
-            # 如果队列已满，丢弃最旧的图像
+            # If the queue is full, discard the oldest image(如果队列已满，丢弃最旧的图像)
             self.image_queue.get()
-        # 将图像放入队列
+        # Put the new image into the queue(将图像放入队列)
         self.image_queue.put(rgb_image)
 
     def image_proc(self, rgb_image):
@@ -145,12 +145,12 @@ class BodyControlNode(Node):
             
             if abs(distance - 150) < 15:
                 distance = 150
-            self.pid_d.update(distance - 150)  # 更新pid(update pid)
+            self.pid_d.update(distance - 150)  # Update pid(更新pid)
             self.linear_x = -common.set_range(self.pid_d.output, -0.4, 0.4)
             
             if abs(self.center[0] - w/2) < 30:
                 self.center[0] = w/2
-            self.pid_angular.update(self.center[0] - w/2)  # 更新pid(update pid)
+            self.pid_angular.update(self.center[0] - w/2)  # Update pid(更新pid)
             twist.linear.x = self.linear_x
             if  'Acker' not in self.machine_type:
                 twist.angular.z = common.set_range(self.pid_angular.output, -0.8, 0.8)
@@ -179,7 +179,7 @@ class BodyControlNode(Node):
             self.center = None
             cv2.imshow(self.name, cv2.cvtColor(result_image, cv2.COLOR_RGB2BGR))
             key = cv2.waitKey(1)
-            if key == ord('q') or key == 27:  # 按q或者esc退出(press Q or Esc to exit)
+            if key == ord('q') or key == 27:  # Press Q or Esc to exit(按q或者esc退出)
                 self.mecanum_pub.publish(Twist())
                 self.running = False
 

@@ -2,7 +2,7 @@
 # encoding: utf-8
 # @data:2023/03/21
 # @author:aiden
-# 机械臂运动学调用(call robotic arm kinematics)
+# Call robotic arm kinematics(机械臂运动学调用)
 from kinematics_msgs.srv import SetRobotPose, SetJointValue
 
 def set_pose_target(position, pitch, pitch_range=[-180.0, 180.0], resolution=1.0):

@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 # encoding: utf-8
 """
-Plane fitting node for Orbbec / Realsense‑style深度相机。
-订阅 depth 图 + camera_info，同步取 1 帧做 SVD 平面拟合，
-将得到的平面参数  [a, b, c, d]  写入 transform.yaml 的  plane  字段。
+Plane fitting node for Orbbec / Realsense‑style depth cameras(深度相机。)
+Subscribe to depth map + camera_info, synchronously take 1 frame for SVD plane fitting(订阅 depth 图 + camera_info，同步取 1 帧做 SVD 平面拟合)，
+Write the obtained plane parameters [a, b, c, d] to the plane field in transform.yaml(将得到的平面参数  [a, b, c, d]  写入 transform.yaml 的  plane  字段)
 
-在任何包中放置本脚本后：
+After placing this script in any package(在任何包中放置本脚本后)：
     ros2 run <your_pkg> plane_fit_node --ros-args \
         -p output_file:=/home/ubuntu/ros2_ws/src/example/config/transform.yaml
 
-默认一次完成即退出，避免长期占用带宽 / 内存。
+Default is to exit after completing once to avoid long-term bandwidth/memory occupation(默认一次完成即退出，避免长期占用带宽 / 内存.)
 """
 
 import os
@@ -30,13 +30,13 @@ class PlaneFitNode(Node):
     def __init__(self):
         super().__init__("plane_fit_node")
 
-        # ---------- 参数 ----------
-        # 输出文件；缺省写到当前工作目录
+        # ---------- Parameters(参数) ----------
+        # Output file; default writes to current working directory(输出文件；缺省写到当前工作目录)
         self.output_file = self.declare_parameter("output_file", "/home/ubuntu/ros2_ws/src/example/example/rgbd_function/config/transform.yaml").value
-        # 最大抽样点数，防止一次抓太多像素
+        # Maximum number of sample points to prevent grabbing too many pixels at once(最大抽样点数，防止一次抓太多像素)
         self.max_points = int(self.declare_parameter("max_samples", 30000).value)
 
-        # ---------- 订阅 ----------
+        # ---------- Subscriptions(订阅) ----------
         depth_sub = message_filters.Subscriber(
             self, Image, "/ascamera/camera_publisher/depth0/image_raw"
         )
@@ -54,7 +54,7 @@ class PlaneFitNode(Node):
         )
 
     # ------------------------------------------------------------------
-    # 工具函数
+    # Utility functions(工具函数)
     # ------------------------------------------------------------------
     @staticmethod
     def depth_to_numpy(msg: Image) -> np.ndarray:
@@ -67,7 +67,7 @@ class PlaneFitNode(Node):
                 .reshape(msg.height, msg.width)
                 .astype(np.float32)
                 / 1000.0
-            )  # 毫米 ➔ 米
+            )  # Millimeters ➔ meters(毫米 ➔ 米)
         else:
             raise ValueError(
                 f"Unsupported depth encoding: {msg.encoding}; expected 32FC1, 16UC1 or mono16."
@@ -88,7 +88,7 @@ class PlaneFitNode(Node):
             yaml.safe_dump(data, f, sort_keys=False)
 
     # ------------------------------------------------------------------
-    # 主回调
+    # Main callback(主回调)
     # ------------------------------------------------------------------
     def callback(self, depth_msg: Image, info_msg: CameraInfo):
         if self.done:
@@ -100,25 +100,25 @@ class PlaneFitNode(Node):
             self.get_logger().error(str(e))
             return
 
-        # ---- 有效像素掩码： >20 cm —— 去掉飞点与背景零值 ----
+        # ---- Valid pixel mask: >20 cm —— remove flying points and background zero values ----(---- 有效像素掩码： >20 cm —— 去掉飞点与背景零值 ----)
         mask = depth > 0.2
         ys, xs = np.where(mask)
         if xs.size < 1500:
             self.get_logger().warn("Not enough depth points; waiting for another frame …")
             return
 
-        # ---- 随机下采样 ----
+        # ---- Random downsampling(随机下采样) ----
         if xs.size > self.max_points:
             choice = np.random.choice(xs.size, self.max_points, replace=False)
             xs, ys = xs[choice], ys[choice]
         zs = depth[ys, xs]
 
-        # 保证一维 & float32
+        # Ensure one-dimensional & float32(保证一维 & float32)
         xs = xs.astype(np.float32).reshape(-1)
         ys = ys.astype(np.float32).reshape(-1)
         zs = zs.astype(np.float32).reshape(-1)
 
-        # ---- 像素 → 相机坐标 ----
+        # ---- Pixels → camera coordinates(像素 → 相机坐标) ----
         fx, fy, cx, cy = (
             info_msg.k[0],  # fx
             info_msg.k[4],  # fy
@@ -129,16 +129,16 @@ class PlaneFitNode(Node):
         y3 = (ys - cy) * zs / fy
         pts = np.column_stack((x3, y3, zs))  # 形状 (N,3)
 
-        # ---- SVD 平面拟合 ----
+        # ---- SVD plane fitting(SVD 平面拟合) ----
         centroid = pts.mean(axis=0)
         _, _, vh = np.linalg.svd(pts - centroid, full_matrices=False)
-        normal = vh[2, :]  # 第 3 行特征向量 = 法向量
+        normal = vh[2, :]  # Third row eigenvector = normal vector(第 3 行特征向量 = 法向量)
         if normal[2] > 0:
-            normal = -normal  # Z 指向上方
+            normal = -normal  # Z points upwards(Z 指向上方)
         d = -float(normal.dot(centroid))
         plane = normal.tolist() + [d]
 
-        # ---- 写入 YAML ----
+        # ---- Write to YAML(写入 YAML) ----
         self.save_plane(plane)
         self.get_logger().info(f"[PlaneFitNode] plane = {plane}  ➔  {self.output_file}")
         self.done = True
@@ -147,7 +147,7 @@ class PlaneFitNode(Node):
 
 
 # ----------------------------------------------------------------------
-# 入口函数
+# Entry function(入口函数)
 # ----------------------------------------------------------------------
 
 def main():

@@ -25,9 +25,9 @@ from rclpy.executors import MultiThreadedExecutor
 from rclpy.callback_groups import ReentrantCallbackGroup
 
 '''
-客厅   厨房
+Living Room（客厅）   Kitchen（厨房）
 
-卧室   卫生间
+Bedroom（卧室）   Bathroom（卫生间）
 
 '''
 
@@ -259,7 +259,7 @@ class VLLMTransportDietitianl(Node):
             if self.llm_result:
                 self.interrupt = False
                 msg = String()
-                if 'action' in self.llm_result: # 如果有对应的行为返回那么就提取处理
+                if 'action' in self.llm_result: # Extract and process the action if a corresponding one is returned(如果有对应的行为返回那么就提取处理)
                     result = eval(self.llm_result[self.llm_result.find('{'):self.llm_result.find('}')+1])
                     if 'response' in result:
                         msg.data = result['response']

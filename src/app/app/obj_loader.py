@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # encoding: utf-8
-# 加载obj模型文件(load obj model file)
+# load obj model file(加载obj模型文件)
 
 class OBJ:
     def __init__(self, filename, swapyz=False):

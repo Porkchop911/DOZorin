@@ -10,8 +10,8 @@ def launch_setup(context):
     if mic_type == 'xf':
         appid = LaunchConfiguration('appid', default="'ae43053e'")
         enable_setting = LaunchConfiguration('enable_setting', default='false')
-        confidence = LaunchConfiguration('confidence', default='18')  # 语音识别结果自信度阈值，取值：0-100(voice recognition result confidence ranging from 0 to 100)
-        seconds_per_order = LaunchConfiguration('seconds_per_order', default='15')  # 每次语音指令录音长度，单位：秒(recording length of each voice command in seconds)
+        confidence = LaunchConfiguration('confidence', default='18')  # Voice recognition result confidence ranging from 0 to 100(语音识别结果自信度阈值，取值：0-100)
+        seconds_per_order = LaunchConfiguration('seconds_per_order', default='15')  # Recording length of each voice command in seconds(每次语音指令录音长度，单位：秒)
         chinese_awake_words = LaunchConfiguration('chinese_awake_words', default='xiao3 huan4 xiao3 huan4')
         if produce_type == 'ONELINE':
             chinese_awake_words = LaunchConfiguration('chinese_awake_words', default='xiao3 huan4 xiao3 huan4')
@@ -86,7 +86,7 @@ def generate_launch_description():
     ])
 
 if __name__ == '__main__':
-    # 创建一个LaunchDescription对象(create a LaunchDescription object)
+    # Create a LaunchDescription object(创建一个LaunchDescription对象)
     ld = generate_launch_description()
 
     ls = LaunchService()

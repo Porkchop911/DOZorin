@@ -53,7 +53,7 @@ tools = [
         "type": "function",
         "function": {
             "name": "get_available_locations",
-            "description": "查询并列出机器人可以导航前往的所有预定义地点的位置列表。(Query and list the location of all pre-defined places that the robot can navigate to.)",
+            "description": "Query and list the location of all pre-defined places that the robot can navigate to.（查询并列出机器人可以导航前往的所有预定义地点的位置列表。)",
             "parameters": {
                 "type": "object",
                 "properties": {}
@@ -63,14 +63,14 @@ tools = [
     {"type": "function",
         "function": {
             "name": "road_network_navigation",
-            "description": "通过路网节点导航到特定功能区域，如仓库或工地等(Navigate to a specific functional area such as warehouse or construction site via road network node.)",
+            "description": "Navigate to a specific functional area such as warehouse or construction site via road network node.(通过路网节点导航到特定功能区域，如仓库或工地等)",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "location": {
                         "type": "string",
-                        "description": "要去的路网地点名称(Name of the road network location to go)",
-                        "enum": ["配送中心(Distribution Center)", "公园(Park)", "仓库(Warehouse)", "社区(Community)","商店(Store)"]
+                        "description": "Name of the road network location to go(要去的路网地点名称)",
+                        "enum": ["Distribution Center(配送中心)", "Park(公园)", "Warehouse(仓库)", "Community(社区)","Store(商店)"]
                     }
                 },
                 "required": ["location"],
@@ -81,13 +81,13 @@ tools = [
         "type": "function",
         "function": {
             "name": "describe_current_view",
-            "description": "详细描述机器人当前看到的画面内容，以回答用户提出的具体问题。(Describe the detailed contents of the scene that the robot sees currently, to answer the specific question that the user asks.)",
+            "description": "Describe the detailed contents of the scene that the robot sees currently, to answer the specific question that the user asks.(详细描述机器人当前看到的画面内容，以回答用户提出的具体问题。)",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "question": {
                         "type": "string",
-                        "description": "关于当前画面的具体问题，例如'前面的大门有没有关'？(A specific question about the current scene, for example 'Is the door closed?', or 'What is there?')'"
+                        "description": "A specific question about the current scene, for example 'Is the door closed?', or 'What is there?'(关于当前画面的具体问题，例如'前面的大门有没有关'？)'"
                     }
                 },
                 "required": ["question"]
@@ -99,11 +99,11 @@ tools = [
 
 
 waypoint_dict = {
-    "配送中心(Distribution Center)": 0,
-    "公园(Park)": 2,
-    "仓库(Warehouse)": 12,  #12  6
-    "社区(Community)": 13,  #13  5
-    "商店(Store)": 15,
+    "Distribution Center(配送中心)": 0,
+    "Park(公园)": 2,
+    "Warehouse(仓库)": 12,  #12  6
+    "Community(社区)": 13,  #13  5
+    "Store(商店)": 15,
 }
 
 language = os.environ.get('ASR_LANGUAGE','')
@@ -168,14 +168,14 @@ class LLMControlMove(Node):
     def __init__(self, name):
         super().__init__(name)
 
-        self.initialize_variables() # 初始化变量(init variables)
-        self.setup_ros_components() # 设置ROS节点(init node)
-        self.setup_services_and_clients() # 设置ROS服务客户端(init services and clients)
-        self.setup_subs_and_pubs() # 设置ROS订阅者与发布者(init subs and pubs)
-        self.setup_timers() # 设置ROS定时器(init timers)
+        self.initialize_variables() # Initialize variables(初始化变量)
+        self.setup_ros_components() # Setup ROS nodes(设置ROS节点)
+        self.setup_services_and_clients() # Setup ROS service clients(设置ROS服务客户端)
+        self.setup_subs_and_pubs() # Setup ROS subscribers and publishers(设置ROS订阅者与发布者)
+        self.setup_timers() # Setup ROS timers(设置ROS定时器)
 
     def initialize_variables(self):
-        """初始化所有类变量(init all class variables)"""
+        """Initialize all class variables.(初始化所有类变量)"""
         self.language = os.environ.get('ASR_LANGUAGE')
         self.tools = []
         self.vllm_result = ''
@@ -198,7 +198,7 @@ class LLMControlMove(Node):
 
         self.cb_group = ReentrantCallbackGroup()
 
-        # 图像队列(queue)
+        # Image queue(图像队列)
         self.image_pair_queue = queue.Queue(maxsize=2)
         self.image_queue = queue.Queue(maxsize=2)
         self.bridge_box = CvBridge()
@@ -212,12 +212,12 @@ class LLMControlMove(Node):
             self.vllm_model_name = vllm_model
 
     def setup_ros_components(self):
-        """设置ROS2组件(Setup ROS2 components)"""
+        """Setup ROS2 components.(设置ROS2组件)"""
         pass
 
     def setup_services_and_clients(self):
-        """设置服务和服务客户端(Set Services and Clients)"""
-        # LLM相关客户端(LLM-related clients)
+        """Setup services and service clients.(设置服务和服务客户端)"""
+        # LLM-related clients(LLM相关客户端)
         if self.language == 'English':
             self.client = speech.OpenAIAPI(vllm_api_key, vllm_base_url)
         else:
@@ -226,21 +226,21 @@ class LLMControlMove(Node):
         self.set_model_client = self.create_client(SetModel, 'agent_process/set_model')
         self.set_prompt_client = self.create_client(SetString, 'agent_process/set_prompt')
 
-        # 导航客户端(Navigation clients)
+        # Navigation clients(导航客户端)
         self.set_pose_client = self.create_client(SetPose2D, 'navigation_controller/set_pose')
         
-        # 语音唤醒客户端(Voice wakeup clients)
+        # Voice wakeup clients(语音唤醒客户端)
         self.awake_client = self.create_client(SetBool, 'vocal_detect/enable_wakeup')
 
 
     def setup_subs_and_pubs(self):
-        """设置订阅者和发布者(Setup subscribers and publishers)"""
-        # LLM相关(LLM related)
+        """Setup subscribers and publishers.(设置订阅者和发布者)"""
+        # LLM related(LLM相关)
         self.create_subscription(Tools, 'agent_process/tools', self.tools_callback, 1, callback_group=self.cb_group)
         self.create_subscription(String, 'agent_process/result', self.llm_result_callback, 1)
         self.tools_result_pub = self.create_publisher(Tools, 'agent_process/tools_result', 1)
 
-        # 导航相关(Navigation related)
+        # Navigation related(导航相关)
         qos_profile = QoSProfile(depth=10)
         qos_profile.durability = QoSDurabilityPolicy.TRANSIENT_LOCAL
         qos_profile.reliability = QoSReliabilityPolicy.RELIABLE
@@ -250,12 +250,12 @@ class LLMControlMove(Node):
         self.create_subscription(Bool, '/road_network_navigator/reach_final', self.reach_goal_callback, 1, callback_group=self.cb_group)
         self.waypoint_pub = self.create_publisher(Int32, '/request_waypoint', 1)
 
-        # 语音相关(Voice related)
+        # Voice related(语音相关)
         self.create_subscription(Bool, 'vocal_detect/wakeup', self.wakeup_callback, 1, callback_group=self.cb_group)
         self.tts_text_pub = self.create_publisher(String, 'tts_node/tts_text', 1)
         self.create_subscription(Bool, 'tts_node/play_finish', self.play_audio_finish_callback, 1, callback_group=self.cb_group)
 
-        # 底盘控制(Chassis control)
+        # Chassis control(底盘控制)
         self.cmd_vel_pub = self.create_publisher(Twist, '/controller/cmd_vel', 1)
 
         self.joints_pub = self.create_publisher(ServosPosition, 'servo_controller', 1)
@@ -264,10 +264,10 @@ class LLMControlMove(Node):
         #     '/home/ubuntu/software/arm_pc/ActionGroups'
         # )
 
-        # 图像发布(Image publisher)
+        # Image publisher(图像发布)
         self.result_image_publisher = self.create_publisher(Image, '~/result_image', 10)
 
-        # # 图像同步(Image synchronizer)
+        # # Image synchronizer(图像同步)
         if self.camera != 'usb_cam':
             depth_sub = message_filters.Subscriber(self, Image, '/depth_cam/depth0/image_raw')
             image_sub = message_filters.Subscriber(self, Image, '/depth_cam/rgb0/image_raw')
@@ -277,11 +277,11 @@ class LLMControlMove(Node):
             self.create_subscription(Image, '/depth_cam/rgb0/image_raw', self.image_callback, 1)
 
     def setup_timers(self):
-        """设置定时器(Timer)"""
+        """Setup timers.(设置定时器)"""
         self.timer = self.create_timer(0.0, self.init_process, callback_group=self.cb_group)
 
     def _wait_for_services(self, timeout_sec=5.0):
-        """等待关键服务就绪(Wait for critical services to be available)"""
+        """Wait for critical services to be available.(等待关键服务就绪)"""
         services = [
             (self.set_model_client, 'set_model'),
             (self.set_prompt_client, 'set_prompt'),
@@ -293,11 +293,11 @@ class LLMControlMove(Node):
                 self.get_logger().warn(f'Service {name} not available after {timeout_sec} seconds')
 
     def amcl_pose_callback(self, msg):
-        """处理AMCL位姿信息(Slove the pose information from AMCL)"""
+        """Process AMCL pose information.(处理AMCL位姿信息)"""
         position = msg.pose.pose.position
         orientation_q = msg.pose.pose.orientation
 
-        # 四元数转欧拉角(Convert quaternion to euler angle)
+        # Convert quaternion to Euler angles(四元数转欧拉角)
         t3 = +2.0 * (orientation_q.w * orientation_q.z + orientation_q.x * orientation_q.y)
         t4 = +1.0 - 2.0 * (orientation_q.y * orientation_q.y + orientation_q.z * orientation_q.z)
         yaw_z = math.atan2(t3, t4)
@@ -314,18 +314,18 @@ class LLMControlMove(Node):
             self.task_finished = True
 
     def reach_goal_callback(self, msg):
-        """到达目标回调(Arrived at goal)"""
+        """Goal reached callback.(到达目标回调)"""
         self.get_logger().info('Reached goal')
         self.reach_goal = msg.data
         self.get_logger().info(f'{LogColors.GREEN}{LogColors.BOLD}>>>Reached goal<<<: {self.reach_goal}{LogColors.RESET}')
 
 
     def llm_result_callback(self, msg):
-        """LLM结果回调(LLM result)"""
+        """LLM result callback.(LLM结果回调)"""
         self.llm_result = msg.data
         self.get_logger().info(f'{LogColors.YELLOW}{LogColors.BOLD}LLM Reply: {self.llm_result}{LogColors.RESET}')
 
-        # 非列表响应才进行语音播报(Speak out the response if it is not a list response)
+        # Broadcast voice only for non-list responses(非列表响应才进行语音播报)
         text_to_speak = self.llm_result
         is_list_response = re.search(r'^\s*\d+\.', text_to_speak, re.MULTILINE)
         if not is_list_response:
@@ -344,9 +344,9 @@ class LLMControlMove(Node):
         self.image_queue.put(bgr_image)
 
     def road_network_navigation(self, location):
-        """路网节点导航(Road network node navigation)"""
+        """Road network node navigation.(路网节点导航)"""
         if location not in waypoint_dict:
-            return f"导航失败：未知的路网地点 '{location}'。"
+            return f"Navigation failed: Unknown road network location '{location}'.(导航失败：未知的路网地点 '{location}'。)"
         
         node_id = waypoint_dict[location]
         self.reach_goal = False
@@ -358,15 +358,15 @@ class LLMControlMove(Node):
         
         self.get_logger().info(f"Road network goal '{location}' (ID: {node_id}) sent. Waiting for arrival...")
         
-        # 假设底层节点到达后同样会发布 reach_goal 信号(Publish reach_goal signal)
+        # Assume underlying node will publish reach_goal signal upon arrival(假设底层节点到达后同样会发布 reach_goal 信号)
         while not self.reach_goal:
             time.sleep(0.1)
         
-        return f"已通过路网成功抵达{location}"
+        return f"Successfully arrived at {location} via road network.(已通过路网成功抵达{location})"
 
 
     def get_current_location(self):
-        """获取当前位置(get current location)"""
+        """Get current location.(获取当前位置)"""
         timeout_sec = 10.0
         start_time = time.time()
 
@@ -379,10 +379,10 @@ class LLMControlMove(Node):
             location_string = self.find_nearest_location(x, y, waypoint_dict)
             return location_string
         else:
-            return "抱歉，我现在还无法确定自己的位置信息。(Sorry I can't determine my location now.)"
+            return "Sorry I can't determine my location now.(抱歉，我现在还无法确定自己的位置信息。)"
 
     def find_nearest_location(self, current_x, current_y, waypoint_dict):
-        """查找最近的位置(Find the nearest location)"""
+        """Find the nearest location.(查找最近的位置)"""
         min_distance = float('inf')
         nearest_location_name = None
 
@@ -396,14 +396,14 @@ class LLMControlMove(Node):
 
         if nearest_location_name:
             if min_distance < 0.2:
-                return f'我现在在{nearest_location_name}(I am at {nearest_location_name})'
+                return f'I am at {nearest_location_name}(我现在在{nearest_location_name})'
             else:
-                return f'我现在在{nearest_location_name}附近(I am near {nearest_location_name})'
+                return f'I am near {nearest_location_name}(我现在在{nearest_location_name}附近)'
         else:
-            return '我现在暂时不知道在哪里(I am not sure where I am now)'
+            return 'I am not sure where I am now(我现在暂时不知道在哪里)'
 
     def describe_current_view(self, question):
-        """描述当前视图(Describe the current view)"""
+        """Describe the current view.(描述当前视图)"""
         try:
             time.sleep(2)
             if self.camera != 'usb_cam':
@@ -428,33 +428,33 @@ class LLMControlMove(Node):
 
             self.get_logger().info(f'{LogColors.YELLOW}{LogColors.BOLD}LLM Reply: {description}{LogColors.RESET}')
 
-            # 直接发布到TTS进行语音播报(publish to tts)
+            # Publish directly to TTS for voice broadcast(直接发布到TTS进行语音播报)
             tts_msg = String()
             tts_msg.data = description
             self.tts_text_pub.publish(tts_msg)
 
-            return f"画面描述任务已成功执行。得到的结果是{description}(The description of the view has been successfully executed. The result is {description})"
+            return f"The description of the view has been successfully executed. The result is {description}(画面描述任务已成功执行。得到的结果是{description})"
 
         except Exception as e:
             self.get_logger().error(f"Describe current view error: {str(e)}")
-            return "无法描述当前画面(Unable to describe the current view)"
+            return "Unable to describe the current view(无法描述当前画面)"
 
 
     def get_available_locations(self):
-        """获取可用位置(get available locations)"""
+        """Get available locations.(获取可用位置)"""
         self.get_logger().info("Querying available locations.")
         return str(waypoint_dict)
 
     def get_node_state(self, request, response):
-        """获取节点状态(Get node state)"""
+        """Get node state.(获取节点状态)"""
         return response
 
     def init_process(self):
-        """初始化过程(Initialization process)"""
+        """Initialization process.(初始化过程)"""
         self.timer.cancel()
         self._wait_for_services()
 
-        # 设置模型
+        # Set the model(设置模型)
         msg = SetModel.Request()
         msg.model_type = 'llm_tools'
         if self.language == 'Chinese':
@@ -467,12 +467,12 @@ class LLMControlMove(Node):
             msg.base_url = vllm_base_url
         self.send_request(self.set_model_client, msg)
 
-        # 设置提示词(Set prompt)
+        # Set the prompt(设置提示词)
         msg = SetString.Request()
         msg.data = content_string
         self.send_request(self.set_prompt_client, msg)
 
-        # 设置工具(Set tools)
+        # Set the tools(设置工具)
         tools_json = [json.dumps(tool, ensure_ascii=False) for tool in tools]
         msg = SetTools.Request()
         msg.tools = tools_json
@@ -481,18 +481,18 @@ class LLMControlMove(Node):
         # self.controller.run_action('init')
         # time.sleep(1.5)
 
-        # 启动处理线程(Start processing thread)
+        # Start processing thread(启动处理线程)
         threading.Thread(target=self.process, daemon=True).start()
         # threading.Thread(target=self.display_thread, daemon=True).start()
 
-        # 启动功能开启语音提示(Start function opening voice prompt)
+        # Start function opening voice prompt(启动功能开启语音提示)
         speech.play_audio(start_audio_path)
 
         self.create_service(Empty, '~/init_finish', self.get_node_state)
         self.get_logger().info('\033[1;32m%s\033[0m' % 'start')
 
     def send_request(self, client, msg):
-        """发送请求并等待响应(Send request and wait for response)"""
+        """Send request and wait for response.(发送请求并等待响应)"""
         future = client.call_async(msg)
         while rclpy.ok():
             if future.done():
@@ -505,7 +505,7 @@ class LLMControlMove(Node):
         return None
 
     def tools_callback(self, msg):
-        """工具回调(Tools callback)"""
+        """Tools callback.(工具回调)"""
         self.get_logger().info(f'{LogColors.GREEN}{LogColors.BOLD}AI Decision-Making:{LogColors.RESET}')
         self.get_logger().info(f'{LogColors.GREEN}{LogColors.BOLD}Tools id [{msg.id}]:{LogColors.RESET}')
         self.get_logger().info(f'{LogColors.GREEN}{LogColors.BOLD}Tools name [{msg.name}]:{LogColors.RESET}')
@@ -514,7 +514,7 @@ class LLMControlMove(Node):
         self.tools = [msg.id, msg.name, json.loads(msg.data)]
 
     def play_audio_finish_callback(self, msg):
-        """音频播放完成回调(Audio playback finished callback)"""
+        """Audio playback finished callback.(音频播放完成回调)"""
         if msg.data:
             self.play_audio_finish = True
             awake_msg = SetBool.Request()
@@ -522,15 +522,15 @@ class LLMControlMove(Node):
             self.send_request(self.awake_client, awake_msg)
 
     def wakeup_callback(self, msg):
-        """唤醒回调(Wakeup callback)"""
+        """Wakeup callback.(唤醒回调)"""
         if msg.data:
-            self.get_logger().info('唤醒中断(Wakeup interrupt)')
+            self.get_logger().info('Wakeup interrupt.(唤醒中断)')
 
         elif msg.data:
             self.get_logger().info('Wakeup received, but no interruptible task is running.')
 
     def process(self):
-        """主处理循环(Main processing loop)"""
+        """Main processing loop.(主处理循环)"""
         while rclpy.ok():
             if self.tools:
                 tool_id, tool_name, args_dict = self.tools
@@ -554,7 +554,7 @@ class LLMControlMove(Node):
 
                 except Exception as e:
                     self.get_logger().error(f"Tool {tool_name} execution error: {str(e)}")
-                    res = f"工具执行错误: {str(e)}(tool used failed{tool_name})"
+                    res = f"Tool execution error: {str(e)}(工具执行错误：{str(e)})"
                     self.tools_result_pub.publish(Tools(id=tool_id, name=tool_name, data=res))
                 
                 self.tools = []
@@ -562,7 +562,7 @@ class LLMControlMove(Node):
             else:
                 time.sleep(0.02)
     def display_thread(self):
-        """显示线程(show thread)"""
+        """Display thread.(显示线程)"""
         while self.running:
             try:
                 try:
@@ -588,7 +588,7 @@ class LLMControlMove(Node):
 
 
     def image_sync_callback(self, ros_image, ros_depth_image):
-        """同步图像回调(Synchronized image callback)"""
+        """Synchronized image callback.(同步图像回调)"""
         try:
             bgr_image = self.bridge.imgmsg_to_cv2(ros_image, "bgr8")
             depth_image = np.ndarray(
@@ -607,9 +607,9 @@ class LLMControlMove(Node):
         cv_image = self.bridge.imgmsg_to_cv2(ros_image, "bgr8")
         bgr_image = np.array(cv_image, dtype=np.uint8)
         if self.image_queue.full():
-            # 如果队列已满，丢弃最旧的图像 (If the queue is full, discard the oldest image)
+            # Discard the oldest image if the queue is full.(如果队列已满，丢弃最旧的图像)
             self.image_queue.get()
-        # 将图像放入队列(Put the image into the queue)
+        # Put the image into the queue.(将图像放入队列)
         self.image_queue.put(bgr_image)
 
 def main():

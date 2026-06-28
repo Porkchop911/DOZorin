@@ -39,7 +39,7 @@ class VocalDetect(Node):
         self.awake_method = self.get_parameter('awake_method').value  # Wake-up method (唤醒方法)
         mic_type = self.get_parameter('mic_type').value  # Microphone type (麦克风类型)
         port = self.get_parameter('port').value  # Device port (设备端口)
-        awake_word = self.get_parameter('awake_word').value  # Wake-up word (唤醒词)
+        awake_word = self.get_parameter('awake_word').value  # Wake word (唤醒词)
         enable_setting = self.get_parameter('enable_setting').value  # Enable settings (启用设置)
         self.enable_wakeup = self.get_parameter('enable_wakeup').value  # Enable wake-up (启用唤醒)
         self.mode = int(self.get_parameter('mode').value)  # Working mode (工作模式)

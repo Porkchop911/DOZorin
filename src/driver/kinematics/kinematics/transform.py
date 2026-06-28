@@ -40,7 +40,7 @@ joint3 = [-120.2, 120.2]
 joint4 = [-200.2, 20.2]
 joint5 = [-120.2, 120.2]
 
-#  Servo pulse width range, neutral position value, corresponding angle range, and neutral position value(舵机脉宽范围，中位值，对应的角度范围，中位值)
+#  Servo pulse width range, central position value, corresponding angle range, and central position value(舵机脉宽范围，中位值，对应的角度范围，中位值)
 joint1_map = [0, 1000, 500, -120, 120, 0]
 joint2_map = [0, 1000, 500, 30, -210, -90]
 joint3_map = [0, 1000, 500, 120, -120, 0]

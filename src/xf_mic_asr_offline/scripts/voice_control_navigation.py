@@ -52,11 +52,11 @@ class VoiceControlNavNode(Node):
 
         self.produce_type = os.environ.get('PRODUCT_TYPE')
         if self.produce_type == 'OFFLINE':
-            self.get_logger().info('唤醒口令: 小迈小迈(Wake up word: hello hiwonder)')
+            self.get_logger().info('Wake word: hello hiwonder(唤醒口令: 小幻小幻)')
         else:
-            self.get_logger().info('唤醒口令: 小幻小幻(Wake up word: hello hiwonder)')
-        self.get_logger().info('唤醒后15秒内可以不用再唤醒(No need to wake up within 15 seconds after waking up)')
-        self.get_logger().info('控制指令: 去A点 去B点 去C点 回原点(Voice command: go to A/B/C point go back to the start')
+            self.get_logger().info('Wake word: hello hiwonder(唤醒口令: 小幻小幻)')
+        self.get_logger().info('No need to wake up within 15 seconds after waking up(唤醒后15秒内可以不用再唤醒)')
+        self.get_logger().info('Voice command: go to A/B/C point go back to the start(控制指令: 去A点 去B点 去C点 回原点)')
 
         threading.Thread(target=self.main, daemon=True).start()
         self.create_service(Trigger, '~/init_finish', self.get_node_state)
@@ -74,12 +74,12 @@ class VoiceControlNavNode(Node):
         if self.language == 'Chinese':
             self.words = self.words.replace(' ', '')
         self.get_logger().info('words:%s' % self.words)
-        if self.words is not None and self.words not in ['唤醒成功(wake-up-success)', '休眠(Sleep)', '失败5次(Fail-5-times)',
-                                                         '失败10次(Fail-10-times']:
+        if self.words is not None and self.words not in ['Wake-up-success(唤醒成功)', 'Sleep(休眠)', 'Fail-5-times(失败5次)',
+                                                         'Fail-10-times(失败10次)']:
             pass
-        elif self.words == '唤醒成功(wake-up-success)':
+        elif self.words == 'Wake-up-success(唤醒成功)':
             self.play('awake')
-        elif self.words == '休眠(Sleep)':
+        elif self.words == 'Sleep(休眠)':
             msg = BuzzerState()
             msg.freq = 1000
             msg.on_time = 0.1

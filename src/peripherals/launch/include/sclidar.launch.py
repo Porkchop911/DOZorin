@@ -24,7 +24,7 @@ def generate_launch_description():
     machine_type = os.environ['MACHINE_TYPE']
 
     PI = 3.1415926
-    # Perform a static transformation uniformly, separate from URDF, need to confirm the LiDAR installation method(统一做一次静态变换，和URDF做一次分离，需要确认好激光雷达的安装方式
+    # Perform a static transformation uniformly, separate from URDF, need to confirm the LiDAR installation method(统一做一次静态变换，和URDF做一次分离，需要确认好激光雷达的安装方式)
     statis_tf_trans_node = Node(
             package='tf2_ros',
             executable='static_transform_publisher',

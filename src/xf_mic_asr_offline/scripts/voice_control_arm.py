@@ -2,7 +2,7 @@
 # encoding: utf-8
 # @data:2022/11/18
 # @author:aiden
-# 语音控制机械臂(voice control robotic arm)
+# Voice control robotic arm(语音控制机械臂)
 import os
 import json
 import rclpy
@@ -30,9 +30,9 @@ class VoiceControlColorDetectNode(Node):
         self.controller.run_action('init')
         self.play('running')
 
-        self.get_logger().info('唤醒口令: 小幻小幻(Wake up word: hello hiwonder)')
-        self.get_logger().info('唤醒后15秒内可以不用再唤醒(No need to wake up within 15 seconds after waking up)')
-        self.get_logger().info('控制指令: 拔个萝卜 拿给我(Voice command: pick a carrot/pass me please)')
+        self.get_logger().info('Wake word: hello hiwonder(唤醒口令: 小幻小幻)')
+        self.get_logger().info('No need to wake up within 15 seconds after waking up(唤醒后15秒内可以不用再唤醒)')
+        self.get_logger().info('Voice command: pick a carrot/pass me please(控制指令: 拔个萝卜 拿给我)')
         self.create_service(Trigger, '~/init_finish', self.get_node_state)
         self.get_logger().info('\033[1;32m%s\033[0m' % 'start')
     
@@ -48,16 +48,16 @@ class VoiceControlColorDetectNode(Node):
         if self.language == 'Chinese':
             words = words.replace(' ', '')
         self.get_logger().info('words: %s'%words)
-        if words is not None and words not in ['唤醒成功(wake-up-success)', '休眠(Sleep)', '失败5次(Fail-5-times)', '失败10次(Fail-10-times']:
+        if words is not None and words not in ['Wake-up-success(唤醒成功)', 'Sleep(休眠)', 'Fail-5-times(失败5次)', 'Fail-10-times(失败10次)']:
             if words == '拔个萝卜' or words == 'pick a carrot':
                 self.play('ok')
                 self.controller.run_action('voice_pick')
             elif words == '拿给我' or words == 'pass me please':
                 self.play('come')
                 self.controller.run_action('voice_give')
-        elif words == '唤醒成功(wake-up-success)':
+        elif words == 'Wake-up-success(唤醒成功)':
             self.play('awake')
-        elif words == '休眠(Sleep)':
+        elif words == 'Sleep(休眠)':
             msg = BuzzerState()
             msg.freq = 1900
             msg.on_time = 0.05

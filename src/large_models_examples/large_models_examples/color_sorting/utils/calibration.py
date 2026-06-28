@@ -51,12 +51,12 @@ class CalibrationNode(Node):
         self.bridge = CvBridge()
         self.image_queue = queue.Queue(maxsize=2)
         self.depth_image_queue = queue.Queue(maxsize=2)
-        # Create Publisher 创建发布者
+        # Create Publisher (创建发布者)
         self.joints_pub = self.create_publisher(ServosPosition, '/servo_controller', 1)
         self.result_image_pub = self.create_publisher(Image, '~/image_result', 10)
         self.finish_pub = self.create_publisher(Bool, '~/finish', 1)
 
-        # create service 服务
+        # Create service (服务)
         self.create_service(Trigger, '~/enter', self.enter_srv_callback)
         self.create_service(Trigger, '~/exit', self.exit_srv_callback)
         self.create_service(Trigger, '~/start', self.start_calibration_srv_callback)
@@ -83,12 +83,12 @@ class CalibrationNode(Node):
             transform = tf_buffer.lookup_transform(
                 'depth_cam_color_frame', 'usb_link', rclpy.time.Time(),
                 timeout=rclpy.duration.Duration(seconds=5.0))
-            self.static_transform = transform  # save transform data 保存变换数据
+            self.static_transform = transform  # Save transform data (保存变换数据)
             # self.get_logger().info(f'Static transform: {self.static_transform}')
         except TransformException as e:
             self.get_logger().error(f'Failed to get static transform: {e}')
 
-        # Extract translation and rotation 提取平移和旋转
+        # Extract translation and rotation (提取平移和旋转)
         translation = transform.transform.translation
         rotation = transform.transform.rotation
 
@@ -99,7 +99,7 @@ class CalibrationNode(Node):
         with open(self.config_path + self.config_file, 'r') as f:
             config = yaml.safe_load(f)
 
-            # Convert to numpy arrays 转换为 numpy 数组
+            # Convert to numpy arrays (转换为 numpy 数组)
             self.extristric = np.array(config['extristric'])
             self.white_area_pose_cam = np.array(config['white_area_pose_cam'])
             self.white_area_pose_world = np.array(config['white_area_pose_world'])
@@ -126,10 +126,10 @@ class CalibrationNode(Node):
 
 
     def calibration_proc(self):
-        # hand-eye calibration 手眼标定。。。。
-        # calibration through fixed structural dimensions 通过固定的结构尺寸确定
+        # Hand-eye calibration (手眼标定。。。。)
+        # Calibration through fixed structural dimensions (通过固定的结构尺寸确定)
 
-        # get the current end-effector coordinates 获取当前末端坐标
+        # Get the current end-effector coordinates (获取当前末端坐标)
         timer_cb_group = ReentrantCallbackGroup()
         self.get_current_pose_client = self.create_client(GetRobotPose, '/kinematics/get_current_pose', callback_group=timer_cb_group)
         self.get_current_pose_client.wait_for_service()
@@ -140,7 +140,7 @@ class CalibrationNode(Node):
         # self.get_logger().info(f'pose_t:{pose_t}') 
         endpoint = common.xyz_quat_to_mat([pose_t.x, pose_t.y, pose_t.z], [pose_r.w, pose_r.x, pose_r.y, pose_r.z])
             
-        # get tag data 获取标签数据
+        # Get tag data (获取标签数据)
         t = time.time()
         self.tags = []
         self.calibration_step = 1
@@ -155,15 +155,15 @@ class CalibrationNode(Node):
             self.thread = None
             return
 
-        # calibration of the center position in the recognition area 识别区域中心位置标定
-        # calculate the average of multiple recognition data 对多次识别的数据求均值
-        pose = map(lambda tag: common.xyz_rot_to_mat(tag.pose_t, tag.pose_R), self.tags) # convert all poses to 4x4 homogeneous matrices 将所有位姿转为4x4齐次矩阵
-        vectors = map(lambda p: p.ravel(), pose) # flatten the matrix into a vector 将矩阵展平为向量
-        avg_pose = np.mean(list(vectors), axis=0).reshape((4, 4))  # calculate the mean and reassemble into a 4x4 matrix 求均值并重组为4x4矩阵
+        # Calibration of the center position in the recognition area (识别区域中心位置标定)
+        # Calculate the average of multiple recognition data (对多次识别的数据求均值)
+        pose = map(lambda tag: common.xyz_rot_to_mat(tag.pose_t, tag.pose_R), self.tags) # Convert all poses to 4x4 homogeneous matrices (将所有位姿转为4x4齐次矩阵)
+        vectors = map(lambda p: p.ravel(), pose) # Flatten the matrix into a vector (将矩阵展平为向量)
+        avg_pose = np.mean(list(vectors), axis=0).reshape((4, 4))  # Calculate the mean and reassemble into a 4x4 matrix (求均值并重组为4x4矩阵)
         self.get_logger().info(f'avg_pose: {avg_pose}')
-        pose_end = np.matmul(self.hand2cam_tf_matrix, avg_pose)  # transform to end-effector relative coordinates 转换到末端相对坐标
+        pose_end = np.matmul(self.hand2cam_tf_matrix, avg_pose)  # Transform to end-effector relative coordinates (转换到末端相对坐标)
         self.get_logger().info(f'pose_end: {pose_end}')
-        pose_world = np.matmul(endpoint, pose_end)  # transform to robotic arm world coordinates 转换到机械臂世界坐标
+        pose_world = np.matmul(endpoint, pose_end)  # Transform to robotic arm world coordinates (转换到机械臂世界坐标)
         self.get_logger().info(f'pose_world: {pose_world}')
         self.get_logger().info(f'endpoint: {endpoint}')
         self.white_area_pose_world = pose_world
@@ -172,10 +172,10 @@ class CalibrationNode(Node):
         world_position[:3, 3] = pose_world[:3, 3]
         
         self.white_area_pose_cam = avg_pose
-        white_area_pose_cam = avg_pose.tolist()  # the position of the center of the recognition area in the camera's world coordinate system is stored in the parameter 'param' 识别区域中心的在相机的世界坐标系中的位置, 结果存入到param中
-        white_area_pose_world = world_position.tolist()  # the position of the center of the recognition area in the camera's world coordinate system is stored in the parameter 'param' 识别区域中心的机械臂世界坐标系的位置, 结果存入到param中
+        white_area_pose_cam = avg_pose.tolist()  # The position of the center of the recognition area in the camera's world coordinate system is stored in the parameter 'param' (识别区域中心的在相机的世界坐标系中的位置, 结果存入到param中)
+        white_area_pose_world = world_position.tolist()  # The position of the center of the recognition area in the camera's world coordinate system is stored in the parameter 'param' (识别区域中心的机械臂世界坐标系的位置, 结果存入到param中)
 
-        # extrinsic calibration 外参标定
+        # Extrinsic calibration (外参标定)
         world_points = np.array([(-self.tag_size/2, -self.tag_size/2, 0), 
                                  ( self.tag_size/2, -self.tag_size/2, 0), 
                                  ( self.tag_size/2,  self.tag_size/2, 0), 
@@ -187,10 +187,10 @@ class CalibrationNode(Node):
         tvec_flattened = tvec.flatten().tolist()
 
         extristric = [
-            tvec_flattened,  # Use tvec as the first row 将 tvec 作为第一行
-            rmat[0].tolist(),  # First row of the rotation matrix 第一行的旋转矩阵
-            rmat[1].tolist(),  # Second row of the rotation matrix 第二行的旋转矩阵
-            rmat[2].tolist()   # Third row of the rotation matrix 第三行的旋转矩阵
+            tvec_flattened,  # Use tvec as the first row (将 tvec 作为第一行)
+            rmat[0].tolist(),  # First row of the rotation matrix (第一行的旋转矩阵)
+            rmat[1].tolist(),  # Second row of the rotation matrix (第二行的旋转矩阵)
+            rmat[2].tolist()   # Third row of the rotation matrix (第三行的旋转矩阵)
         ]
         self.extristric = np.array(extristric)
         corners = self.draw_retangle()
@@ -269,9 +269,9 @@ class CalibrationNode(Node):
 
     def enter_srv_callback(self,request, response):
         self.get_logger().info('\033[1;32m%s\033[0m' % "enter calibration")
-        # get and publish topic of image 获取和发布图像的topic
+        # Get and publish topic of image (获取和发布图像的topic)
         self._init_parameters()
-        self.heart = Heart(self, '~/heartbeat', 5, lambda _: self.exit_srv_callback(request=Trigger.Request(), response=Trigger.Response()))  # heartbeat package 心跳包
+        self.heart = Heart(self, '~/heartbeat', 5, lambda _: self.exit_srv_callback(request=Trigger.Request(), response=Trigger.Response()))  # Heartbeat package (心跳包)
         if self.camera_type == "GEMINI":
             self.image_sub = self.create_subscription(Image, '/depth_cam/rgb/image_raw', self.image_callback, 1)
             self.camera_info_sub = self.create_subscription(CameraInfo, '/depth_cam/rgb/camera_info', self.camera_info_callback, 1)
@@ -280,7 +280,7 @@ class CalibrationNode(Node):
         if self.camera_type == "USB_CAM":
             self.image_sub = self.create_subscription(Image, '/usb_cam/image_raw', self.image_callback, 1)
             self.camera_info_sub = self.create_subscription(CameraInfo, '/usb_cam/camera_info', self.camera_info_callback, 1)
-        set_servo_position(self.joints_pub, 1.5, ((1, 500), (2, 520), (3, 185), (4, 50), (5, 500), (10, 200)))  # Set initial position of the robotic arm 设置机械臂初始位置
+        set_servo_position(self.joints_pub, 1.5, ((1, 500), (2, 520), (3, 185), (4, 50), (5, 500), (10, 200)))  # Set initial position of the robotic arm (设置机械臂初始位置)
 
         self.enter = True
         response.success = True
@@ -384,7 +384,7 @@ class CalibrationNode(Node):
                             else:
                                 self.tags.append(tags[0])
                             if len(self.tags) >= 10:
-                                print("收集完成")
+                                print("Collection complete(收集完成)")
                                 if self.camera_type == 'GEMINI':
                                     if self.depth_cam_info.k is not None:
                                         self.search_plane(depth_image)
@@ -416,17 +416,17 @@ class CalibrationNode(Node):
                     if self.calibration_step == 20:
                         msg = "Calibration finished!"
                         self.draw_retangle()
-                        cv2.drawContours(result_image, [self.imgpts], -1, (255, 255, 0), 2, cv2.LINE_AA) # draw rectangle 绘制矩形
+                        cv2.drawContours(result_image, [self.imgpts], -1, (255, 255, 0), 2, cv2.LINE_AA) # Draw rectangle (绘制矩形)
                     else:
                         msg = "Calibrating..."
                     cv2.putText(result_image, msg, (5, result_image.shape[0] - 20), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 6)
                     cv2.putText(result_image, msg, (5, result_image.shape[0] - 20), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 0, 0), 2)
 
                 if self.imgpts1 is not None:
-                    cv2.drawContours(result_image, [self.imgpts1], -1, (255, 255, 0), 2, cv2.LINE_AA) # draw contours 绘制轮廓
+                    cv2.drawContours(result_image, [self.imgpts1], -1, (255, 255, 0), 2, cv2.LINE_AA) # Draw contours (绘制轮廓)
                 if self.imgpts is not None:
-                    cv2.drawContours(result_image, [self.imgpts], -1, (255, 255, 0), 2, cv2.LINE_AA) # draw rectangle 绘制矩形
-                # publish the resulting image 发布结果图像
+                    cv2.drawContours(result_image, [self.imgpts], -1, (255, 255, 0), 2, cv2.LINE_AA) # Draw rectangle (绘制矩形)
+                # Publish the resulting image (发布结果图像)
                 self.result_image_pub.publish(self.bridge.cv2_to_imgmsg(result_image, "rgb8"))
             else:
                 time.sleep(0.1)
@@ -439,14 +439,14 @@ class CalibrationNode(Node):
         self.depth_cam_info = msg
 
     def image_callback(self, ros_image):
-        # convert the ros format image to opencv format 将ros格式图像转换为opencv格式
+        # Convert the ros format image to opencv format (将ros格式图像转换为opencv格式)
         cv_image = self.bridge.imgmsg_to_cv2(ros_image, "rgb8")
         rgb_image = np.array(cv_image, dtype=np.uint8)
 
         if self.image_queue.full():
-            # # Discard the oldest image if the queue is full 如果队列已满，丢弃最旧的图像
+            # # Discard the oldest image if the queue is full (如果队列已满，丢弃最旧的图像)
             self.image_queue.get()
-        # # Put image into the queue 将图像放入队列
+        # # Put image into the queue (将图像放入队列)
         self.image_queue.put(rgb_image)
 
     def depth_image_callback(self, ros_depth_image):
@@ -454,9 +454,9 @@ class CalibrationNode(Node):
                                  buffer=ros_depth_image.data)
 
         if self.depth_image_queue.full():
-            # # Discard the oldest image if the queue is full 如果队列已满，丢弃最旧的图像
+            # # Discard the oldest image if the queue is full (如果队列已满，丢弃最旧的图像)
             self.depth_image_queue.get()
-        # # Put image into the queue 将图像放入队列
+        # # Put image into the queue (将图像放入队列)
         self.depth_image_queue.put(depth_image)
 
 def main():
@@ -466,7 +466,7 @@ def main():
     try:
         executor.spin()
     except KeyboardInterrupt:
-        node.running = False  # Stop thread flag 停止线程标志
+        node.running = False  # Stop thread flag (停止线程标志)
         executor.shutdown()
  
 if __name__ == "__main__":

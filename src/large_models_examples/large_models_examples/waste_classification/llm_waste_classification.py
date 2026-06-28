@@ -103,9 +103,9 @@ Output: {"action": "garbage_classification('food_waste‘，'hazardous_waste'，
     '''
 
 ALL_TARGETS = [
-    # 类别目标（顺序固定）
+    # Category targets (fixed order)(类别目标（顺序固定）)
     'food_waste', 'hazardous_waste', 'recyclable_waste', 'residual_waste',
-    # 物品目标
+    # Object target(物品目标)
     'BananaPeel', 'BrokenBones', 'Ketchup',
     'Marker', 'OralLiquidBottle', 'StorageBattery',
     'PlasticBottle', 'Toothbrush', 'Umbrella',
@@ -189,21 +189,21 @@ class LLMColorSorting(Node):
         while self.running:
             if self.llm_result:
                 msg = String()
-                if 'action' in self.llm_result: # If a corresponding action is returned, extract it and proceed with processing. 如果有对应的行为返回那么就提取处理
+                if 'action' in self.llm_result: # If a corresponding action is returned, extract it and proceed with processing. (如果有对应的行为返回那么就提取处理)
                     result = eval(self.llm_result[self.llm_result.find('{'):self.llm_result.find('}') + 1])
                     # result = json.loads(self.llm_result)
                     if 'action' in result:
                         text = result['action']
-                        # Use regular expressions to extract all strings inside. 使用正则表达式提取括号中的所有字符串
+                        # Use regular expressions to extract all strings inside. (使用正则表达式提取括号中的所有字符串)
                         pattern = r"\((['\"][^'\"]+['\"](?:\s*,\s*['\"][^'\"]+['\"])*)\)" 
-                        #  Use re.search to find the matching result. 使用re.search找到匹配的结果
+                        #  Use re.search to find the matching result. (使用re.search找到匹配的结果)
                         match = re.search(pattern, text)
                         self.get_logger().info(f'{match}')
-                        # Extract the result. 提取结果
+                        # Extract the result. (提取结果)
                         if match:
-                            # Retrieve all argument parts (the content inside the parentheses). 获取所有的参数部分（括号内的内容）
+                            # Retrieve all argument parts (the content inside the parentheses). (获取所有的参数部分（括号内的内容）)
                             params = match.group(1)
-                            # Use regular expressions to split the string arguments. 使用正则拆分出各个字符串参数
+                            # Use regular expressions to split the string arguments. (使用正则拆分出各个字符串参数)
                             target_list = re.findall(r"['\"]([^'\"]+)['\"]", params)
                             self.get_logger().info(str(target_list))
                             waste_msg = SetStringBool.Request()
@@ -219,13 +219,13 @@ class LLMColorSorting(Node):
                             waste_msg.data = target_list
                             self.send_request(self.set_target_client, waste_msg)
                             self.get_logger().info(f'{target_list}')
-                            # Enable sorting. 开启分拣
+                            # Enable sorting. (开启分拣)
                             start_msg = SetBool.Request()
                             start_msg.data = True 
                             self.send_request(self.start_client, start_msg)
                     if 'response' in result:
                         msg.data = result['response']
-                else: # No corresponding action, just respond. 没有对应的行为，只回答
+                else: # No corresponding action, just respond. (没有对应的行为，只回答)
                     msg.data = self.llm_result
                 self.tts_text_pub.publish(msg)
                 self.action_finish = True

@@ -62,10 +62,10 @@ class YoloNode(Node):
         self.yolo_detect = YOLO(( self.mode_path + "/" + engine + '.engine'), task=self.task, verbose=False)
 
         self.colors = Colors()
-        self.create_service(Trigger, '/yolo/start', self.start_srv_callback)  # 进入玩法(enter the game)
-        self.create_service(Trigger, '/yolo/stop', self.stop_srv_callback)  # 退出玩法(exit the game)
+        self.create_service(Trigger, '/yolo/start', self.start_srv_callback)  # Enter the feature(进入玩法)
+        self.create_service(Trigger, '/yolo/stop', self.stop_srv_callback)  # Exit the feature(退出玩法)
 
-        self.image_sub = self.create_subscription(Image, '/depth_cam/rgb0/image_raw', self.image_callback, 1)  # 摄像头订阅(subscribe to the camera)
+        self.image_sub = self.create_subscription(Image, '/depth_cam/rgb0/image_raw', self.image_callback, 1)  # Subscribe to the camera(摄像头订阅)
 
         self.yolo_detet_flag = False
         self.object_pub = self.create_publisher(ObjectsInfo, '~/object_detect', 1)

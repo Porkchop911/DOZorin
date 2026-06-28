@@ -2,7 +2,7 @@
 # encoding: utf-8
 # @data:2024/02/28
 # @author:aiden
-# 颜色分拣(color sorting)
+# Color sorting(颜色分拣)
 import os
 import cv2
 import time
@@ -47,8 +47,8 @@ class ColorSortingNode(Node):
         self.create_subscription(ColorsInfo, '/color_detect/color_info', self.get_color_callback, 1)
         self.create_subscription(Image, '/color_detect/image_result', self.image_callback, 1)
         timer_cb_group = ReentrantCallbackGroup()
-        self.create_service(Trigger, '~/start', self.start_srv_callback, callback_group=timer_cb_group) # 进入玩法(enter game)
-        self.create_service(Trigger, '~/stop', self.stop_srv_callback, callback_group=timer_cb_group) # 退出玩法(exit game)
+        self.create_service(Trigger, '~/start', self.start_srv_callback, callback_group=timer_cb_group) # Enter the feature(进入玩法)
+        self.create_service(Trigger, '~/stop', self.stop_srv_callback, callback_group=timer_cb_group) # Exit the feature(退出玩法)
 
         self.controller = ActionGroupController(self.create_publisher(ServosPosition, 'servo_controller', 1), '/home/ubuntu/software/arm_pc/ActionGroups')
         self.client = self.create_client(Trigger, '/controller_manager/init_finish')
@@ -221,19 +221,19 @@ class ColorSortingNode(Node):
                     cv2.rectangle(image, (self.pick_roi[2] - 25, self.pick_roi[0] - 25), (self.pick_roi[3] + 25, self.pick_roi[1] + 25), (0, 255, 255), 2)
                 cv2.imshow('image', image)
                 key = cv2.waitKey(1)
-                if key == ord('q') or key == 27:  # 按q或者esc退出(press q or esc to exit)
+                if key == ord('q') or key == 27:  # Press q or esc to exit(按q或者esc退出)
                     self.running = False
         self.controller.run_action('init')
         rclpy.shutdown()
 
     def image_callback(self, ros_image):
         rgb_image = np.ndarray(shape=(ros_image.height, ros_image.width, 3), dtype=np.uint8,
-                               buffer=ros_image.data)  # 原始 RGB 画面(original RGB image)
+                               buffer=ros_image.data)  # Original RGB image(原始 RGB 画面)
 
         if self.image_queue.full():
-            # 如果队列已满，丢弃最旧的图像(if the queue is full, discard the oldest image)
+            # If the queue is full, discard the oldest image(如果队列已满，丢弃最旧的图像)
             self.image_queue.get()
-            # 将图像放入队列(put the image into the queue)
+            # Put the image into the queue(将图像放入队列)
         self.image_queue.put(rgb_image)
 
 def main():

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # encoding: utf-8
-# 指尖轨迹点发布(publish fingertip trajectory point)
+# Publish fingertip trajectory point(指尖轨迹点发布)
 import cv2
 import time
 import enum
@@ -22,9 +22,9 @@ faulthandler.enable()
 
 def get_hand_landmarks(img, landmarks):
     """
-    将landmarks从medipipe的归一化输出转为像素坐标(convert landmarks from normalized output of Mediapipe to pixel coordinates)
-    :param img: 像素坐标对应的图片(image corresponding to pixel coordinates)
-    :param landmarks: 归一化的关键点(normalized key points)
+    Convert landmarks from normalized output of Mediapipe to pixel coordinates(将landmarks从medipipe的归一化输出转为像素坐标)
+    :param img: Image corresponding to pixel coordinates(像素坐标对应的图片)
+    :param landmarks: Normalized key points(归一化的关键点)
     :return:
     """
     h, w, _ = img.shape
@@ -33,24 +33,24 @@ def get_hand_landmarks(img, landmarks):
 
 def hand_angle(landmarks):
     """
-    计算各个手指的弯曲角度(calculate the bending angle of each finger)
-    :param landmarks: 手部关键点(the key points of the hand)
-    :return: 各个手指的角度(each finger's angle)
+    Calculate the bending angle of each finger(计算各个手指的弯曲角度)
+    :param landmarks: The key points of the hand(手部关键点)
+    :return: Each finger's angle(各个手指的角度)
     """
     angle_list = []
     # thumb 大拇指
     angle_ = vector_2d_angle(landmarks[3] - landmarks[4], landmarks[0] - landmarks[2])
     angle_list.append(angle_)
-    # index 食指
+    # index finger 食指
     angle_ = vector_2d_angle(landmarks[0] - landmarks[6], landmarks[7] - landmarks[8])
     angle_list.append(angle_)
-    # middle 中指
+    # middle finger 中指
     angle_ = vector_2d_angle(landmarks[0] - landmarks[10], landmarks[11] - landmarks[12])
     angle_list.append(angle_)
-    # ring 无名指
+    # ring finger 无名指
     angle_ = vector_2d_angle(landmarks[0] - landmarks[14], landmarks[15] - landmarks[16])
     angle_list.append(angle_)
-    # pink 小拇指
+    # pinky finger 小拇指
     angle_ = vector_2d_angle(landmarks[0] - landmarks[18], landmarks[19] - landmarks[20])
     angle_list.append(angle_)
     angle_list = [abs(a) for a in angle_list]
@@ -58,9 +58,9 @@ def hand_angle(landmarks):
 
 def h_gesture(angle_list):
     """
-    通过二维特征确定手指所摆出的手势(Determine the gesture made by the fingers based on the two-dimensional features)
-    :param angle_list: 各个手指弯曲的角度(the angles of each finger's bending)
-    :return : 手势名称字符串(gesture name string)
+    Determine the gesture made by the fingers based on the two-dimensional features(通过二维特征确定手指所摆出的手势)
+    :param angle_list: The angles of each finger's bending(各个手指弯曲的角度)
+    :return : Gesture name string(手势名称字符串)
     """
     thr_angle = 65.
     thr_angle_thumb = 53.
@@ -135,7 +135,7 @@ class HandTrajectoryNode(Node):
         self.start = False
         self.running = True
         self.image = None
-        self.fps = fps.FPS()  # fps计算器(FPS calculator)
+        self.fps = fps.FPS()  # FPS calculator(fps计算器)
         self.state = State.NULL
         self.points = []
         self.count = 0
@@ -143,9 +143,9 @@ class HandTrajectoryNode(Node):
         self.bridge = CvBridge()
         self.image_queue = queue.Queue(maxsize=2)
         self.camera = 'depth_cam'
-        self.image_sub = self.create_subscription(Image, '/%s/rgb0/image_raw' % self.camera, self.image_callback, 1)  # 摄像头订阅(subscribe to the camera)
+        self.image_sub = self.create_subscription(Image, '/%s/rgb0/image_raw' % self.camera, self.image_callback, 1)  # Subscribe to the camera(摄像头订阅)
         self.point_publisher = self.create_publisher(Points, '~/points', 1)
-        self.result_publisher = self.create_publisher(Image, '~/image_result', 1)  # 图像处理结果发布(publish the image processing result)
+        self.result_publisher = self.create_publisher(Image, '~/image_result', 1)  # Publish the image processing result(图像处理结果发布)
 
         self.create_service(Trigger, '~/start', self.start_srv_callback)
         self.create_service(Trigger, '~/stop', self.stop_srv_callback)
@@ -207,7 +207,7 @@ class HandTrajectoryNode(Node):
                             gesture = (h_gesture(angle_list))
                             index_finger_tip = landmarks[8].tolist()
                         if self.state != State.TRACKING:
-                            if gesture == "one":  # 检测食指手势， 开始指尖追踪(detect index finger gesture and start fingertip tracking)
+                            if gesture == "one":  # Detect index finger gesture and start fingertip tracking(检测食指手势， 开始指尖追踪)
                                 self.count += 1
                                 if self.count > 5:
                                     self.count = 0
@@ -253,7 +253,7 @@ class HandTrajectoryNode(Node):
             if self.debug:
                 cv2.imshow(self.name, bgr_image)
                 key = cv2.waitKey(1)
-                if key == ord('q') or key == 27:  # 按q或者esc退出(press Q or Esc to quit)
+                if key == ord('q') or key == 27:  # Press Q or Esc to quit(按q或者esc退出)
                     break
 
             t2 = time.time()
@@ -267,9 +267,9 @@ class HandTrajectoryNode(Node):
         cv_image = self.bridge.imgmsg_to_cv2(ros_image, "rgb8")
         rgb_image = np.array(cv_image, dtype=np.uint8)
         if self.image_queue.full():
-            # 如果队列已满，丢弃最旧的图像(if the queue is full, remove the oldest image)
+            # If the queue is full, remove the oldest image(如果队列已满，丢弃最旧的图像)
             self.image_queue.get()
-        # 将图像放入队列(put the image into the queue)
+        # Put the image into the queue(将图像放入队列)
         self.image_queue.put(rgb_image)
 
 def main():

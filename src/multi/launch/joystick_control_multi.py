@@ -36,7 +36,7 @@ class JoystickController(Node):
         self.machine = os.environ.get('MACHINE_TYPE', 'MentorPi_Mecanum')
         self.get_logger().info('\033[1;32m%s\033[0m' % self.max_linear)
 
-        # 动态创建机器人列表
+        # Dynamically create a robot list(动态创建机器人列表)
         self.robots = []
         for i in range(1, num_robots + 1):
             robot_namespace = f'robot_{i}/'
@@ -78,7 +78,7 @@ class JoystickController(Node):
                 twist.angular.z = 0.0
                 servo_state = PWMServoState()
                 servo_state.id = [3]
-                servo_state.position = [1500]  # 中立位置
+                servo_state.position = [1500]  # Central position(中立位置)
                 data = SetPWMServoState()
                 data.state = [servo_state]
                 data.duration = 0.02
@@ -96,7 +96,7 @@ class JoystickController(Node):
                 for robot in self.robots:
                     robot['servo_state_pub'].publish(data)
 
-        # 发布控制消息到所有机器人
+        # Publish control messages to all robots(发布控制消息到所有机器人)
         for robot in self.robots:
             robot['mecanum_pub'].publish(twist)
 
@@ -107,7 +107,7 @@ class JoystickController(Node):
             msg.on_time = 0.05
             msg.off_time = 0.01
             msg.repeat = 1
-            # 同时控制所有机器人的蜂鸣器
+            # Control the buzzers of all robots simultaneously(同时控制所有机器人的蜂鸣器)
             for robot in self.robots:
                 robot['buzzer_pub'].publish(msg)
 
@@ -150,7 +150,7 @@ class JoystickController(Node):
 
 
 def main():
-    # 指定机器人数量
+    # Specify the number of robots(指定机器人数量)
     num_robots = 3
     node = JoystickController('joystick_control', num_robots)
     rclpy.spin(node)

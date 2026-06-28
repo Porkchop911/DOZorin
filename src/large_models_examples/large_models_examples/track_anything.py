@@ -19,9 +19,9 @@ class ObjectTracker:
             cv2.setMouseCallback(name, self.onmouse)
 
         self.mouse_click = False
-        self.selection = None  # 实时跟踪鼠标的跟踪区域
-        self.track_window = None  # 要检测的物体所在区域
-        self.drag_start = None  # 标记，是否开始拖动鼠标
+        self.selection = None  # Real-time tracking of the mouse tracking area(实时跟踪鼠标的跟踪区域)
+        self.track_window = None  # Area where the object to be detected is located(要检测的物体所在区域)
+        self.drag_start = None  # Flag, whether to start dragging the mouse(标记，是否开始拖动鼠标)
         self.start_circle = True
         self.start_click = False
         self.stop_track = False
@@ -31,7 +31,7 @@ class ObjectTracker:
         self.angular_speed = 0
         self.angular_base_speed = 0.03
         
-        self.linear_pid = pid.PID(0.0, 0.0, 0.0)#pid初始化(pid initialization)
+        self.linear_pid = pid.PID(0.0, 0.0, 0.0)#PID initialization(pid初始化)
         self.angular_pid  = pid.PID(0.0, 0.0, 0.0)
 
     def set_init_param(self, linear_pid, angular_pid): 
@@ -39,31 +39,31 @@ class ObjectTracker:
         self.angular_pid = angular_pid
 
     def update_pid(self, p1, p2):
-        self.linear_pid = pid.PID(p1[0], p1[1], p1[2])#pid初始化(pid initialization)
+        self.linear_pid = pid.PID(p1[0], p1[1], p1[2])#PID initialization(pid初始化)
         self.angular_pid = pid.PID(p2[0], p2[1], p2[2])
 
-    # 鼠标点击事件回调函数
+    # Mouse click event callback function(鼠标点击事件回调函数)
     def onmouse(self, event, x, y, flags, param):
-        if event == cv2.EVENT_LBUTTONDOWN:  # 鼠标左键按下
+        if event == cv2.EVENT_LBUTTONDOWN:  # Left mouse button pressed(鼠标左键按下)
             self.mouse_click = True
-            self.drag_start = (x, y)  # 鼠标起始位置
+            self.drag_start = (x, y)  # Mouse starting position(鼠标起始位置)
             self.track_window = None
-        if self.drag_start:  # 是否开始拖动鼠标，记录鼠标位置
+        if self.drag_start:  # Whether to start dragging the mouse, record the mouse position(是否开始拖动鼠标，记录鼠标位置)
             xmin = min(x, self.drag_start[0])
             ymin = min(y, self.drag_start[1])
             xmax = max(x, self.drag_start[0])
             ymax = max(y, self.drag_start[1])
             self.selection = (xmin, ymin, xmax, ymax)
-        if event == cv2.EVENT_LBUTTONUP:  # 鼠标左键松开
+        if event == cv2.EVENT_LBUTTONUP:  # Left mouse button released(鼠标左键松开)
             self.mouse_click = False
             self.drag_start = None
             self.track_window = self.selection
             self.selection = None
         if event == cv2.EVENT_RBUTTONDOWN:
             self.mouse_click = False
-            self.selection = None  # 实时跟踪鼠标的跟踪区域
-            self.track_window = None  # 要检测的物体所在区域
-            self.drag_start = None  # 标记，是否开始拖动鼠标
+            self.selection = None  # Real-time tracking of the mouse tracking area(实时跟踪鼠标的跟踪区域)
+            self.track_window = None  # Area where the object to be detected is located(要检测的物体所在区域)
+            self.drag_start = None  # Flag, whether to start dragging the mouse(标记，是否开始拖动鼠标)
             self.start_circle = True
             self.start_click = False
 
@@ -79,12 +79,12 @@ class ObjectTracker:
 
     def get_target(self, tracker, image):
         if self.start_circle and self.use_mouse and not self.automatic:
-            # 用鼠标拖拽一个框来指定区域
+            # Drag a box with the mouse to specify the area(用鼠标拖拽一个框来指定区域)
             h, w = image.shape[:2]
-            if self.track_window:  # 跟踪目标的窗口画出后，实时标出跟踪目标
+            if self.track_window:  # After the tracking target window is drawn, mark the tracking target in real time(跟踪目标的窗口画出后，实时标出跟踪目标)
                 cv2.rectangle(image, (self.track_window[0], self.track_window[1]),
                               (self.track_window[2], self.track_window[3]), (0, 0, 255), 2)
-            elif self.selection:  # 跟踪目标的窗口随鼠标拖动实时显示
+            elif self.selection:  # The tracking target window is displayed in real time as the mouse is dragged(跟踪目标的窗口随鼠标拖动实时显示)
                 cv2.rectangle(image, (self.selection[0], self.selection[1]), (self.selection[2], self.selection[3]),
                               (0, 255, 255), 2)
             if self.mouse_click:

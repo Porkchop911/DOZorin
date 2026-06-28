@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # encoding: utf-8
-# Color picker and heartbeat packet 颜色拾取器及心跳包
+# Color picker and heartbeat packet (颜色拾取器及心跳包)
 import cv2
 import time
 from std_srvs.srv import SetBool, Trigger
@@ -66,41 +66,41 @@ class Heart:
         self.callback = callback
         self.timeout = timeout
         self.node = node
-        self._destroyed = False  # Add destroy flag 添加销毁标志
+        self._destroyed = False  # Add destroy flag (添加销毁标志)
         self.timer = self.node.create_timer(1, self.heartbeat_timeout_check)
         self.service = self.node.create_service(SetBool, srv_name, self.heartbeat_srv_callback)
 
     def destroy(self):
         """
-        Completely destroy the Heart instance to ensure all resources are properly released. 完全销毁 Heart 实例，确保所有资源被正确释放
+        Completely destroy the Heart instance to ensure all resources are properly released. (完全销毁 Heart 实例，确保所有资源被正确释放)
         """
         if self._destroyed:
             return
         
         try:
-            # Stop heartbeat detection 停止心跳检测
+            # Stop heartbeat detection (停止心跳检测)
             self.heartbeat_stamp = 0
             
-            # Destroy timer 销毁定时器
+            # Destroy timer (销毁定时器)
             if hasattr(self, 'timer') and self.timer is not None:
                 self.timer.cancel()
                 self.timer.destroy()
                 self.timer = None
 
-            # Destroy service 销毁服务
+            # Destroy service (销毁服务)
             if hasattr(self, 'service') and self.service is not None:
                 self.node.destroy_service(self.service)
                 self.service = None
 
-            # Clear callbacks 清理回调
+            # Clear callbacks (清理回调)
             if hasattr(self, 'callback'):
                 self.callback = None
 
-            # Log destruction information 记录销毁信息
+            # Log destruction information (记录销毁信息)
             if self.node and hasattr(self.node, 'get_logger'):
                 self.node.get_logger().info('\033[1;32m%s\033[0m' % "heart destroyed")
 
-            # Clean up node references 清理节点引用
+            # Clean up node references (清理节点引用)
             self.node = None
             
         except Exception as e:

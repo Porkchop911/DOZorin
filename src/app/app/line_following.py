@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # encoding: utf-8
-# 巡线(line following)
+# line following(巡线)
 import os
 import cv2
 import math
@@ -32,7 +32,7 @@ else:
     display_size = [int(640*6/4), int(480*6/4)]
     
 # display_size = [int(640*6/4), int(480*6/4)]
-MAX_SCAN_ANGLE = 240  # 激光的扫描角度,去掉总是被遮挡的部分degree(the scanning angle of lidar. The covered part is always eliminated)
+MAX_SCAN_ANGLE = 240  # The scanning angle of LiDAR. The covered part is always eliminated(激光的扫描角度,去掉总是被遮挡的部分degree)
 class LineFollower:
     def __init__(self, color, node):
         self.node = node
@@ -46,7 +46,7 @@ class LineFollower:
     @staticmethod
     def get_area_max_contour(contours, threshold=100):
         '''
-        获取最大面积对应的轮廓(get the contour of the largest area)
+        Get the contour of the largest area(获取最大面积对应的轮廓)
         :param contours:
         :param threshold:
         :return:
@@ -76,34 +76,34 @@ class LineFollower:
             lowerb = tuple(color['min'])
             upperb = tuple(color['max'])
         for roi in self.rois:
-            blob = image[int(roi[0]*h):int(roi[1]*h), int(roi[2]*w):int(roi[3]*w)]  # 截取roi(intercept roi)
-            img_lab = cv2.cvtColor(blob, cv2.COLOR_RGB2LAB)  # rgb转lab(convert rgb into lab)
-            img_blur = cv2.GaussianBlur(img_lab, (3, 3), 3)  # 高斯模糊去噪(perform Gaussian filtering to reduce noise)
-            mask = cv2.inRange(img_blur, lowerb, upperb)  # 二值化(image binarization)
-            eroded = cv2.erode(mask, cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3)))  # 腐蚀(corrode)
-            dilated = cv2.dilate(eroded, cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3)))  # 膨胀(dilate)
+            blob = image[int(roi[0]*h):int(roi[1]*h), int(roi[2]*w):int(roi[3]*w)]  # Intercept roi(截取roi)
+            img_lab = cv2.cvtColor(blob, cv2.COLOR_RGB2LAB)  # Convert rgb into lab(rgb转lab)
+            img_blur = cv2.GaussianBlur(img_lab, (3, 3), 3)  # Perform Gaussian filtering to reduce noise(高斯模糊去噪)
+            mask = cv2.inRange(img_blur, lowerb, upperb)  # Image binarization(二值化)
+            eroded = cv2.erode(mask, cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3)))  # Corrode(腐蚀)
+            dilated = cv2.dilate(eroded, cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3)))  # Dilate(膨胀)
             # cv2.imshow('section:{}:{}'.format(roi[0], roi[1]), cv2.cvtColor(dilated, cv2.COLOR_GRAY2BGR))
-            contours = cv2.findContours(dilated, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_TC89_L1)[-2]  # 找轮廓(find the contour)
-            max_contour_area = self.get_area_max_contour(contours, 30)  # 获取最大面积对应轮廓(get the contour corresponding to the largest contour)
+            contours = cv2.findContours(dilated, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_TC89_L1)[-2]  # Find the contour(找轮廓)
+            max_contour_area = self.get_area_max_contour(contours, 30)  # Get the contour corresponding to the largest contour(获取最大面积对应轮廓)
             if max_contour_area is not None:
-                rect = cv2.minAreaRect(max_contour_area[0])  # 最小外接矩形(minimum circumscribed rectangle)
-                box = np.intp(cv2.boxPoints(rect))  # 四个角(four corners)
+                rect = cv2.minAreaRect(max_contour_area[0])  # Minimum circumscribed rectangle(最小外接矩形)
+                box = np.intp(cv2.boxPoints(rect))  # Four corners(四个角)
                 for j in range(4):
                     box[j, 1] = box[j, 1] + int(roi[0]*h)
-                cv2.drawContours(result_image, [box], -1, (0, 255, 255), 2)  # 画出四个点组成的矩形(draw the rectangle composed of four points)
+                cv2.drawContours(result_image, [box], -1, (0, 255, 255), 2)  # Draw the rectangle composed of four points(画出四个点组成的矩形)
 
-                # 获取矩形对角点(acquire the diagonal points of the rectangle)
+                # Acquire the diagonal points of the rectangle(获取矩形对角点)
                 pt1_x, pt1_y = box[0, 0], box[0, 1]
                 pt3_x, pt3_y = box[2, 0], box[2, 1]
-                # 线的中心点(center point of the line)
+                # Center point of the line(线的中心点)
                 line_center_x, line_center_y = (pt1_x + pt3_x) / 2, (pt1_y + pt3_y) / 2
 
-                cv2.circle(result_image, (int(line_center_x), int(line_center_y)), 5, (0, 0, 255), -1)   # 画出中心点(draw the center point)
+                cv2.circle(result_image, (int(line_center_x), int(line_center_y)), 5, (0, 0, 255), -1)   # Draw the center point(画出中心点)
                 centroid_sum += line_center_x * roi[-1]
         if centroid_sum == 0:
             return result_image, None
-        center_pos = centroid_sum / self.weight_sum  # 按比重计算中心点(calculate the center point according to the ratio)
-        deflection_angle = -math.atan((center_pos - (w / 2.0)) / (h / 2.0))   # 计算线角度(calculate the line angle)
+        center_pos = centroid_sum / self.weight_sum  # Calculate the center point according to the ratio(按比重计算中心点)
+        deflection_angle = -math.atan((center_pos - (w / 2.0)) / (h / 2.0))   # Calculate the line angle(计算线角度)
         return result_image, deflection_angle
 
 class LineFollowingNode(Node):
@@ -136,17 +136,17 @@ class LineFollowingNode(Node):
         self.image_queue = queue.Queue(2)
         self.lidar_type = os.environ.get('LIDAR_TYPE')
         self.machine_type = os.environ.get('MACHINE_TYPE')
-        self.mecanum_pub = self.create_publisher(Twist, '/controller/cmd_vel', 1)  # 底盘控制(chassis control)
-        self.result_publisher = self.create_publisher(Image, '~/image_result', 1)  # 图像处理结果发布(publish the image processing result)
-        self.create_service(Trigger, '~/enter', self.enter_srv_callback)  # 进入玩法(enter the game)
-        self.create_service(Trigger, '~/exit', self.exit_srv_callback)  # 退出玩法(exit the game)
-        self.create_service(SetBool, '~/set_running', self.set_running_srv_callback)  # 开启玩法(start the game)
+        self.mecanum_pub = self.create_publisher(Twist, '/controller/cmd_vel', 1)  # Chassis control(底盘控制)
+        self.result_publisher = self.create_publisher(Image, '~/image_result', 1)  # Publish the image processing result(图像处理结果发布)
+        self.create_service(Trigger, '~/enter', self.enter_srv_callback)  # Enter the feature(进入玩法)
+        self.create_service(Trigger, '~/exit', self.exit_srv_callback)  # Exit the feature(退出玩法)
+        self.create_service(SetBool, '~/set_running', self.set_running_srv_callback)  # Start the feature(开启玩法)
         self.set_color_srv = self.create_service(SetString, '~/set_color', self.set_color_srv_callback)
-        self.create_service(SetPoint, '~/set_target_color', self.set_target_color_srv_callback)  # 设置颜色(set the color)
-        self.create_service(Trigger, '~/get_target_color', self.get_target_color_srv_callback)   # 获取颜色(get the color)
-        self.create_service(SetFloat64, '~/set_threshold', self.set_threshold_srv_callback)  # 设置阈值(set the threshold)
+        self.create_service(SetPoint, '~/set_target_color', self.set_target_color_srv_callback)  # Set the color(设置颜色)
+        self.create_service(Trigger, '~/get_target_color', self.get_target_color_srv_callback)   # Get the color(获取颜色)
+        self.create_service(SetFloat64, '~/set_threshold', self.set_threshold_srv_callback)  # Set the threshold(设置阈值)
         self.joints_pub = self.create_publisher(ServosPosition, 'servo_controller', 1)
-        self.heartbeat = Heart(self, self.name + '/heartbeat', 5, lambda _: self.exit_srv_callback(request=Trigger.Request(), response=Trigger.Response())) # 心跳包(heartbeat package)
+        self.heartbeat = Heart(self, self.name + '/heartbeat', 5, lambda _: self.exit_srv_callback(request=Trigger.Request(), response=Trigger.Response())) # Heartbeat package(心跳包)
         self.debug = self.get_parameter('debug').value
         if self.debug:
             threading.Thread(target=self.main, daemon=True).start()
@@ -169,7 +169,7 @@ class LineFollowingNode(Node):
             cv2.imshow("image", cv2.resize(result, (display_size[0], display_size[1])))
             if self.debug and not self.set_callback:
                 self.set_callback = True
-                # 设置鼠标点击事件的回调函数(set callback function for mouse clicking event)
+                # Set callback function for mouse clicking event(设置鼠标点击事件的回调函数)
                 cv2.setMouseCallback("image", self.mouse_callback)
             k = cv2.waitKey(1)
             if k != -1:
@@ -206,13 +206,13 @@ class LineFollowingNode(Node):
             if self.image_sub is None:
                 if 'ROSOrin' in self.machine_type:
                     self.camera_type = 'Stereo'
-                    self.image_sub = self.create_subscription(Image, '/depth_cam/rgb0/image_raw', self.image_callback, 1)  # 摄像头订阅(subscribe to the camera)
+                    self.image_sub = self.create_subscription(Image, '/depth_cam/rgb0/image_raw', self.image_callback, 1)  # Subscribe to the camera(摄像头订阅)
                 else:
                     self.camera_type = 'Mono'
-                    self.image_sub = self.create_subscription(Image, '/usb_cam/image_raw', self.image_callback, 1)  # 摄像头订阅(subscribe to the camera)
+                    self.image_sub = self.create_subscription(Image, '/usb_cam/image_raw', self.image_callback, 1)  # Subscribe to the camera(摄像头订阅)
             if self.lidar_sub is None:
                 qos = QoSProfile(depth=1, reliability=QoSReliabilityPolicy.BEST_EFFORT)
-                self.lidar_sub = self.create_subscription(LaserScan, '/scan_raw', self.lidar_callback, qos)  # 订阅雷达数据(subscribe to Lidar data)
+                self.lidar_sub = self.create_subscription(LaserScan, '/scan_raw', self.lidar_callback, qos)  # Subscribe to LiDAR data(订阅雷达数据)
                 set_servo_position(self.joints_pub, 1, ((10, 300), (5, 500), (4, 200), (3, 70), (2, 605), (1, 500)))
             self.mecanum_pub.publish(Twist())
         response.success = True
@@ -303,7 +303,7 @@ class LineFollowingNode(Node):
         return response
 
     def lidar_callback(self, lidar_data):
-        # 数据大小 = 扫描角度/每扫描一次增加的角度(data size= scanning angle/ the increased angle per scan)
+        # Data size = scanning angle / the increased angle per scan(数据大小 = 扫描角度/每扫描一次增加的角度)
         if self.lidar_type != 'G4':
             if self.lidar_type == 'SCLIDAR':
                 num_points = len(lidar_data.ranges)
@@ -313,15 +313,15 @@ class LineFollowingNode(Node):
                 right_ranges = shifted_ranges[::-1][:max_index]
             else:
                 max_index = int(math.radians(MAX_SCAN_ANGLE / 2.0) / lidar_data.angle_increment)
-                left_ranges = lidar_data.ranges[:max_index]  # 左半边数据 (the left data)
-                right_ranges = lidar_data.ranges[::-1][:max_index]  # 右半边数据 (the right data)
+                left_ranges = lidar_data.ranges[:max_index]  # The left data(左半边数据)
+                right_ranges = lidar_data.ranges[::-1][:max_index]  # The right data(右半边数据)
         elif self.lidar_type == 'G4':
             min_index = int(math.radians((360 - MAX_SCAN_ANGLE) / 2.0) / lidar_data.angle_increment)
             max_index = int(math.radians(180) / lidar_data.angle_increment)
-            left_ranges = lidar_data.ranges[min_index:max_index][::-1]  # 左半边数据 (the left data)
-            right_ranges = lidar_data.ranges[::-1][min_index:max_index][::-1]  # 右半边数据 (the right data)
+            left_ranges = lidar_data.ranges[min_index:max_index][::-1]  # The left data(左半边数据)
+            right_ranges = lidar_data.ranges[::-1][min_index:max_index][::-1]  # The right data(右半边数据)
 
-        # 根据设定取数据(Get data according to settings)
+        # Get data according to settings(根据设定取数据)
         angle = self.scan_angle / 2
         angle_index = int(angle / lidar_data.angle_increment + 0.50)
         left_range, right_range = np.array(left_ranges[:angle_index]), np.array(right_ranges[:angle_index])
@@ -330,7 +330,7 @@ class LineFollowingNode(Node):
         right_nonzero = right_range.nonzero()
         left_nonan = np.isfinite(left_range[left_nonzero])
         right_nonan = np.isfinite(right_range[right_nonzero])
-        # 取左右最近的距离(Take the nearest distance left and right)
+        # Take the nearest distance left and right(取左右最近的距离)
         min_dist_left_ = left_range[left_nonzero][left_nonan]
         min_dist_right_ = right_range[right_nonzero][right_nonan]
         if len(min_dist_left_) > 0 and len(min_dist_right_) > 0:
@@ -349,11 +349,11 @@ class LineFollowingNode(Node):
         rgb_image = np.array(cv_image, dtype=np.uint8)
         rgb_image = cv2.resize(rgb_image, (640,480))
         self.image_height, self.image_width = rgb_image.shape[:2]
-        result_image = np.copy(rgb_image)  # 显示结果用的画面 (the image used to display the result)
+        result_image = np.copy(rgb_image)  # The image used to display the result(显示结果用的画面)
         with self.lock:
             if self.use_color_picker:
-                # 颜色拾取器和识别巡线互斥, 如果拾取器存在就开始拾取(color picker and line recognition are exclusive. If there is color picker, start picking)
-                if self.color_picker is not None:  # 拾取器存在(color picker exists)
+                # Color picker and line recognition are exclusive. If there is color picker, start picking(颜色拾取器和识别巡线互斥, 如果拾取器存在就开始拾取)
+                if self.color_picker is not None:  # Color picker exists(拾取器存在)
                     try:
                         target_color, result_image = self.color_picker(rgb_image, result_image)
                         if target_color is not None:
@@ -408,9 +408,9 @@ class LineFollowingNode(Node):
                     self.mecanum_pub.publish(twist)
         if self.debug:
             if self.image_queue.full():
-                # 如果队列已满，丢弃最旧的图像(if the queue is full, discard the oldest image)
+                # If the queue is full, discard the oldest image(如果队列已满，丢弃最旧的图像)
                 self.image_queue.get()
-                # 将图像放入队列(put the image into the queue)
+                # Put the image into the queue(将图像放入队列)
             self.image_queue.put(result_image)
         else:
             self.result_publisher.publish(self.bridge.cv2_to_imgmsg(result_image, "rgb8"))

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # encoding: utf-8
-# 颜色拾取器及心跳包(color picker and heartbeat packet)
+# Color picker and heartbeat packet(颜色拾取器及心跳包)
 import cv2
 import time
 from std_srvs.srv import SetBool, Trigger

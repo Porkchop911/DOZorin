@@ -2,7 +2,7 @@
 # encoding: utf-8
 # @data:2023/12/18
 # @author:aiden
-# 过独木桥(cross bridge)
+# Cross bridge(过独木桥)
 import os
 import cv2
 import time
@@ -37,8 +37,8 @@ class CrossBridgeNode(Node):
         self.center_roi = [290, 300, 315, 325]
         self.right_roi = [290, 300, 395, 405]
         self.debug = self.get_parameter('debug').value
-        self.joints_pub = self.create_publisher(ServosPosition, '/servo_controller', 1) # 舵机控制(servo control)
-        self.mecanum_pub = self.create_publisher(Twist, '/controller/cmd_vel', 1)  # 底盘控制(chassis control)
+        self.joints_pub = self.create_publisher(ServosPosition, '/servo_controller', 1) # Servo control(舵机控制)
+        self.mecanum_pub = self.create_publisher(Twist, '/controller/cmd_vel', 1)  # Chassis control(底盘控制)
         self.create_subscription(Image, '/depth_cam/depth0/image_raw', self.depth_callback, 1)
 
         self.client = self.create_client(Trigger, '/controller_manager/init_finish')
@@ -60,9 +60,9 @@ class CrossBridgeNode(Node):
         depth_image = np.ndarray(shape=(ros_depth_image.height, ros_depth_image.width), dtype=np.uint16,
                                  buffer=ros_depth_image.data)
         if self.image_queue.full():
-            # 如果队列已满，丢弃最旧的图像(if the queue is full, discard the oldest image)
+            # If the queue is full, discard the oldest image(如果队列已满，丢弃最旧的图像)
             self.image_queue.get()
-        # 将图像放入队列(put the image into the queue)
+        # Put the image into the queue(将图像放入队列)
         self.image_queue.put(depth_image)
 
     def shutdown(self, signum, frame):
@@ -80,7 +80,7 @@ class CrossBridgeNode(Node):
     def move_policy(self, left_distance, center_distance, right_distance):
         if abs(left_distance - self.plane_high) > 0.02:
             if abs(center_distance - self.plane_high) > 0.02:
-                self.twist.angular.z = -1.0 #单位：弧度/秒
+                self.twist.angular.z = -1.0 #Unit: rad/s(单位：弧度/秒)
             else:
                 self.twist.angular.z = -0.2
         elif abs(right_distance - self.plane_high) > 0.02:

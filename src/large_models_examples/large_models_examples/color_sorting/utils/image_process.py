@@ -137,28 +137,28 @@ def draw_tags(image, tags, corners_color=(0, 125, 255), center_color=(0, 255, 0)
 
 def get_area_max_contour(contours, threshold=50):
     """
-    Get the contour whose area is the largest. Filter out those whose area is too small. 获取轮廓中面积最重大的一个, 过滤掉面积过小的情况
-    :param contours: contour list 轮廓列表
-    :param threshold: Area threshold. Contour whose area is less than this value will be filtered out. 面积阈值, 小于这个面积的轮廓会被过滤
-    :return: if the maximum contour area is greater than this threshold, return the largest contour, otherwise return None. 如果最大的轮廓面积大于阈值则返回最大的轮廓, 否则返回None
+    Get the contour whose area is the largest. Filter out those whose area is too small. (获取轮廓中面积最重大的一个, 过滤掉面积过小的情况)
+    :param contours: contour list (轮廓列表)
+    :param threshold: Area threshold. Contour whose area is less than this value will be filtered out. (面积阈值, 小于这个面积的轮廓会被过滤)
+    :return: if the maximum contour area is greater than this threshold, return the largest contour, otherwise return None. (如果最大的轮廓面积大于阈值则返回最大的轮廓, 否则返回None)
     """
     contour_area_max = 0
     area_max_contour = None
 
-    for c in contours:  # Iterate through all contours. 历遍所有轮廓
-        contour_area_temp = math.fabs(cv2.contourArea(c))  # Compute the area of each contour. 计算轮廓面积
+    for c in contours:  # Iterate through all contours. (历遍所有轮廓)
+        contour_area_temp = math.fabs(cv2.contourArea(c))  # Compute the area of each contour. (计算轮廓面积)
         if contour_area_temp > contour_area_max:
             contour_area_max = contour_area_temp
-            if contour_area_temp > threshold:  # Filter out noise or irrelevant contours. 过滤干扰
+            if contour_area_temp > threshold:  # Filter out noise or irrelevant contours. (过滤干扰)
                 area_max_contour = c
 
-    return area_max_contour,  contour_area_max  # Return the largest contour. 返回最大的轮廓
+    return area_max_contour,  contour_area_max  # Return the largest contour. (返回最大的轮廓)
 
 def bgr8_to_jpeg(value, quality=75):
     """
-    Convert data in the format of cv bgr8 into jpg. 将cv bgr8格式数据转换为jpg格式
-    :param value: original data 原始数据
-    :param quality:  jpg quality. Maximum value is 100. jpg质量 最大值100
+    Convert data in the format of cv bgr8 into jpg. (将cv bgr8格式数据转换为jpg格式)
+    :param value: original data (原始数据)
+    :param quality:  jpg quality. Maximum value is 100. (jpg质量 最大值100)
     :return:
     """
     return bytes(cv2.imencode('.jpg', value)[1])
@@ -167,14 +167,14 @@ class GetObjectSurface:
     def __init__(self, proto_path, model_path):
         self.net = cv2.dnn.readNetFromCaffe(proto_path, model_path)
         cv2.dnn_registerLayer("Crop", CropLayer)
-        self.net.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)  # Use CUDA as the computation backend. 使用 CUDA 作为后端
+        self.net.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)  # Use CUDA as the computation backend. (使用 CUDA 作为后端)
         self.net.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA_FP16)
-        # self.net.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA)  # Set the target to CUDA. 目标为 CUDA
+        # self.net.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA)  # Set the target to CUDA. (目标为 CUDA)
 
     def adaptive_threshold(self, gray_image):
-        # Segment using adaptive threshold, and filter out the side view. 用自适应阈值先进行分割, 过滤掉侧面
-        # cv2.ADAPTIVE_THRESH_MEAN_C： All neighboring pixel values have equal weights. 邻域所有像素点的权重值是一致的
-        # cv2.ADAPTIVE_THRESH_GAUSSIAN _C ： The wights if each point are related to the distance between each neighboring pixel and the center pixel, and are calculated using the Gaussian function. 与邻域各个像素点到中心点的距离有关，通过高斯方程得到各个点的权重值
+        # Segment using adaptive threshold, and filter out the side view. (用自适应阈值先进行分割, 过滤掉侧面)
+        # cv2.ADAPTIVE_THRESH_MEAN_C： All neighboring pixel values have equal weights. (邻域所有像素点的权重值是一致的)
+        # cv2.ADAPTIVE_THRESH_GAUSSIAN _C ： The wights if each point are related to the distance between each neighboring pixel and the center pixel, and are calculated using the Gaussian function. (与邻域各个像素点到中心点的距离有关，通过高斯方程得到各个点的权重值)
         binary = cv2.adaptiveThreshold(gray_image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 31, 5)
         return binary
 
@@ -193,20 +193,20 @@ class GetObjectSurface:
         return mask
 
     def get_top_surface(self, bgr_image):
-        # to extract only the top surface of the object 为了只提取物体最上层表面
+        # to extract only the top surface of the object (为了只提取物体最上层表面)
         # kernel = np.array([[0, -1, 0],
                        # [-1, 5, -1],
                        # [0, -1, 0]])
 
         # sharpened = cv2.filter2D(rgb_image, -1, kernel)
         # image_gray = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2GRAY)
-        # image_mb = cv2.medianBlur(image_gray, 3)  # median filtering 中值滤波
+        # image_mb = cv2.medianBlur(image_gray, 3)  # median filtering (中值滤波)
 
-        # binary = self.adaptive_threshold(image_mb)  # adaptive thresholding 阈值自适应
-        # image_gs = cv2.GaussianBlur(rgb_image, (5, 5), 5)  # Gaussian blur for noise reduction 高斯模糊去噪
+        # binary = self.adaptive_threshold(image_mb)  # Adaptive thresholding (阈值自适应)
+        # image_gs = cv2.GaussianBlur(rgb_image, (5, 5), 5)  # Gaussian blur for noise reduction (高斯模糊去噪)
         mask = self.edge_detect(bgr_image)
         # mask1 = cv2.bitwise_and(binary,
-                                # mask)  # merge two extracted images and retain their common areas 合并两个提取出来的图像，保留他们共有的地方
+                                # mask)  # Merge two extracted images and retain their common areas (合并两个提取出来的图像，保留他们共有的地方)
         roi_image_mask = cv2.bitwise_and(bgr_image, bgr_image,
-                                         mask=mask)  # mask the original image to retain the area to be recognized 和原图做遮罩，保留需要识别的区域
+                                         mask=mask)  # Mask the original image to retain the area to be recognized (和原图做遮罩，保留需要识别的区域)
         return roi_image_mask

@@ -102,7 +102,7 @@ class CalibrateLinear(Node):
 
 def main():
     node = CalibrateLinear('calibrate_linear')
-    rclpy.spin(node)  # 循环等待ROS2退出(loop waiting for ROS2 to exit)
+    rclpy.spin(node)  # loop waiting for ROS2 to exit(循环等待ROS2退出)
 
 if __name__ == "__main__":
     main()

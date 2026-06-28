@@ -26,7 +26,7 @@ def generate_launch_description():
     return LaunchDescription([camera_nodes])
 
 if __name__ == '__main__':
-    # 创建一个LaunchDescription对象(create a LaunchDescription object)
+    # Create a LaunchDescription object(创建一个LaunchDescription对象)
     ld = generate_launch_description()
 
     ls = LaunchService()

@@ -49,27 +49,27 @@ def save_yaml_data(data, yaml_file):
 
 def distance(point_1, point_2):
     """
-    calculate the distance between two points. 计算两个点间的距离
-    :param point_1: Point 1. 点1
-    :param point_2: Point 2. 点2
-    :return: Distance between two points. 两点间的距离
+    Calculate the distance between two points. (计算两个点间的距离)
+    :param point_1: Point 1. (点1)
+    :param point_2: Point 2. (点2)
+    :return: Distance between two points. (两点间的距离)
     """
     return math.sqrt((point_1[0] - point_2[0]) ** 2 + (point_1[1] - point_2[1]) ** 2)
 
 def box_center(box):
     """
-    Calculate the center of quadrangle box. 计算四边形box的中心
-    :param box: box （x1, y1, x2, y2)形式(box （x1, y1, x2, y2)type)
-    :return:  Center coordinate. 中心坐标（x, y)
+    Calculate the center of quadrangle box. (计算四边形box的中心)
+    :param box: box （x1, y1, x2, y2)type (box （x1, y1, x2, y2)形式)
+    :return:  Center coordinate. (中心坐标（x, y))
     """
     return (box[0] + box[2]) / 2, (box[1] + box[3]) / 2
 
 
 def bgr8_to_jpeg(value, quality=75):
     """
-    Convert data in the format of cv bgr8 into jpg. 将cv bgr8格式数据转换为jpg格式
-    :param value: Original data 原始数据
-    :param quality:  jpg quality. Maximum value is 100. jpg质量 最大值100
+    Convert data in the format of cv bgr8 into jpg. (将cv bgr8格式数据转换为jpg格式)
+    :param value: Original data (原始数据)
+    :param quality:  jpg quality. Maximum value is 100. (jpg质量 最大值100)
     :return:
     """
     return bytes(cv2.imencode('.jpg', value)[1])
@@ -77,11 +77,11 @@ def bgr8_to_jpeg(value, quality=75):
 
 def point_remapped(point, now, new, data_type=float):
     """
-    Map the coordinate of one point from a picture to a new picture of different size. 将一个点的坐标从一个图片尺寸映射的新的图片上
-    :param point: Coordinate of point.  点的坐标
-    :param now: Size of current picture. 现在图片的尺寸
-    :param new: New picture size. 新的图片尺寸
-    :return: New point coordinate. 新的点坐标
+    Map the coordinate of one point from a picture to a new picture of different size. (将一个点的坐标从一个图片尺寸映射的新的图片上)
+    :param point: Coordinate of point.  (点的坐标)
+    :param now: Size of current picture. (现在图片的尺寸)
+    :param new: New picture size. (新的图片尺寸)
+    :return: New point coordinate. (新的点坐标)
     """
     x, y = point
     now_w, now_h = now
@@ -93,30 +93,30 @@ def point_remapped(point, now, new, data_type=float):
 
 def get_area_max_contour(contours, threshold=50):
     """
-    Get the contour whose area is the largest. Filter out those whose area is too small. 获取轮廓中面积最重大的一个, 过滤掉面积过小的情况
-    :param contours: Contour list 轮廓列表
-    :param threshold: Area threshold. Contour whose area is less than this value will be filtered out. 面积阈值, 小于这个面积的轮廓会被过滤
-    :return: If the maximum contour area is greater than this threshold, return the largest contour, otherwise return None如果最大的轮廓面积大于阈值则返回最大的轮廓, 否则返回None
+    Get the contour whose area is the largest. Filter out those whose area is too small. (获取轮廓中面积最重大的一个, 过滤掉面积过小的情况)
+    :param contours: Contour list (轮廓列表)
+    :param threshold: Area threshold. Contour whose area is less than this value will be filtered out. (面积阈值, 小于这个面积的轮廓会被过滤)
+    :return: If the maximum contour area is greater than this threshold, return the largest contour, otherwise return None(如果最大的轮廓面积大于阈值则返回最大的轮廓, 否则返回None)
     """
     contour_area_max = 0
     area_max_contour = None
 
-    for c in contours:  # Iterate through all contours 历遍所有轮廓
-        contour_area_temp = math.fabs(cv2.contourArea(c))  # Compute the area of each contour 计算轮廓面积
+    for c in contours:  # Iterate through all contours (历遍所有轮廓)
+        contour_area_temp = math.fabs(cv2.contourArea(c))  # Compute the area of each contour (计算轮廓面积)
         if contour_area_temp > contour_area_max:
             contour_area_max = contour_area_temp
-            if contour_area_temp > threshold:  # Filter out noise or irrelevant contours 过滤干扰
+            if contour_area_temp > threshold:  # Filter out noise or irrelevant contours (过滤干扰)
                 area_max_contour = c
 
-    return area_max_contour,  contour_area_max  # Return the largest contour 返回最大的轮廓
+    return area_max_contour,  contour_area_max  # Return the largest contour (返回最大的轮廓)
 
 
 def vector_2d_angle(v1, v2):
     """
-    Calculate the angle between two vectors -pi ~ pi. 计算两向量间的夹角 -pi ~ pi
-    :param v1: first vector 第一个向量
-    :param v2: second vector 第二个向量
-    :return: angle 角度
+    Calculate the angle between two vectors -pi ~ pi. (计算两向量间的夹角 -pi ~ pi)
+    :param v1: First vector (第一个向量)
+    :param v2: Second vector (第二个向量)
+    :return: Angle (角度)
     """
     d_v1_v2 = np.linalg.norm(v1) * np.linalg.norm(v2)
     cos = v1.dot(v2) / (d_v1_v2)
@@ -128,32 +128,32 @@ def vector_2d_angle(v1, v2):
 def warp_affine(image, points, scale=1.0):
     """
      Simple alignment. Calculate the angle of the line connecting the two points. Rotate the picture around the image
-     center to make the line horizontal can be used to align the face简单的对齐，计算两个点的连线的角度，以图片中心为原点旋转图片，使线水平
-    可以用在人脸对齐上
+     center to make the line horizontal can be used to align the face(简单的对齐，计算两个点的连线的角度，以图片中心为原点旋转图片，使线水平
+    可以用在人脸对齐上)
 
-    :param image: select face picture 要选择的人脸图片
-    :param points: coordinate of two points 两个点的坐标 ((x1, y1), (x2, y2))
-    :param scale: scaling 缩放比例
-    :return: rotated picture 旋转后的图片
+    :param image: Select face picture (要选择的人脸图片)
+    :param points: Coordinate of two points (两个点的坐标 ((x1, y1), (x2, y2)))
+    :param scale: Scaling (缩放比例)
+    :return: Rotated picture (旋转后的图片)
     """
     w, h = image.shape[:2]
     dy = points[1][1] - points[0][1]
     dx = points[1][0] - points[0][0]
-    # Calculate the rotation angle and rotate picture. 计算旋转角度并旋转图片
+    # Calculate the rotation angle and rotate picture. (计算旋转角度并旋转图片)
     angle = cv2.fastAtan2(dy, dx)
     rot = cv2.getRotationMatrix2D((int(w / 2), int(h / 2)), angle, scale=scale)
     return cv2.warpAffine(image, rot, dsize=(h, w))
 
 def perspective_transform(img, src, dst, debug=False):
     """
-    perform perspective transformation: converting a skewed view of a road image taken from an oblique angle into a top-down
-    view, aligning the camera's viewpoint parallel to the road. 执行透视变换：将倾斜视角拍摄到的道路图像转换成鸟瞰图，即将摄像机的视角转换到和道路平行。
-    :param img: input image 输入图像
-    :param src: the coordinates of the four points of the rectangle to be measured in the source image 源图像中待测矩形的四点坐标
-    :param dst: the coordinates of the four points of the rectangle in the target image 目标图像中矩形的四点坐标
+    Perform perspective transformation: converting a skewed view of a road image taken from an oblique angle into a top-down
+    view, aligning the camera's viewpoint parallel to the road. (执行透视变换：将倾斜视角拍摄到的道路图像转换成鸟瞰图，即将摄像机的视角转换到和道路平行。)
+    :param img: Input image (输入图像)
+    :param src: The coordinates of the four points of the rectangle to be measured in the source image (源图像中待测矩形的四点坐标)
+    :param dst: The coordinates of the four points of the rectangle in the target image (目标图像中矩形的四点坐标)
     """
     img_size = (img.shape[1], img.shape[0])
-    # Manually extract the vertices for performing the perspective transformation. 手动提取用于执行透视变换的顶点
+    # Manually extract the vertices for performing the perspective transformation. (手动提取用于执行透视变换的顶点)
     '''
     # left_down
     # left_up
@@ -171,7 +171,7 @@ def perspective_transform(img, src, dst, debug=False):
          [575,55],
          [575,430]])
     '''
-    m = cv2.getPerspectiveTransform(src, dst)  # Calculate the perspective transformation matrix. 计算透视变换矩阵
+    m = cv2.getPerspectiveTransform(src, dst)  # Calculate the perspective transformation matrix. (计算透视变换矩阵)
     if debug:
         m_inv = cv2.getPerspectiveTransform(dst, src)
     else:
@@ -179,16 +179,16 @@ def perspective_transform(img, src, dst, debug=False):
     # Perform perspective transformation with parameters: input image, output image, target image size, and the cv2.INTER_LINEAR
     # interpolation method. 进行透视变换 参数：输入图像、输出图像、目标图像大小、cv2.INTER_LINEAR插值方法
     warped = cv2.warpPerspective(img, m, img_size, flags=cv2.INTER_LINEAR)
-    #unwarped = cv2.warpPerspective(warped, m_inv, (warped.shape[1], warped.shape[0]), flags=cv2.INTER_LINEAR)  # debugging 调试
+    #unwarped = cv2.warpPerspective(warped, m_inv, (warped.shape[1], warped.shape[0]), flags=cv2.INTER_LINEAR)  # debugging (调试)
 
     return warped, m, m_inv
 
 def pixels_to_world(pixels, K, T):
     """
-    Convert the pixel coordinates to world coordinates. 像素坐标转世界坐标
-    Pixel coordinates list. pixels像素坐标列表
-    Intrinsic camera parameters matrix K. K 相机内参 np 矩阵
-    Extrinsic camera parameters matrix T. T 相机外参 np 矩阵
+    Convert the pixel coordinates to world coordinates. (像素坐标转世界坐标)
+    Pixel coordinates list. (pixels像素坐标列表)
+    Intrinsic camera parameters matrix K. (K 相机内参 np 矩阵)
+    Extrinsic camera parameters matrix T. (T 相机外参 np 矩阵)
     """
     invK = K.I
     t, r, _, _ =  tfs.affines.decompose(np.matrix(T))
@@ -207,46 +207,46 @@ def pixels_to_world(pixels, K, T):
 
 def world_to_pixels(world_points, K, T):
     """
-    Convert 3D world coordinates to 2D pixel coordinates. 将世界坐标点转换为像素坐标
+    Convert 3D world coordinates to 2D pixel coordinates. (将世界坐标点转换为像素坐标)
     Args:
-        world_points: A list of 3D points in world coordinates. 世界坐标点列表
-        K: Camera intrinsic matrix. 相机内参矩阵
-        T: Camera extrinsic matrix. 外参矩阵 [R|t]
+        world_points: A list of 3D points in world coordinates. (世界坐标点列表)
+        K: Camera intrinsic matrix. (相机内参矩阵)
+        T: Camera extrinsic matrix. (外参矩阵 [R|t])
     Returns:
-        pixel_points: A list of 2D pixel coordinates. 像素坐标点列表
+        pixel_points: A list of 2D pixel coordinates. (像素坐标点列表)
     """
     pixel_points = []
     for wp in world_points:
-        # Convert to homogeneous coordinates. 将世界坐标转换为齐次坐标
+        # Convert to homogeneous coordinates. (将世界坐标转换为齐次坐标)
         world_homo = np.append(wp, 1).reshape(4, 1)
-        # Transform to camera coordinates using extrinsic matrix. 通过外参矩阵转换到相机坐标系
+        # Transform to camera coordinates using extrinsic matrix. (通过外参矩阵转换到相机坐标系)
         camera_point = np.dot(T, world_homo)
-        # Project to image plane. 投影到像素平面
+        # Project to image plane. (投影到像素平面)
         pixel_homo = np.dot(K, camera_point[:3])
-        # Normalization 归一化
+        # Normalization (归一化)
         pixel = (pixel_homo / pixel_homo[2])[:2].reshape(-1)
         pixel_points.append(pixel)
     return pixel_points
 
 def calculate_pixel_length(world_length, K, T):
     """
-    Compute the corresponding pixel length for a given length in world coordinates. 计算世界坐标中的长度在像素坐标中的对应长度
+    Compute the corresponding pixel length for a given length in world coordinates. (计算世界坐标中的长度在像素坐标中的对应长度)
     Args:
-        world_length: Length in world space 世界坐标中的长度
-        K: Camera intrinsic matrix 相机内参矩阵
-        T: Extrinsic transformation matrix 外参矩阵
+        world_length: Length in world space (世界坐标中的长度)
+        K: Camera intrinsic matrix (相机内参矩阵)
+        T: Extrinsic transformation matrix (外参矩阵)
     Returns:
-        pixel_length: Corresponding length in pixel space 像素坐标中的长度
+        pixel_length: Corresponding length in pixel space (像素坐标中的长度)
     """
-    # Define a starting point and direction. 定义起始点和方向
-    start_point = np.array([0, 0, 0])  # Starting point 起始点
-    direction = np.array([0, 1, 0])  # y-direction y方向
+    # Define a starting point and direction. (定义起始点和方向)
+    start_point = np.array([0, 0, 0])  # Starting point (起始点)
+    direction = np.array([0, 1, 0])  # y-direction (y方向)
 
-    # Compute the endpoint in world coordinates. 计算终点坐标
+    # Compute the endpoint in world coordinates. (计算终点坐标)
     end_point = start_point + direction * world_length
-    # Transform both endpoints to pixel coordinates. 转换两个端点到像素坐标
+    # Transform both endpoints to pixel coordinates. (转换两个端点到像素坐标)
     pixels = world_to_pixels([start_point, end_point], K, T)
-    # Calculate Euclidean distance in pixel space. 计算像素距离
+    # Calculate Euclidean distance in pixel space. (计算像素距离)
     pixel_length = np.linalg.norm(pixels[1] - pixels[0])
     
     return int(pixel_length)

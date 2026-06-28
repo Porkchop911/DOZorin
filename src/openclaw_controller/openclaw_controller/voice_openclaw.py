@@ -20,7 +20,7 @@ from openclaw_controller.config import *
 
 from std_srvs.srv import Trigger
 
-# 日志颜色定义
+# Log color definition(日志颜色定义)
 class LogColor:
     GREEN = '\033[32m'
     BLUE = '\033[34m'

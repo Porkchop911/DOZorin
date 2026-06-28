@@ -2,7 +2,7 @@
 # encoding: utf-8
 # @data:2022/11/07
 # @author:aiden
-# 跌倒检测(fall detection)
+# Fall detection(跌倒检测)
 import os
 import cv2
 import time
@@ -45,9 +45,9 @@ RIGHT_ANKLE = mp_pose.PoseLandmark.RIGHT_ANKLE
 
 def get_joint_landmarks(img, landmarks):
     """
-    将landmarks从medipipe的归一化输出转为像素坐标(Convert landmarks from medipipe's normalized output to pixel coordinates)
-    :param img: 像素坐标对应的图片(picture corresponding to pixel coordinate)
-    :param landmarks: 归一化的关键点(normalized keypoint)
+    Convert landmarks from medipipe's normalized output to pixel coordinates(将landmarks从medipipe的归一化输出转为像素坐标)
+    :param img: Picture corresponding to pixel coordinate(像素坐标对应的图片)
+    :param landmarks: Normalized keypoint(归一化的关键点)
     :return:
     """
     h, w, _ = img.shape
@@ -73,7 +73,7 @@ class FallDownDetectNode(Node):
             min_tracking_confidence=0.7,
             min_detection_confidence=0.7)
         self.running = True
-        self.fps = fps.FPS()  # fps计算器(FPS calculator)
+        self.fps = fps.FPS()  # FPS calculator(fps计算器)
         
         self.fall_down_count = []
         self.move_finish = True
@@ -84,7 +84,7 @@ class FallDownDetectNode(Node):
         self.machine_type = os.environ.get('MACHINE_TYPE')
         camera = 'depth_cam'
         self.create_subscription(Image, '/depth_cam/rgb0/image_raw' , self.image_callback, 1)
-        self.mecanum_pub = self.create_publisher(Twist, '/controller/cmd_vel', 1)  # 底盘控制(chassis control)
+        self.mecanum_pub = self.create_publisher(Twist, '/controller/cmd_vel', 1)  # Chassis control(底盘控制)
         self.buzzer_pub = self.create_publisher(BuzzerState, '/ros_robot_controller/set_buzzer', 1)
         self.servo_state_pub = self.create_publisher(SetPWMServoState, 'ros_robot_controller/pwm_servo/set_state', 10)
         if 'Acker' in self.machine_type:
@@ -120,9 +120,9 @@ class FallDownDetectNode(Node):
         cv_image = self.bridge.imgmsg_to_cv2(ros_image, "rgb8")
         rgb_image = np.array(cv_image, dtype=np.uint8)
         if self.image_queue.full():
-            # 如果队列已满，丢弃最旧的图像(if the queue is full, discard the oldest image)
+            # If the queue is full, discard the oldest image(如果队列已满，丢弃最旧的图像)
             self.image_queue.get()
-        # 将图像放入队列(put the image into the queue)
+        # Put the image into the queue(将图像放入队列)
         self.image_queue.put(rgb_image)
 
     def move(self):
@@ -209,7 +209,7 @@ class FallDownDetectNode(Node):
             result_image = self.fps.show_fps(result_image)
             cv2.imshow(self.name, result_image)
             key = cv2.waitKey(1)
-            if key == ord('q') or key == 27:  # 按q或者esc退出(press Q or Esc to exit)
+            if key == ord('q') or key == 27:  # Press Q or Esc to exit(按q或者esc退出)
                 self.mecanum_pub.publish(Twist())
                 self.running = False
 

@@ -114,7 +114,7 @@ def launch_setup(context, *args, **kwargs):
     navigation_start_launch = GroupAction(
      actions=[
          PushRosNamespace(robot_name),
-         # rviz_node可用另外一个平台启动(rviz node can be started by another platform)
+         # rviz node can be started by another platform(rviz_node可用另外一个平台启动)
          rviz_node,
          TimerAction(
              period=3.0,
@@ -135,7 +135,7 @@ def launch_setup(context, *args, **kwargs):
             GroupAction(
                 actions=[
                     PushRosNamespace(robot_name),
-                    # rviz_node可用另外一个平台启动(rviz node can be started by another platform)
+                    # rviz node can be started by another platform(rviz_node可用另外一个平台启动)
                     rviz_node,
                     TimerAction(
                         period=3.0,

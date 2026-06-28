@@ -66,7 +66,7 @@ class RoadNetworkNavigator(Node):
 
         # Robotic arm initialization (机械臂初始化)
         time.sleep(0.5) 
-        set_servo_position(self.joints_pub, 1, ((10, 500), (5, 500), (4, 200), (3, 50), (2, 750), (1, 500)))  # 初始姿态
+        set_servo_position(self.joints_pub, 1, ((10, 500), (5, 500), (4, 200), (3, 50), (2, 750), (1, 500)))  # Initial posture（初始姿态）
         time.sleep(1.5)
         self.get_logger().info("arm initialization complete")
         

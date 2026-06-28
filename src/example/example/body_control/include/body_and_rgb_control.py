@@ -2,7 +2,7 @@
 # encoding: utf-8
 # @data:2022/11/07
 # @author:aiden
-# 肌体控制融合RGB(body control combined with RGB)
+# Body control combined with RGB(肌体控制融合RGB)
 import os
 import cv2
 import time
@@ -52,9 +52,9 @@ def get_body_center(h, w, landmarks):
 
 def get_joint_landmarks(img, landmarks):
     """
-    将landmarks从medipipe的归一化输出转为像素坐标(Convert landmarks from medipipe's normalized output to pixel coordinates)
-    :param img: 像素坐标对应的图片(picture corresponding to pixel coordinate)
-    :param landmarks: 归一化的关键点(normalized keypoint)
+    Convert landmarks from medipipe's normalized output to pixel coordinates(将landmarks从medipipe的归一化输出转为像素坐标)
+    :param img: Picture corresponding to pixel coordinate(像素坐标对应的图片)
+    :param landmarks: Normalized keypoint(归一化的关键点)
     """
     h, w, _ = img.shape
     landmarks = [(lm.x * w, lm.y * h) for lm in landmarks]
@@ -69,9 +69,9 @@ def get_dif(list1, list2):
 
 def joint_angle(landmarks):
     """
-    计算各个关节弯曲角度(calculate flex angle of each joint)
-    :param landmarks: 手部关键点(hand keypoints)
-    :return: 关节角度(joint angle)
+    Calculate flex angle of each joint(计算各个关节弯曲角度)
+    :param landmarks: Hand keypoints(手部关键点)
+    :return: Joint angle(关节角度)
     """
     angle_list = []
     left_hand_angle1 = vector_2d_angle(landmarks[LEFT_SHOULDER] - landmarks[LEFT_ELBOW], landmarks[LEFT_WRIST] - landmarks[LEFT_ELBOW])
@@ -130,7 +130,7 @@ class BodyControlNode(Node):
         
         self.color_picker = ColorPicker(Point(), 2)
         signal.signal(signal.SIGINT, self.shutdown)
-        self.fps = fps.FPS()  # fps计算器(FPS calculator)
+        self.fps = fps.FPS()  # FPS calculator(fps计算器)
 
         self.running = True
         self.current_color = None
@@ -154,8 +154,8 @@ class BodyControlNode(Node):
         self.image_queue = queue.Queue(maxsize=2)
 
         self.machine_type = os.environ.get('MACHINE_TYPE')
-        #self.joints_pub = self.create_publisher(ServosPosition, '/servo_controller', 1) # 舵机控制(servo control)
-        self.mecanum_pub = self.create_publisher(Twist, '/controller/cmd_vel', 1)  # 底盘控制(chassis control)
+        #self.joints_pub = self.create_publisher(ServosPosition, '/servo_controller', 1) # Servo control(舵机控制)
+        self.mecanum_pub = self.create_publisher(Twist, '/controller/cmd_vel', 1)  # Chassis control(底盘控制)
 
         camera = 'depth_cam'
         self.create_subscription(Image, '/depth_cam/rgb0/image_raw' , self.image_callback, 1)
@@ -185,9 +185,9 @@ class BodyControlNode(Node):
         cv_image = self.bridge.imgmsg_to_cv2(ros_image, "rgb8")
         rgb_image = np.array(cv_image, dtype=np.uint8)
         if self.image_queue.full():
-            # 如果队列已满，丢弃最旧的图像(if the queue is full, discard the oldest image)
+            # If the queue is full, discard the oldest image(如果队列已满，丢弃最旧的图像)
             self.image_queue.get()
-        # 将图像放入队列(put the image into the queue)
+        # Put the image into the queue(将图像放入队列)
         self.image_queue.put(rgb_image)
 
     def acker_turn(self,pulse):
@@ -270,30 +270,30 @@ class BodyControlNode(Node):
             
             landmarks = get_joint_landmarks(image, results.pose_landmarks.landmark)
             
-            # 叉腰标定(hands-on-hips calibration)
+            # Hands-on-hips calibration(叉腰标定)
             angle_list = joint_angle(landmarks)
             #print(angle_list)
             if -150 < angle_list[0] < -90 and -30 < angle_list[1] < -10 and 90 < angle_list[2] < 150 and 10 < angle_list[3] < 30:
-                self.count_akimbo += 1  # 叉腰检测+1(hands-on-hips detection+1)
-                self.count_no_akimbo = 0  # 没有叉腰检测归零(clear no hands-on-hips detection)
+                self.count_akimbo += 1  # Hands-on-hips detection+1(叉腰检测+1)
+                self.count_no_akimbo = 0  # Clear no hands-on-hips detection(没有叉腰检测归零)
             else:
-                self.count_akimbo = 0  # 叉腰检测归零(clear hands-on-hips detection)
-                self.count_no_akimbo += 1  # 没有叉腰检测+1(no hands-on-hips detection+1)
-                # 当连续5次都检测到叉腰且当前不在标定状态(If hands-on-hips posture is detected for 5 consecutive times, and not under calibrated status)
+                self.count_akimbo = 0  # Clear hands-on-hips detection(叉腰检测归零)
+                self.count_no_akimbo += 1  # No hands-on-hips detection+1(没有叉腰检测+1)
+                # If hands-on-hips posture is detected for 5 consecutive times, and not under calibrated status(当连续5次都检测到叉腰且当前不在标定状态)
             if self.count_akimbo > 5 and not self.calibrating:
-                self.count_akimbo = 0  # 检测归零(clear detection)
-                self.calibrating = True  # 正在标定(calibrating)
-                self.color_picker.reset()  # 颜色拾取器重置(reset color picker)
-                self.lock_color = None  # 标定颜色置空(calibrate color to noun)
-                # 当连续5次都检测不到叉腰(hands-on-hips posture is detected for 5 consecutive times)
+                self.count_akimbo = 0  # Clear detection(检测归零)
+                self.calibrating = True  # Calibrating(正在标定)
+                self.color_picker.reset()  # Reset color picker(颜色拾取器重置)
+                self.lock_color = None  # Calibrate color to none(标定颜色置空)
+                # Hands-on-hips posture is not detected for 5 consecutive times(当连续5次都检测不到叉腰)
             if self.count_no_akimbo > 5:
-                # 且已经标定过(was calibrated)
+                # Was calibrated(且已经标定过)
                 if self.calibrating:
-                    self.calibrating = False  # 没在标定(not calibrating)
-                    self.have_lock = False  # 没标定好(not be calibrated)
-                self.count_akimbo = 0  # 检测归零(Check zero position)
+                    self.calibrating = False  # Not calibrating(没在标定)
+                    self.have_lock = False  # Not be calibrated(没标定好)
+                self.count_akimbo = 0  # Check zero position(检测归零)
 
-                # 获取躯体中心颜色(acquire the color of body center)
+                # Acquire the color of body center(获取躯体中心颜色)
             h, w = image.shape[:-1]
             center = get_body_center(h, w, results.pose_landmarks.landmark)
             point = Point()
@@ -303,24 +303,24 @@ class BodyControlNode(Node):
 
             if self.move_finish:
                 self.current_color, image = self.color_picker(image, image.copy())
-                # 没有标定颜色且检测到当前中心颜色，且在标定状态，还没标定好(Color is not calibrated.
-                # Color of body center is detected and calibrated but the calibration isn't finished)
+                # Color is not calibrated. Color of body center is detected and calibrated but the calibration isn't finished
+                # (没有标定颜色且检测到当前中心颜色，且在标定状态，还没标定好)
                 if self.lock_color is None and self.current_color is not None and self.calibrating and not self.have_lock:
-                    self.have_lock = True  # 标定好了(the calibration is completed)
-                    self.buzzer_warn()  # 标定好蜂鸣器提示(calibrate buzzer warning)
-                    self.lock_color = self.current_color[1]  # 保存标定的颜色(save calibrated)
+                    self.have_lock = True  # The calibration is completed(标定好了)
+                    self.buzzer_warn()  # Calibrate buzzer warning(标定好蜂鸣器提示)
+                    self.lock_color = self.current_color[1]  # Save calibrated color(保存标定的颜色)
                 # print(self.current_color[1])
-                # 已经有标定颜色且测到当前中心颜色，不在标定状态(There is calibrated color and color of body center is detected but not be calibrated)
+                # There is calibrated color and color of body center is detected but not be calibrated(已经有标定颜色且测到当前中心颜色，不在标定状态)
                 if self.lock_color is not None and self.current_color is not None and not self.calibrating:
-                    # 比较当前颜色和标定颜色是否一致(compare the current color and the calibrated color)
+                    # Compare the current color and the calibrated color(比较当前颜色和标定颜色是否一致)
                     res = get_dif(list(self.lock_color), list(self.current_color[1]))
                     # print(res)
                     # print(self.lock_color, self.current_color[1])
-                    if res < 50:  # 如果是则表示当前可以控制(if they are consistent, it means that control function can be implemented)
+                    if res < 50:  # If they are consistent, it means that control function can be implemented(如果是则表示当前可以控制)
                         self.can_control = True
-                    else:  # 如果不是则表示当前不可以控制(if they are not consistent, it means that control function cannot be implemented)
+                    else:  # If they are not consistent, it means that control function cannot be implemented(如果不是则表示当前不可以控制)
                         self.can_control = False
-                if self.can_control:  # 可以控制则进入姿态检测部分(if control function can be implemented, move to posture detection part)
+                if self.can_control:  # If control function can be implemented, move to posture detection part(可以控制则进入姿态检测部分)
                     distance_list = (joint_distance(landmarks))
                     
                     if distance_list[0] < 1:
@@ -425,7 +425,7 @@ class BodyControlNode(Node):
             result_image = self.fps.show_fps(result_image)
             cv2.imshow(self.name, result_image)
             key = cv2.waitKey(1)
-            if key == ord('q') or key == 27:  # 按q或者esc退出(press Q or Esc to exit)
+            if key == ord('q') or key == 27:  # Press Q or Esc to exit(按q或者esc退出)
                 self.mecanum_pub.publish(Twist())
                 self.running = False
         rclpy.shutdown()

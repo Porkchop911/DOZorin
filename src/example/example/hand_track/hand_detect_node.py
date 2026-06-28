@@ -2,7 +2,7 @@
 # encoding: utf-8
 # @data:2022/11/07
 # @author:aiden
-# 手检测(hand detection)
+# Hand detection(手检测)
 import cv2
 import rclpy
 import queue
@@ -27,9 +27,9 @@ faulthandler.enable()
 
 def get_hand_landmarks(img, landmarks):
     """
-    将landmarks从medipipe的归一化输出转为像素坐标(convert landmarks from normalized output of Mediapipe to pixel coordinates)
-    :param img: 像素坐标对应的图片(the image corresponding to the pixel coordinates)
-    :param landmarks: 归一化的关键点(normalized key points)
+    Convert landmarks from normalized output of Mediapipe to pixel coordinates(将landmarks从medipipe的归一化输出转为像素坐标)
+    :param img: The image corresponding to the pixel coordinates(像素坐标对应的图片)
+    :param landmarks: Normalized key points(归一化的关键点)
     :return:
     """
     h, w, _ = img.shape
@@ -49,14 +49,14 @@ class HandDetectNode(Node):
             min_tracking_confidence=0.05,
             min_detection_confidence=0.6
         )
-        self.fps = fps.FPS()  # fps计算器(fps calculator)
+        self.fps = fps.FPS()  # fps calculator(fps计算器)
         self.running = True
         self.image_queue = queue.Queue(maxsize=2)
         self.bridge = CvBridge()
         self.camera = 'depth_cam'
         self.enable_display = self.get_parameter('enable_display').value
-        self.result_publisher = self.create_publisher(Image, '~/image_result', 1)   # 图像处理结果发布(publish image processing results)
-        self.image_sub = self.create_subscription(Image, '/%s/rgb0/image_raw' % self.camera, self.image_callback, 1)  # 摄像头订阅(subscribe to camera)
+        self.result_publisher = self.create_publisher(Image, '~/image_result', 1)   # Publish image processing results(图像处理结果发布)
+        self.image_sub = self.create_subscription(Image, '/%s/rgb0/image_raw' % self.camera, self.image_callback, 1)  # Subscribe to camera(摄像头订阅)
         self.point_publisher = self.create_publisher(Point2D, '~/center', 1)
 
         threading.Thread(target=self.image_proc, daemon=True).start()
@@ -117,9 +117,9 @@ class HandDetectNode(Node):
         rgb_image = np.array(cv_image, dtype=np.uint8)
 
         if self.image_queue.full():
-            # 如果队列已满，丢弃最旧的图像(if the queue is full, discard the oldest image)
+            # If the queue is full, discard the oldest image(如果队列已满，丢弃最旧的图像)
             self.image_queue.get()
-            # 将图像放入队列(put the image into the queue)
+            # Put the image into the queue(将图像放入队列)
         self.image_queue.put(rgb_image)
 
 def main():

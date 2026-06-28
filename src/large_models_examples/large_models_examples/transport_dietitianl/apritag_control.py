@@ -13,11 +13,11 @@ class AprilTagHighAngleAligner(Node):
         super().__init__('apriltag_high_angle_aligner')
         self.bridge = CvBridge()
 
-        # ================== 状态控制变量 ==================
-        self.is_align_active = False  # 默认关闭校准功能
+        # ================== State Control Variables(状态控制变量) ==================
+        self.is_align_active = False  # Default to off alignment function(默认关闭校准功能)
         self.status = "idle"
 
-        # ================== 核心参数 ==================
+        # ================== Core Parameters(核心参数) ==================
         self.tag_size = 0.035
         self.target_dist = 0.10
         self.tilt_angle = np.radians(60) 
@@ -28,13 +28,13 @@ class AprilTagHighAngleAligner(Node):
         self.smooth_yaw = 0.0
         self.last_twist = Twist()
 
-        # ================== 服务定义 ==================
-        # 服务1: 校准开关 (true=start, false=stop)
+        # ================== Service Definition(服务定义) ==================
+        # Service 1: Alignment switch (true=start, false=stop)(服务1: 校准开关 (true=start, false=stop))
         self.align_srv = self.create_service(SetBool, 'align_control', self.align_control_callback)
-        # 服务2: 机械臂控制 (true=pick, false=place)
+        # Service 2: Robotic arm control (true=pick, false=place)(服务2: 机械臂控制 (true=pick, false=place))
         self.arm_srv = self.create_service(SetBool, 'arm_control', self.arm_control_callback)
 
-        # ================== 调试窗口 ==================
+        # ================== Debug Window(调试窗口) ==================
         cv2.namedWindow("High Angle Debug")
         cv2.createTrackbar("KP_Pos", "High Angle Debug", 12, 40, lambda x: None)
         cv2.createTrackbar("KP_Yaw", "High Angle Debug", 5, 20, lambda x: None)
@@ -55,7 +55,7 @@ class AprilTagHighAngleAligner(Node):
             [-s, -s, 0]  
         ], dtype=np.float32)
 
-    # ================== 服务回调函数 ==================
+    # ================== Service Callback Functions(服务回调函数) ==================
     def align_control_callback(self, request, response):
         if request.data:
             self.is_align_active = True
@@ -64,7 +64,7 @@ class AprilTagHighAngleAligner(Node):
         else:
             self.is_align_active = False
             self.status = "idle"
-            # 停止小车运动
+            # Stop the robot motion(停止小车运动)
             self.stop_robot()
             response.message = "Alignment Stopped & Robot Braked"
         response.success = True
@@ -81,15 +81,15 @@ class AprilTagHighAngleAligner(Node):
         response.success = True
         return response
 
-    # ================== 机械臂具体动作 ==================
+    # ================== Specific Actions of the Robotic Arm(机械臂具体动作) ==================
     def pick_action(self):
         self.get_logger().info("Executing PICK action...")
-        # 在这里添加控制机械臂底层的代码
+        # Add code here to control the underlying robotic arm(在这里添加控制机械臂底层的代码)
         return "Pick sequence finished"
 
     def place_action(self):
         self.get_logger().info("Executing PLACE action...")
-        # 在这里添加控制机械臂底层的代码
+        # Add code here to control the underlying robotic arm(在这里添加控制机械臂底层的代码)
         return "Place sequence finished"
 
     def stop_robot(self):
@@ -97,7 +97,7 @@ class AprilTagHighAngleAligner(Node):
         self.cmd_pub.publish(empty_twist)
         self.last_twist = empty_twist
 
-    # ================== 核心逻辑 ==================
+    # ================== Core Logic(核心逻辑) ==================
     def normalize_angle(self, angle):
         while angle > math.pi/2: angle -= math.pi
         while angle < -math.pi/2: angle += math.pi
@@ -122,7 +122,7 @@ class AprilTagHighAngleAligner(Node):
         current_twist = Twist()
         display_dist_err = 0.0
 
-        # 只有在校准激活时才计算运动逻辑
+        # Calculate motion logic only when alignment is active(只有在校准激活时才计算运动逻辑)
         if self.is_align_active:
             if ids is not None:
                 success, rvec, tvec = cv2.solvePnP(self.obj_points, corners[0][0], self.camera_matrix, self.dist_coeffs)
@@ -162,14 +162,14 @@ class AprilTagHighAngleAligner(Node):
             else:
                 self.status = "searching"
 
-            # 发布速度指令
+            # Publish velocity commands(发布速度指令)
             v_lpf = 0.6 
             self.last_twist.linear.x = self.last_twist.linear.x * (1-v_lpf) + current_twist.linear.x * v_lpf
             self.last_twist.linear.y = self.last_twist.linear.y * (1-v_lpf) + current_twist.linear.y * v_lpf
             self.last_twist.angular.z = self.last_twist.angular.z * (1-v_lpf) + current_twist.angular.z * v_lpf
             self.cmd_pub.publish(self.last_twist)
 
-        # UI 绘制
+        # UI Drawing(UI 绘制)
         font = cv2.FONT_HERSHEY_SIMPLEX
         txt_color = (0, 255, 0) if self.status == "finish" else (0, 255, 255)
         active_str = "ACTIVE" if self.is_align_active else "DISABLED"

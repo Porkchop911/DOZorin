@@ -186,7 +186,7 @@ class VLLMNavigation(Node):
         self.action_finish = False
         self.transport_action_finish = False
         self.play_audio_finish = False
-        # self.llm_result = '{\'action\':[\'move(\"前台\")\', \'vision(\"大门有没有关\")\', \'move(\"原点\")\', \'play_audio()\'], \'response\':\'马上！\'}'
+        # self.llm_result = '{\'action\':[\'move(\"Front Desk(前台)\")\', \'vision(\"Is the main gate closed(大门有没有关)\")\', \'move(\"Home Position(原点)\")\', \'play_audio()\'], \'response\':\'Right away!(马上！)\'}'
         self.running = True
         self.reach_goal = False
         self.interrupt = False

@@ -2,7 +2,7 @@
 # encoding: utf-8
 # @data:2022/11/07
 # @author:aiden
-# 语音开启颜色检测(voice control color detection)
+# Voice control color detection(语音开启颜色检测)
 import os
 import json
 import time
@@ -46,11 +46,11 @@ class VoiceControlColorDetectNode(Node):
         
         self.produce_type = os.environ.get('PRODUCT_TYPE')
         if self.produce_type == 'OFFLINE':
-            self.get_logger().info('唤醒口令: 小迈小迈(Wake up word: hello hiwonder)')
+            self.get_logger().info('Wake word: hello hiwonder(唤醒口令: 小幻小幻)')
         else:
-            self.get_logger().info('唤醒口令: 小幻小幻(Wake up word: hello hiwonder)')
-        self.get_logger().info('唤醒后15秒内可以不用再唤醒(No need to wake up within 15 seconds after waking up)')
-        self.get_logger().info('控制指令: 开启颜色识别 关闭颜色识别(Voice command: start color recognition/stop color recognition)')
+            self.get_logger().info('Wake word: hello hiwonder(唤醒口令: 小幻小幻)')
+        self.get_logger().info('No need to wake up within 15 seconds after waking up(唤醒后15秒内可以不用再唤醒)')
+        self.get_logger().info('Voice command: start color recognition/stop color recognition(控制指令: 开启颜色识别 关闭颜色识别)')
 
         threading.Thread(target=self.main, daemon=True).start()
         self.create_service(Trigger, '~/init_finish', self.get_node_state)
@@ -87,8 +87,8 @@ class VoiceControlColorDetectNode(Node):
         if self.language == 'Chinese':
             words = words.replace(' ', '')
         self.get_logger().info('words: %s'%words)
-        if words is not None and words not in ['唤醒成功(wake-up-success)', '休眠(Sleep)', '失败5次(Fail-5-times)',
-                                               '失败10次(Fail-10-times']:
+        if words is not None and words not in ['Wake-up-success(唤醒成功)', 'Sleep(休眠)', 'Fail-5-times(失败5次)',
+                                               'Fail-10-times(失败10次)']:
             if words == '开启颜色识别' or words == 'start color recognition':
                 msg_red = ColorDetect()
                 msg_red.color_name = 'red'
@@ -113,9 +113,9 @@ class VoiceControlColorDetectNode(Node):
                     self.play('close_success')
                 else:
                     self.play('close_fail')
-        elif words == '唤醒成功(wake-up-success)':
+        elif words == 'Wake-up-success(唤醒成功)':
             self.play('awake')
-        elif words == '休眠(Sleep)':
+        elif words == 'Sleep(休眠)':
             msg = BuzzerState()
             msg.freq = 1900
             msg.on_time = 0.05

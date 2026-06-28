@@ -58,7 +58,7 @@ def launch_setup(context):
          PushRosNamespace(robot_name),
          base_launch,
          TimerAction(
-             period=10.0,  # 延时等待其它节点启动好(delay for enabling other nodes)
+             period=10.0,  # Delay for enabling other nodes(延时等待其它节点启动好)
              actions=[navigation_launch],
          ),
       ]
@@ -72,7 +72,7 @@ def generate_launch_description():
     ])
 
 if __name__ == '__main__':
-    # 创建一个LaunchDescription对象(create a LaunchDescription object)
+    # Create a LaunchDescription object(创建一个LaunchDescription对象)
     ld = generate_launch_description()
 
     ls = LaunchService()

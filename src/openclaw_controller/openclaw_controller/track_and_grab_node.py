@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # encoding: utf-8
 # @data:2023/12/19
-# 机械前超前看识别追踪空中指定颜色物品(Mechanical front-facing vision for recognizing and tracking aerial objects of a specific color)
-# 通过深度相机识别计算物品的空间位置(Determine the spatial location of objects using a depth camera)
-# 完成抓取并放到指定位置(Complete the grasping and place the object at the designated location)
+# Mechanical front-facing vision for recognizing and tracking aerial objects of a specific color(机械前超前看识别追踪空中指定颜色物品)
+# Determine the spatial location of objects using a depth camera(通过深度相机识别计算物品的空间位置)
+# Complete the grasping and place the object at the designated location(完成抓取并放到指定位置)
 import cv2
 import math
 import time
@@ -50,31 +50,31 @@ class ColorTracker:
         color = color_ranges['lab']['Stereo'][self.target_color]
 
         img = cv2.resize(source_image, (int(w/2), int(h/2)))
-        img_blur = cv2.GaussianBlur(img, (3, 3), 3) # 高斯模糊(Gaussian blur)
-        img_lab = cv2.cvtColor(img_blur, cv2.COLOR_BGR2LAB) # 转换到 LAB 空间(convert to the LAB space)
-        mask = cv2.inRange(img_lab, tuple(color['min']), tuple(color['max'])) # 二值化(binarization)
+        img_blur = cv2.GaussianBlur(img, (3, 3), 3) # Gaussian blur(高斯模糊)
+        img_lab = cv2.cvtColor(img_blur, cv2.COLOR_BGR2LAB) # Convert to the LAB space(转换到 LAB 空间)
+        mask = cv2.inRange(img_lab, tuple(color['min']), tuple(color['max'])) # Binarization(二值化)
 
-        # 平滑边缘，去除小块，合并靠近的块(Smooth edges, remove small patches, and merge nearby blocks)
+        # Smooth edges, remove small patches, and merge nearby blocks(平滑边缘，去除小块，合并靠近的块)
         eroded = cv2.erode(mask, cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3)))
         dilated = cv2.dilate(eroded, cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3)))
-        # 找出最大轮廓(Find the largest contour)
+        # Find the largest contour(找出最大轮廓)
         contours = cv2.findContours(dilated, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)[-2]
         best_c = None
-        max_y = -1  # 记录最大的y值（画面最下方）
+        max_y = -1  # Record the maximum y value (bottom of the screen)(记录最大的y值（画面最下方）)
         for c in contours:
             if math.fabs(cv2.contourArea(c)) < 50:
                 continue
-            (center_x, center_y), radius = cv2.minEnclosingCircle(c) # 最小外接圆(Minimum enclosing circle)
-            # 修改：选择画面最下方的轮廓（y值最大），因为相机斜向下，下方更近
+            (center_x, center_y), radius = cv2.minEnclosingCircle(c) # Minimum enclosing circle(最小外接圆)
+            # Select the contour at the bottom of the screen (maximum y value) because the camera points diagonally downward and the bottom is closer(修改：选择画面最下方的轮廓（y值最大），因为相机斜向下，下方更近)
             if best_c is None or center_y > max_y:
                 best_c = (c, center_x, center_y)
                 max_y = center_y
 
-        # 如果有符合要求的轮廓(if there is a contour that meets the requirements)
+        # If there is a contour that meets the requirements(如果有符合要求的轮廓)
         if best_c is not None:
-            (center_x, center_y), radius = cv2.minEnclosingCircle(best_c[0]) # 最小外接圆(minimum enclosing circle)
+            (center_x, center_y), radius = cv2.minEnclosingCircle(best_c[0]) # Minimum enclosing circle(最小外接圆)
 
-            # 圈出识别的的要追踪的色块(Circle the color blocks to be tracked)
+            # Circle the identified color block to track(圈出识别的的要追踪的色块)
             circle_color = common.range_rgb[self.target_color] if self.target_color in common.range_rgb else (0x55, 0x55, 0x55)
             cv2.circle(result_image, (int(center_x * 2), int(center_y * 2)), int(radius * 2), circle_color, 2)
             
@@ -83,12 +83,12 @@ class ColorTracker:
 
             center_x = center_x * 2
             center_x_1 = center_x / w
-            if abs(center_x_1 - 0.5) > 0.02: # 相差范围小于一定值就不用再动了(If the difference range is less than a certain value, no further adjustments are needed)
-                self.pid_yaw.SetPoint = 0.5 # 我们的目标是要让色块在画面的中心, 就是整个画面的像素宽度的 1/2 位置(Our goal is to center the color blocks in the middle of the frame, which is at the 1/2 position of the frame's pixel width.)
+            if abs(center_x_1 - 0.5) > 0.02: # If the difference range is less than a certain value, no further adjustments are needed(相差范围小于一定值就不用再动了)
+                self.pid_yaw.SetPoint = 0.5 # Our goal is to center the color blocks in the middle of the frame, which is at the 1/2 position of the frame's pixel width.(我们的目标是要让色块在画面的中心, 就是整个画面的像素宽度的 1/2 位置)
                 self.pid_yaw.update(center_x_1)
                 self.yaw = min(max(self.yaw + self.pid_yaw.output, 0), 1000)
             else:
-                self.pid_yaw.clear() # 如果已经到达中心了就复位一下 pid 控制器(If the center is reached, reset the PID controller)
+                self.pid_yaw.clear() # If the center is reached, reset the PID controller(如果已经到达中心了就复位一下 pid 控制器)
 
             center_y = center_y * 2
             center_y_1 = center_y / h
@@ -157,9 +157,9 @@ class TrackAndGrabNode(Node):
         depth_sub = message_filters.Subscriber(self, Image, '/depth_cam/depth0/image_raw')
         info_sub = message_filters.Subscriber(self, CameraInfo, '/depth_cam/depth0/camera_info')
 
-        # 同步时间戳, 时间允许有误差在0.03s(Synchronize the timestamps, with an allowable time error of 0.03 seconds)
+        # Synchronize the timestamps, with an allowable time error of 0.03 seconds(同步时间戳, 时间允许有误差在0.03s)
         sync = message_filters.ApproximateTimeSynchronizer([rgb_sub, depth_sub, info_sub], 3, 0.02)
-        sync.registerCallback(self.multi_callback) #执行反馈函数(Execute the feedback function)
+        sync.registerCallback(self.multi_callback) #Execute the feedback function(执行反馈函数)
         
         timer_cb_group = ReentrantCallbackGroup()
         self.timer = self.create_timer(0.0, self.init_process, callback_group=timer_cb_group)
@@ -192,11 +192,11 @@ class TrackAndGrabNode(Node):
     def shutdown(self, signum, frame):
         self.running = False
         self.get_logger().info('\033[1;32m%s\033[0m' % "shutdown")
-        # 确保程序能够正常退出
-        cv2.destroyAllWindows()  # 关闭所有OpenCV窗口
-        rclpy.shutdown()  # 关闭ROS2
+        # Ensure the program can exit normally(确保程序能够正常退出)
+        cv2.destroyAllWindows()  # Close all OpenCV windows(关闭所有OpenCV窗口)
+        rclpy.shutdown()  # Shutdown ROS2(关闭ROS2)
         import sys
-        sys.exit(0)  # 强制退出程序
+        sys.exit(0)  # Force exit the program(强制退出程序)
 
     def set_color_srv_callback(self, request, response):
         self.get_logger().info('\033[1;32m%s\033[0m' % "set_color")
@@ -241,9 +241,9 @@ class TrackAndGrabNode(Node):
 
     def multi_callback(self, ros_rgb_image, ros_depth_image, depth_camera_info):
         if self.image_queue.full():
-            # 如果队列已满，丢弃最旧的图像(If the queue is full, discard the oldest image)
+            # If the queue is full, discard the oldest image(如果队列已满，丢弃最旧的图像)
             self.image_queue.get()
-        # 将图像放入队列(Add the image into the queue)
+        # Add the image into the queue(将图像放入队列)
         self.image_queue.put((ros_rgb_image, ros_depth_image, depth_camera_info))
 
     def get_endpoint(self):
@@ -296,7 +296,7 @@ class TrackAndGrabNode(Node):
             self.pick_finish_pub.publish(finish_msg)
             time.sleep(0.5)
 
-        # 停止
+        # Stop(停止)
         self.send_request(self.stop_client, Trigger.Request())
 
         self.tracker.yaw = 500
@@ -362,18 +362,18 @@ class TrackAndGrabNode(Node):
                                 if np.isnan(dist):
                                     txt = "DISTANCE ERROR !!!"
                                     return
-                                dist += 0.01 # 物体半径补偿(Object radius compensation)
-                                dist += 0.015 # 误差补偿(Error compensation)
+                                dist += 0.01 # Object radius compensation(物体半径补偿)
+                                dist += 0.015 # Error compensation(误差补偿)
                                 K = depth_camera_info.k
                                 self.get_endpoint()
                                 position = depth_pixel_to_camera((center_x, center_y), dist, (K[0], K[4], K[2], K[5]))
 
-                                position[0] += 0.00  # rgb相机和深度相机tf有1cm偏移(There is a 1 cm offset between the RGB camera and the depth camera in the TF.)
+                                position[0] += 0.00  # There is a 1 cm offset between the RGB camera and the depth camera in the TF.(rgb相机和深度相机tf有1cm偏移)
                                 position[1] -= 0.01
                                 position[2] += 0.00
 
-                                pose_end = np.matmul(self.hand2cam_tf_matrix, common.xyz_euler_to_mat(position, (0, 0, 0)))  # 转换的末端相对坐标(Relative coordinates of the end effector after transformation)
-                                world_pose = np.matmul(self.endpoint, pose_end)  # 转换到机械臂世界坐标(Transform to the robot arm's world coordinates)
+                                pose_end = np.matmul(self.hand2cam_tf_matrix, common.xyz_euler_to_mat(position, (0, 0, 0)))  # Relative coordinates of the end effector after transformation(转换的末端相对坐标)
+                                world_pose = np.matmul(self.endpoint, pose_end)  # Transform to the robot arm's world coordinates(转换到机械臂世界坐标)
                                 pose_t, pose_R = common.mat_to_xyz_euler(world_pose)
                                 self.stamp = time.time()
                                 self.moving = True
@@ -399,7 +399,7 @@ class TrackAndGrabNode(Node):
                     
                     cv2.imshow("depth", result_image)
                     key = cv2.waitKey(1)
-                    if key == ord('q') or key == 27:  # 按q或者esc退出(Hold q or esc key to exit)
+                    if key == ord('q') or key == 27:  # Hold q or esc key to exit(按q或者esc退出)
                         self.running = False
 
             except Exception as e:

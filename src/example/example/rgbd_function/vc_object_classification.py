@@ -2,7 +2,7 @@
 # encoding: utf-8
 # @data:2022/11/18
 # @author:aiden
-# 语音控制颜色追踪(voice control for color tracking)
+# Voice control for color tracking(语音控制颜色追踪)
 import os
 import json
 import rclpy
@@ -39,9 +39,9 @@ class VoiceControlGrabNode(Node):
 
         self.buzzer_pub = self.create_publisher(BuzzerState, '/ros_robot_controller/set_buzzer', 1)
         self.play('running')
-        self.get_logger().info('唤醒口令: 小幻小幻(Wake up word: hello hiwonder)')
-        self.get_logger().info('唤醒后15秒内可以不用再唤醒(No need to wake up within 15 seconds after waking up)')
-        self.get_logger().info('控制指令: 夹取球体 夹取圆柱体 夹取立方体 夹取红色 夹取蓝色 关闭夹取(Voice command: gripping the sphere/cylinder/cuboid red/blue stop gripping)')
+        self.get_logger().info('Wake word: hello hiwonder(唤醒口令: 小幻小幻)')
+        self.get_logger().info('No need to wake up within 15 seconds after waking up(唤醒后15秒内可以不用再唤醒)')
+        self.get_logger().info('Voice command: gripping the sphere/cylinder/cuboid red/blue stop gripping(控制指令: 夹取球体 夹取圆柱体 夹取立方体 夹取红色 夹取蓝色 关闭夹取)')
         
         self.create_service(Trigger, '~/init_finish', self.get_node_state)
         self.get_logger().info('\033[1;32m%s\033[0m' % 'start')
@@ -64,8 +64,8 @@ class VoiceControlGrabNode(Node):
         if self.language == 'Chinese':
             words = words.replace(' ', '')
         self.get_logger().info('words: %s'%words)
-        if words is not None and words not in ['唤醒成功(wake-up-success)', '休眠(Sleep)', '失败5次(Fail-5-times)',
-                                               '失败10次(Fail-10-times']:
+        if words is not None and words not in ['Wake-up-success(唤醒成功)', 'Sleep(休眠)', 'Fail-5-times(失败5次)',
+                                               'Fail-10-times(失败10次)']:
             if words == '夹取球体' or words == 'gripping the sphere':
                 msg = SetStringList.Request()
                 msg.data = ["sphere"]
@@ -113,11 +113,11 @@ class VoiceControlGrabNode(Node):
                     self.play('stop')
                 else:
                     self.play('stop_fail')
-        elif words == '唤醒成功(wake-up-success)':
+        elif words == 'Wake-up-success(唤醒成功)':
             self.play('awake')
             msg = Trigger.Request()
             res = self.send_request(self.stop_client, msg)
-        elif words == '休眠(Sleep)':
+        elif words == 'Sleep(休眠)':
             msg = BuzzerState()
             msg.freq = 1900
             msg.on_time = 0.05

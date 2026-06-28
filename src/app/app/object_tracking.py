@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # encoding: utf-8
-# 颜色跟踪(color tracking)
+# Color tracking(颜色跟踪)
 import os
 import cv2
 import math
@@ -44,7 +44,7 @@ class ObjectTracker:
         twist = Twist()
         h, w = image.shape[:2]
         image = cv2.resize(image, self.pro_size)
-        image = cv2.cvtColor(image, cv2.COLOR_RGB2LAB)  # RGB转LAB空间(convert RGB to LAB space)
+        image = cv2.cvtColor(image, cv2.COLOR_RGB2LAB)  # Convert RGB to LAB space(RGB转LAB空间)
         image = cv2.GaussianBlur(image, (5, 5), 5)
 
         if use_color_picker: 
@@ -60,14 +60,14 @@ class ObjectTracker:
         else:
             lowerb = tuple(color['min'])
             upperb = tuple(color['max'])
-        mask = cv2.inRange(image, lowerb, upperb) # 二值化(binarization)
+        mask = cv2.inRange(image, lowerb, upperb) # Binarization(二值化)
         # cv2.imshow('mask', cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR))
         # cv2.waitKey(1)
-        eroded = cv2.erode(mask, cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3)))  # 腐蚀(erode)
-        dilated = cv2.dilate(eroded, cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3)))  # 膨胀(dilate)
-        contours = cv2.findContours(dilated, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)[-2]  # 找出轮廓(find contours)
-        contour_area = map(lambda c: (c, math.fabs(cv2.contourArea(c))), contours)  # 计算各个轮廓的面积(calculate the area of each contour)
-        contour_area = list(filter(lambda c: c[1] > 40, contour_area))  # 剔除>面积过小的轮廓(remove contours with area that is too small)
+        eroded = cv2.erode(mask, cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3)))  # Erode(腐蚀)
+        dilated = cv2.dilate(eroded, cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3)))  # Dilate(膨胀)
+        contours = cv2.findContours(dilated, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)[-2]  # Find contours(找出轮廓)
+        contour_area = map(lambda c: (c, math.fabs(cv2.contourArea(c))), contours)  # Calculate the area of each contour(计算各个轮廓的面积)
+        contour_area = list(filter(lambda c: c[1] > 40, contour_area))  # Remove contours with area that is too small(剔除>面积过小的轮廓)
         circle = None
         if len(contour_area) > 0:
             if self.last_color_circle is None:
@@ -153,7 +153,7 @@ class OjbectTrackingNode(Node):
         self.get_target_color_srv = self.create_service(Trigger, '~/get_target_color', self.get_target_color_srv_callback)
         self.set_threshold_srv = self.create_service(SetFloat64, '~/set_threshold', self.set_threshold_srv_callback)
         self.joints_pub = self.create_publisher(ServosPosition, 'servo_controller', 1)
-        self.heartbeat = Heart(self, self.name + '/heartbeat', 5, lambda _: self.exit_srv_callback(request=Trigger.Request(), response=Trigger.Response())) # 心跳包(heartbeat package)
+        self.heartbeat = Heart(self, self.name + '/heartbeat', 5, lambda _: self.exit_srv_callback(request=Trigger.Request(), response=Trigger.Response())) # Heartbeat package(心跳包)
         self.camera_type = 'Stereo'
         self.debug = self.get_parameter('debug').value
         if self.debug: 
@@ -176,7 +176,7 @@ class OjbectTrackingNode(Node):
             cv2.imshow("image", cv2.resize(result, (display_size[0], display_size[1])))
             if self.debug and not self.set_callback:
                 self.set_callback = True
-                # 设置鼠标点击事件的回调函数(set callback function for mouse clicking event)
+                # Set callback function for mouse clicking event(设置鼠标点击事件的回调函数)
                 cv2.setMouseCallback("image", self.mouse_callback)
             k = cv2.waitKey(1)
             if k != -1:
@@ -211,10 +211,10 @@ class OjbectTrackingNode(Node):
             if self.image_sub is None:
                 if 'ROSOrin' in self.machine_type: 
                     self.camera_type = 'Stereo'
-                    self.image_sub = self.create_subscription(Image, '/depth_cam/rgb0/image_raw', self.image_callback, 1)  # 摄像头订阅(subscribe to the camera)
+                    self.image_sub = self.create_subscription(Image, '/depth_cam/rgb0/image_raw', self.image_callback, 1)  # Subscribe to the camera(摄像头订阅)
                 else:
                     self.camera_type = 'Mono'
-                    self.image_sub = self.create_subscription(Image, '/usb_cam/image_raw', self.image_callback, 1)  # 摄像头订阅(subscribe to the camera)
+                    self.image_sub = self.create_subscription(Image, '/usb_cam/image_raw', self.image_callback, 1)  # Subscribe to the camera(摄像头订阅)
             set_servo_position(self.joints_pub, 1, ((10, 500), (5, 500), (4, 180), (3, 50), (2, 700), (1, 500)))
             self.mecanum_pub.publish(Twist())
         response.success = True
@@ -298,17 +298,17 @@ class OjbectTrackingNode(Node):
         return response
 
     def image_callback(self, ros_image):
-        # 将ros格式(rgb)转为opencv的rgb格式(convert RGB format of ROS to that of OpenCV)
+        # Convert RGB format of ROS to that of OpenCV(将ros格式(rgb)转为opencv的rgb格式)
         cv_image = self.bridge.imgmsg_to_cv2(ros_image, "rgb8")
         rgb_image = np.array(cv_image, dtype=np.uint8)
         rgb_image = cv2.resize(rgb_image, (640,480))
         self.image_height, self.image_width = rgb_image.shape[:2]
 
-        result_image = np.copy(rgb_image)  # 显示结果用的画面(the image used for display the result)
+        result_image = np.copy(rgb_image)  # The image used for displaying the result(显示结果用的画面)
         with self.lock:
             if self.use_color_picker:
-                # 颜色拾取器和识别追踪互斥, 如果拾取器存在就开始拾取(color picker and object tracking are mutually exclusive. If the color picker exists, start picking colors)
-                if self.color_picker is not None:  # 拾取器存在(color pick exists)
+                # Color picker and object tracking are mutually exclusive. If the color picker exists, start picking colors(颜色拾取器和识别追踪互斥, 如果拾取器存在就开始拾取)
+                if self.color_picker is not None:  # Color pick exists(拾取器存在)
                     target_color, result_image = self.color_picker(rgb_image, result_image)
                     if target_color is not None:
                         self.color_picker = None
@@ -336,12 +336,12 @@ class OjbectTrackingNode(Node):
                         self.tracker.pid_yaw.clear()
         if self.debug:
             if self.image_queue.full():
-                # 如果队列已满，丢弃最旧的图像(if the queue is full, discard the oldest image)
+                # If the queue is full, discard the oldest image(如果队列已满，丢弃最旧的图像)
                 self.image_queue.get()
-                # 将图像放入队列(put the image into the queue)
+                # Put the image into the queue(将图像放入队列)
             self.image_queue.put(result_image)
         else:
-            # 将opencv的格式(bgr)转为ros的rgb格式(convert BGR format of OpenCV to RGB format of ROS)
+            # Convert BGR format of OpenCV to RGB format of ROS(将opencv的格式(bgr)转为ros的rgb格式)
             self.result_publisher.publish(self.bridge.cv2_to_imgmsg(result_image, "rgb8"))
 
 def main():

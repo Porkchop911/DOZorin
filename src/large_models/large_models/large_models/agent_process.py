@@ -59,7 +59,7 @@ class AgentProcess(Node):
             self.model = offline_llm
             self.enable_search = None
             self.client = speech.OllamaAPI(ollama_host, timeout=60)
-            self.get_logger().info(f"\033[1;32mOllama {self.client.llm('请回复ready', '', model=self.model, enable_search=self.enable_search, enable_think=self.enable_think)}\033[0m")
+            self.get_logger().info(f"\033[1;32mOllama {self.client.llm('Please reply with "ready"(请回复ready)', '', model=self.model, enable_search=self.enable_search, enable_think=self.enable_think)}\033[0m")
         else:
             self.client = speech.OpenAIAPI(api_key, base_url)  # Initialize OpenAI API client(初始化OpenAI API客户端)
         # Create publisher and subscribers(创建发布者和订阅者)
@@ -263,7 +263,7 @@ class AgentProcess(Node):
         self.get_logger().info('\033[1;32m%s\033[0m' % 'set tools')
         tools_list = []
             
-        # 将JSON字符串转换为Python对象
+        # Convert JSON string to Python object(将JSON字符串转换为Python对象)
         for tool_json in request.tools:
             tool = json.loads(tool_json)
             tools_list.append(tool)

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # encoding: utf-8
-# Waste Classification 垃圾分类
+# Waste Classification (垃圾分类)
 import os
 import cv2
 import yaml
@@ -113,14 +113,14 @@ class WasteClassificationNode(Node):
         threading.Thread(target=self.transport_thread, daemon=True).start()
         threading.Thread(target=self.display_thread, daemon=True).start()
         if self.get_parameter('start').value:
-             # 1. 自动进入垃圾分类场景，相当于 /enter
+             # 1. Automatically enter the waste classification scene, equivalent to /enter(自动进入垃圾分类场景，相当于 /enter)
             self.enter_srv_callback(Trigger.Request(), Trigger.Response())
-            # 2. 自动开启传送/夹取，相当于 /enable_transport data:=true
+            # 2. Automatically enable transport/grasp, equivalent to /enable_transport data:=true(自动开启传送/夹取，相当于 /enable_transport data:=true)
             req = SetBool.Request()
             req.data = True 
             res = SetBool.Response()
             self.start_srv_callback(req, res)
-            # 3. 自动设置所有垃圾类别为目标(auto set all waste category as target)
+            # 3. Automatically set all waste categories as targets(自动设置所有垃圾类别为目标)
             target_req = SetStringList.Request()
             target_req.data = [
                 'food_waste',
@@ -163,7 +163,7 @@ class WasteClassificationNode(Node):
     def get_roi(self):
         with open(self.config_path + self.config_file, 'r') as f:
             config = common.get_yaml_data(os.path.join(self.config_path, self.config_file))
-            # Convert to numpy array. 转换为 numpy 数组
+            # Convert to numpy array. (转换为 numpy 数组)
             extristric = np.array(config['extristric'])
             self.white_area_center = np.array(config['white_area_pose_world'])
             corners = np.array(config['corners']).reshape(-1, 3)
@@ -175,8 +175,8 @@ class WasteClassificationNode(Node):
                 break
             time.sleep(0.1)
         
-        tvec = extristric[:1]  # Take first row. 取第一行
-        rmat = extristric[1:]  # Take next three rows. 取后面三行
+        tvec = extristric[:1]  # Take first row. (取第一行)
+        rmat = extristric[1:]  # Take next three rows. (取后面三行)
         tvec, rmat = common.extristric_plane_shift(np.array(tvec).reshape((3, 1)), np.array(rmat), 0.04)
         extristric = tvec, rmat
         self.extristric = extristric
@@ -184,11 +184,11 @@ class WasteClassificationNode(Node):
                                      distortion)
         imgpts = np.int32(imgpts).reshape(-1, 2)
 
-        # 裁切出ROI区域(crop RIO region)
-        x_min = min(imgpts, key=lambda p: p[0])[0]  # The minimum value of X-axis. x轴最小值
-        x_max = max(imgpts, key=lambda p: p[0])[0]  # The maximum value of X-axis. x轴最大值
-        y_min = min(imgpts, key=lambda p: p[1])[1]  # The minimum value of Y-axis. y轴最小值
-        y_max = max(imgpts, key=lambda p: p[1])[1]  # The maximum value of Y-axis. y轴最大值
+        # Crop RIO region(裁切出ROI区域)
+        x_min = min(imgpts, key=lambda p: p[0])[0]  # The minimum value of X-axis. (x轴最小值)
+        x_max = max(imgpts, key=lambda p: p[0])[0]  # The maximum value of X-axis. (x轴最大值)
+        y_min = min(imgpts, key=lambda p: p[1])[1]  # The minimum value of Y-axis. (y轴最小值)
+        y_max = max(imgpts, key=lambda p: p[1])[1]  # The maximum value of Y-axis. (y轴最大值)
         roi = np.maximum(np.array([y_min, y_max, x_min, x_max]), 0)
 
         self.roi = roi
@@ -197,7 +197,7 @@ class WasteClassificationNode(Node):
         self.get_logger().info('\033[1;32m%s\033[0m' % "enter waste classification")
         set_servo_position(self.joints_pub, 1.0, ((1, 500), (2, 520), (3, 185), (4, 50), (5, 500), (10, 200)))
         self._init_parameters()
-        # self.heart = Heart(self, '~/heartbeat', 5, lambda _: self.exit_srv_callback(request=Trigger.Request(), response=Trigger.Response()))  # 心跳包(heartbeat package)
+        # self.heart = Heart(self, '~/heartbeat', 5, lambda _: self.exit_srv_callback(request=Trigger.Request(), response=Trigger.Response()))  # Heartbeat package(心跳包)
         self.camera_info_sub = self.create_subscription(CameraInfo, '/depth_cam/rgb0/camera_info', self.camera_info_callback, 1)
         self.image_sub = self.create_subscription(Image, 'yolo/object_image', self.image_callback, 1)
         self.object_sub = self.create_subscription(ObjectsInfo, 'yolo/object_detect', self.get_object_callback, 1)
@@ -251,7 +251,7 @@ class WasteClassificationNode(Node):
             self.enable_transport = False
             response.message = "stop"
         response.success = True
-        self.get_logger().info(f"当前目标列表: {self.target_list}")
+        self.get_logger().info(f"Current target list: {self.target_list}(当前目标列表: {self.target_list})")
         return response
 
     def set_target_srv_callback(self, request, response):

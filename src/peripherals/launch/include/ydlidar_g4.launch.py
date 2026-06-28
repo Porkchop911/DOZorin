@@ -4,13 +4,13 @@ from launch import LaunchDescription, LaunchService
 from launch.substitutions import LaunchConfiguration
 
 def generate_launch_description():
-    # 声明参数(declare parameter)
+    # Declare parameter(声明参数)
     lidar_frame = LaunchConfiguration('lidar_frame', default='lidar_frame')
     scan_raw = LaunchConfiguration('scan_raw', default='scan_raw')
     lidar_frame_arg = DeclareLaunchArgument('lidar_frame', default_value=lidar_frame)
     scan_raw_arg = DeclareLaunchArgument('scan_raw', default_value=scan_raw)
 
-    # G4节点(G4 node)
+    # G4 node(G4节点)
     g4_node = Node(
         package='ydlidar_ros2_driver',
         executable='ydlidar_ros2_driver_node',
@@ -50,7 +50,7 @@ def generate_launch_description():
     ])
 
 if __name__ == '__main__':
-    # 创建一个LaunchDescription对象(create a LaunchDescription object)
+    # Create a LaunchDescription object(创建一个LaunchDescription对象)
     ld = generate_launch_description()
 
     ls = LaunchService()

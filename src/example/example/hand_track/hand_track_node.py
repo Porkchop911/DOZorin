@@ -2,7 +2,7 @@
 # encoding: utf-8
 # @data:2022/11/07
 # @author:aiden
-# 手跟随(hand following)
+# Hand following(手跟随)
 import time
 import rclpy
 import signal
@@ -42,7 +42,7 @@ class HandTrackNode(Node):
         signal.signal(signal.SIGINT, self.shutdown)
 
         self.mecanum_pub = self.create_publisher(Twist, '/controller/cmd_vel', 1)
-        self.joints_pub = self.create_publisher(ServosPosition, '/servo_controller', 1) # 舵机控制(servo control)
+        self.joints_pub = self.create_publisher(ServosPosition, '/servo_controller', 1) # Servo control(舵机控制)
 
         self.image_sub = self.create_subscription(Point2D, '/hand_detect/center', self.get_hand_callback, 1)
         self.client = self.create_client(Trigger, '/kinematics/init_finish')

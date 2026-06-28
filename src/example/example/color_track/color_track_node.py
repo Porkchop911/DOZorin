@@ -2,7 +2,7 @@
 # encoding: utf-8
 # @data:2022/11/23
 # @author:aiden
-# 颜色跟踪(color tracking)
+# Color tracking(颜色跟踪)
 import os
 import time
 import rclpy
@@ -38,7 +38,7 @@ class ColorTrackNode(Node):
         self.lock = threading.RLock()
         self.machine_type = os.environ.get('MACHINE_TYPE')
         signal.signal(signal.SIGINT, self.shutdown)
-        self.mecanum_pub = self.create_publisher(Twist, '/controller/cmd_vel', 1)  # 底盘控制(chassis control)
+        self.mecanum_pub = self.create_publisher(Twist, '/controller/cmd_vel', 1)  # Chassis control(底盘控制)
 
         self.create_subscription(ColorsInfo, '/color_detect/color_info', self.get_color_callback, 1)
 
@@ -62,9 +62,9 @@ class ColorTrackNode(Node):
             self.pid_y = pid.PID(0.003, 0.0, 0.001)
 
 
-        self.create_service(Trigger, '~/start', self.start_srv_callback) # 进入玩法(enter the game)
-        self.create_service(Trigger, '~/stop', self.stop_srv_callback, callback_group=timer_cb_group) # 退出玩法(exit the game)
-        self.create_service(SetString, '~/set_color', self.set_color_srv_callback, callback_group=timer_cb_group) # 设置颜色(set color)
+        self.create_service(Trigger, '~/start', self.start_srv_callback) # Enter the feature(进入玩法)
+        self.create_service(Trigger, '~/stop', self.stop_srv_callback, callback_group=timer_cb_group) # Exit the feature(退出玩法)
+        self.create_service(SetString, '~/set_color', self.set_color_srv_callback, callback_group=timer_cb_group) # Set color(设置颜色)
         self.set_color_client = self.create_client(SetColorDetectParam, '/color_detect/set_param', callback_group=timer_cb_group)
         self.set_color_client.wait_for_service()
 

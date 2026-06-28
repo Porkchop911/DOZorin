@@ -2,7 +2,7 @@
 # encoding: utf-8
 # @data:2022/11/18
 # @author:aiden
-# 导航搬运(navigation transport)
+# Navigation transport(导航搬运)
 import math
 import rclpy
 import numpy as np
@@ -76,25 +76,25 @@ class NavigationController(Node):
         pose.pose.position.y = data.y
         pose.pose.orientation = q
 
-        # 用数字标记来显示点(mark the point with number to display)
+        # Mark the point with number to display(用数字标记来显示点)
         marker = Marker()
         marker.header.frame_id = self.map_frame
 
         marker.type = marker.MESH_RESOURCE
         marker.mesh_resource = "package://example/resource/flag.dae"
         marker.action = marker.ADD
-        # 大小(size)
+        # Size(大小)
         marker.scale.x = 0.08
         marker.scale.y = 0.08
         marker.scale.z = 0.2
-        # 颜色(color)
+        # Color(颜色)
         color = list(np.random.choice(range(256), size=3))
         marker.color.a = 1.0
         marker.color.r = color[0] / 255.0
         marker.color.g = color[1] / 255.0
         marker.color.b = color[2] / 255.0
-        # marker.lifetime = rospy.Duration(10)  # 显示时间，没有设置默认一直保留(display time. If not set, it will be kept by default)
-        # 位置姿态(position posture)
+        # marker.lifetime = rospy.Duration(10)  # Display time. If not set, it will be kept by default(显示时间，没有设置默认一直保留)
+        # Position posture(位置姿态)
         marker.pose.position.x = pose.pose.position.x
         marker.pose.position.y = pose.pose.position.y
         marker.pose.orientation = pose.pose.orientation
@@ -108,7 +108,7 @@ class NavigationController(Node):
         return response
 
     def goal_callback(self, msg):
-        # 获取要发布的导航点(obtain the navigation point to be published)
+        # Obtain the navigation point to be published(获取要发布的导航点)
         self.get_logger().info('\033[1;32m%s\033[0m' % str(msg))
 
         self.navigator.goToPose(msg)
