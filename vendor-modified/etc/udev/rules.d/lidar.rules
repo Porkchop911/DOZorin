@@ -1,0 +1,5 @@
+# LiDAR (SCLIDAR / CH340 chip). Pinned to the physical USB port the lidar uses.
+# Vendor default was 1-2.2.4 (wrong for this unit). Actual port = 1-2.1.4.
+SUBSYSTEM=="tty", KERNELS=="1-2.1.4:1.0", SYMLINK+="lidar"
+KERNEL=="ttyCH341USB*", MODE:="0666", GROUP:="dialout"
+KERNEL=="ttyUSB*", MODE:="0666", GROUP:="dialout"

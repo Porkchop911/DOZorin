@@ -1,0 +1,9 @@
+# official
+#SUBSYSTEM=="tty", KERNELS=="1-2.2.2.1:1.0", SYMLINK+="lidar`"
+# sub
+#SUBSYSTEM=="tty", KERNELS=="1-2.2:1.0", SYMLINK+="lidar"
+# Jetson Orin Nano HUB
+SUBSYSTEM=="tty", KERNELS=="1-2.2.4:1.0", SYMLINK+="lidar"
+#KERNEL=="ttyTHS1", SYMLINK+="lidar", MODE="0666", GROUP="dialout"
+KERNEL=="ttyCH341USB*", MODE:="0666", GROUP:="dialout"
+KERNEL=="ttyUSB*", MODE:="0666", GROUP:="dialout"

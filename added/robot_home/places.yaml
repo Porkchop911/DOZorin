@@ -1,0 +1,5 @@
+# Named waypoints on MAP_04 (photo-verified 2026-07-05; door from rtabmap stuck-pose 07-06)
+window: {x: 0.84, y: -1.08, yaw_deg: 353}
+drums:  {x: -0.01, y: -0.79, yaw_deg: 150}
+desk:   {x: 0.36, y: -1.55, yaw_deg: 270}
+door:   {x: -1.55, y: -1.26, yaw_deg: 267}
