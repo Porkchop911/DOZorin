@@ -11,7 +11,8 @@
 | `~/ros2_ws/src/slam/config/slam.yaml` | 2026-07-02 | slam_toolbox retune for Jetson CPU headroom: `map_update_interval 0.1→2.0`, `throttle_scans 1→3`, `minimum_travel_distance 0.0→0.1`, `transform_publish_period 0.01→0.05` (backup: `.heavybak`) |
 | `~/ros2_ws/src/large_models/large_models/large_models/config.py` | 2026-06-29 | LLM provider pointed at **LM Studio on the PC**: `llm_base_url='http://192.168.0.148:1234/v1'`, `llm_api_key='lm-studio'`, local model instead of cloud (no real API keys present). Backup: `config.py.lmstudio.bak`. Gotcha: this path is only used with `ASR_MODE=online`; offline mode routes to local ollama |
 | `~/ros2_ws/src/large_models/large_models/large_models/agent_process.py` | 2026-06-25 | `enable_think = False` — disable qwen reasoning mode for much faster replies on the Jetson |
-| `/etc/udev/rules.d/lidar.rules` | — | Lidar symlink repinned to the **actual** USB port `1-2.1.4` (factory rule pointed at `1-2.2.4` — wrong for this unit; `/dev/lidar` never appeared). Factory original preserved on-robot as `lidar.rules.bak` |
+| `/etc/udev/rules.d/lidar.rules` | 2026-06-29 | Lidar symlink repinned to the **actual** USB port `1-2.1.4` (factory rule pointed at `1-2.2.4` — wrong for this unit; `/dev/lidar` never appeared, sclidar driver crashed). Factory original preserved on-robot as `lidar.rules.bak`. Caveat: the two CH340 adapters are identical (no serial number), so the rule pins by physical port — replugging the lidar into another socket breaks it again |
+| `/etc/udev/rules.d/xf_mic.rules` | 2026-06-29 | Same bug class for the WonderEcho Pro mic serial: repinned `ring_mic` to `1-2.4.1` (factory `1-2.3.1`); without it `vocal_detect` crashed and blocked the LLM demos. Factory original: `xf_mic.rules.bak` |
 | System timezone | — | Asia/Shanghai → **Europe/Vienna** |
 
 ## 2. User files added *inside* the factory tree

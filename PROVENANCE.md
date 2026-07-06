@@ -8,11 +8,11 @@ Legend: **ORIGINAL** = factory as shipped · **MODIFIED** = factory file changed
 | `openclaw_controller` refactor, YOLO `.engine` models, AR `.obj` assets | **ORIGINAL** *(vendor-drift)* | — (listed in `docs/MODIFICATIONS.md` §4) | robot `~/ros2_ws/src` |
 | STM32 firmware | **ORIGINAL** | `vendor/firmware/*.hex` | STM32 board flash |
 | System image, flashing tools, course PDFs, WonderAi app, dev VM | **ORIGINAL** | pointers only: `vendor/VENDOR_ASSETS.md` | `D:\robot\...` |
-| `.typerc` / `.robotrc`, `start_app_node.service`, `xf_mic.rules`, `99-ttyACM0.rules`, `.stop_ros.sh`, `wifi_manager/`, `~/software/`, `~/third_party/` | **ORIGINAL** | `vendor/system/` (captured live) | robot `/etc`, `~/` |
+| `.typerc` / `.robotrc`, `start_app_node.service`, `99-ttyACM0.rules`, `.stop_ros.sh`, `wifi_manager/`, `~/software/`, `~/third_party/` | **ORIGINAL** | `vendor/system/` (captured live) | robot `/etc`, `~/` |
 | `nav2_params.yaml`, `nav2_controller_teb.yaml` | **MODIFIED** (retune + BT wiring + depth-guard source) | `vendor-modified/ros2_ws/src/navigation/config/` | robot `~/ros2_ws/src/navigation/config/` |
 | `slam.yaml` | **MODIFIED** (CPU retune) | `vendor-modified/ros2_ws/src/slam/config/` | robot |
 | `large_models/config.py`, `agent_process.py` | **MODIFIED** (LM Studio; enable_think=False) | `vendor-modified/ros2_ws/src/large_models/...` | robot |
-| `/etc/udev/rules.d/lidar.rules` | **MODIFIED** (USB port repin) | `vendor-modified/etc/udev/rules.d/` | robot |
+| `/etc/udev/rules.d/lidar.rules`, `xf_mic.rules` | **MODIFIED** (USB port repins — lidar & mic were dead as shipped) | `vendor-modified/etc/udev/rules.d/` (factory originals: `vendor/system/.../ *.rules.bak`) | robot |
 | Timezone Europe/Vienna | **MODIFIED** | noted in `docs/MODIFICATIONS.md` | robot |
 | No-backup Nav2 behavior trees (2 XML) | **ADDED** (installed into factory tree) | `vendor-modified/ros2_ws/src/navigation/config/` + mirror in `added/robot_scripts/` | robot |
 | SLAM maps `map_01/02/04/rtab/remap` | **ADDED** (`map_03`, `test` are factory) | `added/robot_maps/` | robot `~/ros2_ws/src/slam/maps/` |

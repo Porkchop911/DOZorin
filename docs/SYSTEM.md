@@ -49,7 +49,7 @@ Key values [LIVE]:
 |---|---|---|---|
 | `/dev/rrc` | `ttyACM0` (QinHeng 1a86:55d4 = STM32) | `99-ttyACM0.rules` (also sets `ID_MM_PORT_IGNORE`) | factory — `vendor/system/etc/udev/rules.d/` |
 | `/dev/lidar` | `ttyCH341USB0` | `lidar.rules` | **modified** — repinned to USB port `1-2.1.4` (factory `1-2.2.4` was wrong for this unit); `vendor-modified/etc/udev/rules.d/lidar.rules`, factory original preserved as `lidar.rules.bak` |
-| `/dev/ring_mic` | `ttyCH341USB1` | `xf_mic.rules` | factory |
+| `/dev/ring_mic` | `ttyCH341USB1` | `xf_mic.rules` | **modified** — repinned to USB port `1-2.4.1` (factory `1-2.3.1` was wrong for this unit; `vocal_detect` crashed); `vendor-modified/etc/udev/rules.d/xf_mic.rules`, factory original preserved as `xf_mic.rules.bak` |
 
 So the docs' `/dev/rrc` vs `/dev/ttyACM0` are the same device — `rrc` is the stable udev name.
 
