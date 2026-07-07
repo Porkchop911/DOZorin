@@ -37,8 +37,8 @@ timeout 5 ros2 run tf2_ros tf2_echo odom base_footprint 2>/dev/null | head -6
 print "=== estop service ==="
 ros2 service list | grep estop
 
-print "=== SIGINT launch, expect clean stop ==="
-kill -INT $LPID
+print "=== stopping launch (SIGTERM: backgrounded launch in a non-interactive shell ignores SIGINT) ==="
+kill -TERM $LPID
 wait $LPID 2>/dev/null
 print "launch exited rc=$?"
 tail -5 /tmp/hwr_bringup.log

@@ -25,4 +25,14 @@
 
 **Effort.** 1.5–2 days including the env decision.
 
-**Open questions.** Joint-state read-back rate that doesn't disturb servo bus (probe 2–5 Hz); WSL2 GUI performance for RViz.
+**Open questions.** ~~Joint-state read-back rate~~ (5 Hz runs clean alongside 50 Hz IMU, 0 CRC errors); WSL2 GUI performance for RViz (test after Jazzy install).
+
+## Status (2026-07-08) — static verification PASSED, motion items on hold
+
+All five packages build on the Jetson (17 s). Live static check (no motion, wheels at zero):
+- **rates on target:** imu 49.99 Hz, wheel_speeds 20.0 Hz, odom_model 20.0 Hz, joint_states 5.0 Hz; battery on `/battery` (12.18 V); `/estop` service present
+- **TF verified:** base_link→lidar_frame = (0.048, 0, 0.107) yaw **180.000°** exactly; odom→base_footprint at rest ≈ identity (0.19° residual from pre-bias-estimate integration — cosmetic, note: zero the integrator after bias estimation)
+- joint_states carries joint1–5 from live servo read-back; gyro z bias estimated at startup (+0.0019 rad/s)
+- clean shutdown verified via **SIGTERM** (POSIX gotcha: backgrounded `ros2 launch` in a non-interactive shell ignores SIGINT — scripts must TERM it)
+
+**Still open (need movement / GUI):** teleop figure-8, ≥3 driving bags + record/replay scripts (3.5), RViz visual check (needs `ros-jazzy-desktop` in WSL per ADR-005). ADR-005 decided: WSL2 Ubuntu 24.04 + Jazzy (doubles as the Jazzy-readiness proof).

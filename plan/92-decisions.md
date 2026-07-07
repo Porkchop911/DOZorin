@@ -24,11 +24,12 @@
 **Decision.** Hand-roll a 2D correlative scan matcher as the primary displacement source, fused with the commanded-velocity model (including vy) and IMU yaw rate in our own small filter. The same correlative core is reused for SLAM scan-to-map matching and MCL relocalization.
 **Consequences.** Odometry quality depends on scan-match robustness (mitigate: offline bag tuning, Phase 5 acceptance gate before SLAM). CPU budget must be watched (~5 Hz matcher, numpy).
 
-## ADR-005 — PC-side Linux env for RViz/bag replay (OPEN)
+## ADR-005 — PC-side Linux env: WSL2 Ubuntu 24.04 + ROS Jazzy (decided 2026-07-08)
 
 **Context.** Bags recorded on the robot need replay + RViz on the PC for offline SLAM/planner development.
-**Options.** WSL2 + Humble desktop; the existing VMware Ubuntu 22.04 ROS 2 VM (`D:\robot\ubuntu_ros2_humble-002`); X-forwarding from the robot (too slow).
-**Decision.** Deferred to task 3.5 — try WSL2 first (lighter, shares filesystem), fall back to the VM.
+**Options.** WSL2 + ROS desktop; the VMware Ubuntu 22.04 ROS 2 VM (VMware not found installed on the PC); X-forwarding from the robot (too slow).
+**Decision.** The PC already runs WSL2 Ubuntu **24.04** — Jazzy's native platform. Install `ros-jazzy-desktop` there for RViz/replay (WSLg GUI, shared filesystem with D:\). This doubles as the standing **Jazzy-readiness proof** for ADR-001: our packages must build and our bags must replay on Jazzy in WSL, continuously.
+**Consequences.** Cross-distro (Humble robot ↔ Jazzy PC) bag replay: record bags as `mcap` where possible and keep message deps to std interfaces + hwr_msgs (built in both places). If a cross-version incompatibility ever bites, fall back to a 22.04/Humble WSL distro alongside.
 
 ## ADR-006 — Lidar driver: reuse binary now, own UART decoder as stretch (2026-07-07)
 
