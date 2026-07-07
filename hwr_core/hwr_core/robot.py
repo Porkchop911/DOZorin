@@ -15,7 +15,7 @@ import time
 from typing import Mapping, Sequence
 
 from .kinematics import Calibration, scale_to_limit, wheel_speeds
-from .rrc import Board, Function, codecs
+from .rrc import Board, codecs
 from .safety import BatteryGate, EStop, Limits, Watchdog
 
 MAX_WHEEL_RPS = 4.0  # conservative wire-level cap; envelope really set by Limits
@@ -69,7 +69,7 @@ class Robot:
         self.estop_latch = EStop()
         self.watchdog = Watchdog(self._watchdog_stop, timeout=watchdog_timeout)
         self.battery_gate = BatteryGate(on_hard_stop=lambda: self.estop("battery hard stop"))
-        self._board._t.subscribe(Function.SYS, self._on_sys_report)
+        self._board.subscribe_battery(lambda mv, stamp: self.battery_gate.update(mv))
         self._last_cmd = (0.0, 0.0, 0.0)
         self._last_cmd_time: float | None = None
         self.arm = Arm(board)
@@ -96,11 +96,6 @@ class Robot:
         self.close()
 
     # ------------------------------------------------------------- reports
-
-    def _on_sys_report(self, data: bytes, stamp: float) -> None:
-        mv = codecs.parse_battery_mv(data)
-        if mv is not None:
-            self.battery_gate.update(mv)
 
     def _watchdog_stop(self) -> None:
         self._board.stop_all_motors()

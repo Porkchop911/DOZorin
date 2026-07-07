@@ -49,6 +49,22 @@ class Board:
         self._t.subscribe(
             Function.IMU, lambda data, stamp: callback(codecs.parse_imu(data), stamp))
 
+    def subscribe_battery(self, callback: Callable[[int, float], None]) -> None:
+        """Battery reports (millivolts) from the RX thread, ~1 Hz."""
+        def _relay(data: bytes, stamp: float) -> None:
+            mv = codecs.parse_battery_mv(data)
+            if mv is not None:
+                callback(mv, stamp)
+        self._t.subscribe(Function.SYS, _relay)
+
+    def subscribe_key(self, callback: Callable[[int, str, float], None]) -> None:
+        """Button events (key_id, event name) from the RX thread."""
+        def _relay(data: bytes, stamp: float) -> None:
+            evt = codecs.parse_key(data)
+            if evt is not None:
+                callback(evt[0], evt[1], stamp)
+        self._t.subscribe(Function.KEY, _relay)
+
     def key_event(self, timeout: float = 0.0) -> tuple[int, str] | None:
         data = self._t.wait_report(
             Function.KEY, timeout, lambda d: codecs.parse_key(d) is not None)

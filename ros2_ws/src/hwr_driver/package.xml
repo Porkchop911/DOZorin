@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>hwr_driver</name>
+  <version>0.0.1</version>
+  <description>Hardware driver node over hwr_core: motors, servos, IMU, battery, buzzer.</description>
+  <maintainer email="adam9x6loeb@googlemail.com">Niko</maintainer>
+  <license>MIT</license>
+
+  <depend>rclpy</depend>
+  <depend>hwr_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>std_srvs</depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
