@@ -1,0 +1,56 @@
+﻿============================= test session starts =============================
+platform win32 -- Python 3.14.2, pytest-8.4.2, pluggy-1.6.0 -- C:\Python314\python.exe
+cachedir: .pytest_cache
+rootdir: D:\robot\highwonder_rework\hwr_core
+configfile: pyproject.toml
+plugins: anyio-4.12.1, langsmith-0.6.4, cov-7.1.0
+collecting ... collected 46 items
+
+tests/test_codecs.py::test_parse_battery PASSED                          [  2%]
+tests/test_codecs.py::test_encode_led PASSED                             [  4%]
+tests/test_codecs.py::test_encode_buzzer PASSED                          [  6%]
+tests/test_codecs.py::test_encode_oled PASSED                            [  8%]
+tests/test_codecs.py::test_encode_motor_speeds_wire_ids_zero_based PASSED [ 10%]
+tests/test_codecs.py::test_encode_motor_speeds_rejects_bad_id PASSED     [ 13%]
+tests/test_codecs.py::test_encode_motor_type PASSED                      [ 15%]
+tests/test_codecs.py::test_parse_imu_si_conversion PASSED                [ 17%]
+tests/test_codecs.py::test_parse_key PASSED                              [ 19%]
+tests/test_codecs.py::test_encode_servo_positions PASSED                 [ 21%]
+tests/test_codecs.py::test_encode_servo_positions_validates PASSED       [ 23%]
+tests/test_codecs.py::test_encode_servo_stop_and_torque PASSED           [ 26%]
+tests/test_codecs.py::test_servo_read_roundtrip PASSED                   [ 28%]
+tests/test_codecs.py::test_servo_reply_failure_and_mismatch PASSED       [ 30%]
+tests/test_codecs.py::test_servo_temp_parse PASSED                       [ 32%]
+tests/test_crc8.py::test_table_matches_bitwise_oracle PASSED             [ 34%]
+tests/test_crc8.py::test_known_vectors PASSED                            [ 36%]
+tests/test_crc8.py::test_random_streams_match_oracle PASSED              [ 39%]
+tests/test_frames.py::test_encode_layout PASSED                          [ 41%]
+tests/test_frames.py::test_encode_empty_payload PASSED                   [ 43%]
+tests/test_frames.py::test_encode_rejects_bad_input PASSED               [ 45%]
+tests/test_frames.py::test_roundtrip_all_chunkings PASSED                [ 47%]
+tests/test_frames.py::test_resync_after_garbage_prefix PASSED            [ 50%]
+tests/test_frames.py::test_resync_after_crc_error PASSED                 [ 52%]
+tests/test_frames.py::test_rejects_unknown_function_then_recovers PASSED [ 54%]
+tests/test_frames.py::test_header_bytes_inside_payload PASSED            [ 56%]
+tests/test_frames.py::test_double_aa_header_still_syncs PASSED           [ 58%]
+tests/test_frames.py::test_truncated_frame_then_stream_recovers PASSED   [ 60%]
+tests/test_frames.py::test_fuzz_noise_never_crashes PASSED               [ 63%]
+tests/test_golden.py::test_led PASSED                                    [ 65%]
+tests/test_golden.py::test_buzzer PASSED                                 [ 67%]
+tests/test_golden.py::test_motor_speed PASSED                            [ 69%]
+tests/test_golden.py::test_motor_type PASSED                             [ 71%]
+tests/test_golden.py::test_oled PASSED                                   [ 73%]
+tests/test_golden.py::test_servo_set_forward_pose PASSED                 [ 76%]
+tests/test_golden.py::test_servo_stop PASSED                             [ 78%]
+tests/test_golden.py::test_servo_torque PASSED                           [ 80%]
+tests/test_golden.py::test_servo_read_requests PASSED                    [ 82%]
+tests/test_transport.py::test_send_writes_full_frame PASSED              [ 84%]
+tests/test_transport.py::test_latest_and_wait_report PASSED              [ 86%]
+tests/test_transport.py::test_wait_report_timeout PASSED                 [ 89%]
+tests/test_transport.py::test_wait_report_predicate_skips_nonmatching PASSED [ 91%]
+tests/test_transport.py::test_subscribe_streams_all_reports PASSED       [ 93%]
+tests/test_transport.py::test_board_battery_and_actuators PASSED         [ 95%]
+tests/test_transport.py::test_board_servo_read_request_response PASSED   [ 97%]
+tests/test_transport.py::test_close_is_clean_and_idempotent PASSED       [100%]
+
+============================= 46 passed in 0.35s ==============================
