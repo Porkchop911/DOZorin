@@ -35,6 +35,13 @@ codecs to byte-identical frames.
   the m3/m4 inversion belongs to the kinematics layer (Phase 2).
 - RTS/DTR must be low before opening the port or the STM32 resets.
 
+## Hard-learned firmware behavior
+
+- **BUZZER with `off_ms=0` latches the tone ON continuously** — no later frame we
+  tried silenced it before the process moved on; required a power-off (2026-07-07).
+  `Board.beep()` now clamps `off_ms >= 10`; `Board.buzzer_off()` exists for panic
+  paths. Policy: scripts stay silent unless sound is explicitly wanted.
+
 ## Open gaps
 
 - `set_rgb`: referenced by vendor node, undefined in SDK. Probe deferred (cosmetic);

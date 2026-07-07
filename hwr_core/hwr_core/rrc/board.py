@@ -77,7 +77,14 @@ class Board:
 
     def beep(self, freq_hz: int = 1500, on_ms: int = 100, off_ms: int = 100,
              repeat: int = 1) -> None:
-        self._t.send(Function.BUZZER, codecs.encode_buzzer(freq_hz, on_ms, off_ms, repeat))
+        # off_ms=0 makes the firmware latch the buzzer ON continuously
+        # (2026-07-07 incident: required a power-off to silence) - never send it
+        self._t.send(Function.BUZZER,
+                     codecs.encode_buzzer(freq_hz, on_ms, max(off_ms, 10), repeat))
+
+    def buzzer_off(self) -> None:
+        """Best-effort silence: overwrite any running pattern with a minimal one."""
+        self._t.send(Function.BUZZER, codecs.encode_buzzer(0, 1, 10, 1))
 
     def oled_text(self, line: int, text: str) -> None:
         self._t.send(Function.OLED, codecs.encode_oled_text(line, text))

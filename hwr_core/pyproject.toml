@@ -1,16 +1,6 @@
 [build-system]
-requires = ["setuptools>=61"]
+requires = ["setuptools>=59"]
 build-backend = "setuptools.build_meta"
 
-[project]
-name = "hwr-core"
-version = "0.0.1"
-description = "Framework-free core library for the highwonder rework: RRC protocol, kinematics, safety. No ROS imports."
-requires-python = ">=3.10"
-dependencies = []
-
-[project.optional-dependencies]
-dev = ["pytest"]
-
-[tool.setuptools.packages.find]
-include = ["hwr_core*"]
+# metadata lives in setup.cfg: the robot's Ubuntu 22.04 ships setuptools 59
+# (no PEP 621/660), so declarative setup.cfg + setup.py shim is the portable path
