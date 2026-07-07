@@ -1,0 +1,38 @@
+{
+  "led": [
+    "aa550107016400c800030026"
+  ],
+  "buzzer": [
+    "aa550208dc05640064000100e4"
+  ],
+  "motor_speed": [
+    "aa5503160104000000003f01000000bf020000803f03000080bf20"
+  ],
+  "motor_type_jgb37": [
+    "aa550302050166"
+  ],
+  "oled": [
+    "aa550a0501034857524f"
+  ],
+  "servo_set_forward_pose": [
+    "aa55051301dc050501f40102bd02037800042c0105f401ae"
+  ],
+  "servo_stop": [
+    "aa550508030601020304050ae8"
+  ],
+  "servo_torque_on": [
+    "aa5505020b05d2"
+  ],
+  "servo_torque_off": [
+    "aa5505020c05bc"
+  ],
+  "servo_read_position_request": [
+    "aa550502050450"
+  ],
+  "servo_read_vin_request": [
+    "aa5505020704c1"
+  ],
+  "servo_read_temp_request": [
+    "aa55050209041d"
+  ]
+}
