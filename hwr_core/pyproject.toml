@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hwr-core"
+version = "0.0.1"
+description = "Framework-free core library for the highwonder rework: RRC protocol, kinematics, safety. No ROS imports."
+requires-python = ">=3.10"
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[tool.setuptools.packages.find]
+include = ["hwr_core*"]
