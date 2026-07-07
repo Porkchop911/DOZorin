@@ -17,6 +17,10 @@ codecs to byte-identical frames.
 | Link quality @1 Mbaud | 4088 frames / 30 s: 0 CRC errors, 0 resyncs |
 | Buzzer `<HHHH>`, LED `<BHHH>`, OLED `[line,len,utf8]` | accepted by firmware, no faults |
 | Port sharing | our Transport + vendor `button_scan.py` coexist on ttyACM0 (same as factory driver does) |
+| Wheel map (user-verified on stand) | **m1=front-left, m2=rear-left, m3=front-right, m4=rear-right**; positive rps = left side forward, right side backward → invert m3/m4 in kinematics |
+| Motor speed steps 0.5/1/2 rps + 3 rps probe | all track visibly on stand; JGB37 type set explicitly at startup |
+| Bus servo forward pose | reached in 1.5 s, worst read-back error 13 pulses (3.1°); elbow (id 3) sags ~12 pulses under gravity, repeatable |
+| Link under motor load | 2 CRC errors / 4535 frames (0 when idle) — decoder resync recovers; monitor in Phase 2 |
 
 ## Implementation decisions
 
