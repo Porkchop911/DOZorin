@@ -18,7 +18,10 @@ sleep 1
 sudo systemctl start start_app_node.service
 print "start_app_node.service started, waiting for factory health..."
 
+# vendor rc appends to possibly-unset vars (LD_LIBRARY_PATH) - must source without -u
+set +u
 source $HOME/ros2_ws/.robotrc >/dev/null 2>&1
+set -u
 
 # 3) poll until /scan and the battery topic publish and the web UI answers (timeout 60 s)
 deadline=$(( START + 60 ))

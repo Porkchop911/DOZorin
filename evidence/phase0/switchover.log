@@ -1,0 +1,7 @@
+2026-07-07 10:22:56 takeover FAIL reason=no-battery-reading
+2026-07-07 10:24:54 takeover OK battery=11607mV
+2026-07-07 10:25:11 handback OK battery=11592mV elapsed=10s
+2026-07-07 10:25:25 takeover OK battery=11587mV
+2026-07-07 10:25:37 handback OK battery=11607mV elapsed=9s
+2026-07-07 10:25:42 takeover OK battery=11584mV
+2026-07-07 10:25:54 handback OK battery=11593mV elapsed=9s

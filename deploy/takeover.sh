@@ -16,7 +16,10 @@ if [[ -f $STATE ]]; then
     exit 0
 fi
 
+# vendor rc appends to possibly-unset vars (LD_LIBRARY_PATH) - must source without -u
+set +u
 source $HOME/ros2_ws/.robotrc >/dev/null 2>&1
+set -u
 
 # 1) battery gate: read from the factory topic while the factory stack still runs
 BATT=""
