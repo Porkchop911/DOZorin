@@ -8,5 +8,5 @@ cd "$HOME/hwr"
 source /opt/ros/humble/setup.bash
 cd ros2_ws
 colcon build --symlink-install --packages-select \
-    hwr_msgs hwr_driver hwr_base hwr_description hwr_teleop
+    hwr_msgs hwr_driver hwr_base hwr_description hwr_teleop hwr_sensors
 echo "build OK -> source ~/hwr/deploy/env.zsh to run"
