@@ -26,3 +26,11 @@
 **Effort.** 1–1.5 days (+1 day stretch 4.7).
 
 **Open questions.** Does `scan_raw` from the binary already embed any angular offset (vendor's `version=4` param)? Settled by 4.3. Aurora node CPU cost with RGB+depth at 12 fps under our stack — measure with `top` during 4.4.
+
+## Status (2026-07-09) — 4.1/4.2 authored + PC-tested; on-robot run blocked on charge
+
+`hwr_sensors` package done on the PC: `lidar.launch.py` (sclidar binary wrapped per ADR-006: port `/dev/lidar`, 230400, version=4, frame `lidar_frame`, `/scan`→`scan_raw`) + our `scan_filter_node` over ROS-free `scan_crop.py` (band 1.25–5.08 rad, self-hits <0.12 m → inf, handles the band wrapping across the driver's angle origin; 6 PC tests, suite 110/110). Added to build.sh.
+
+Check tools staged: `tools/static_phase4_lidar.zsh` (rates + geometry) runs `tools/live_phase4_lidar_check.py` — includes **matcher-on-real-scans**: consecutive static scans through the Phase 5 correlative matcher must give ~zero delta at high score, and dumps a scan sample for evidence.
+
+**Blocked 2026-07-09:** battery read 10.83–10.86 V (< 11.0 V floor) after ~1.5 h idle-on; robot gracefully shut down (user-approved) for an off-power charge. **Next session: sync → build → takeover → `static_phase4_lidar.zsh` → handback** (~5 min total, no motion).
