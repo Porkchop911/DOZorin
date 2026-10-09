@@ -1,9 +1,15 @@
 __pycache__/
 *.pyc
 .pytest_cache/
+.pytest-tmp-codex/
+.pytest-tmp-*/
 build/
 install/
 log/
 *.egg-info/
 *.bag
 evidence/**/*.mp4
+config/hwr.env
+
+.pytest_tmp*/
+.pytest_runtime*/

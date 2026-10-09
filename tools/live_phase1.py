@@ -21,7 +21,7 @@ def main():
     try:
         # ---- battery (1.3)
         mv = board.battery_mv(timeout=3.0)
-        print(f"battery: {mv} mV")
+        print("internal power telemetry received")
         if mv is None:
             print("FAIL: no battery report")
             return 1
@@ -68,7 +68,7 @@ def main():
         time.sleep(0.5)
 
         mv2 = board.battery_mv(timeout=3.0)
-        print(f"battery end: {mv2} mV")
+        print("internal power telemetry received at end")
         verdict = "PASS" if (rate >= 40 and worst >= 40) else "FAIL"
         print(f"IMU-rate acceptance: {verdict}")
         return 0 if verdict == "PASS" else 1

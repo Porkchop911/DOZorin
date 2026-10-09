@@ -1,0 +1,41 @@
+{
+  "captures": [
+    {
+      "attempt": 1,
+      "clearance": {
+        "forward": 0.30000000447034836,
+        "front_left": null,
+        "front_right": 0.15000000223517418,
+        "left": 1.4000000208616257,
+        "right": 0.15000000223517418
+      },
+      "context": "/home/ubuntu/hwr/state/downstairs_sector9_chair_clearance_canary_20260731/attempt_01_success_context.json",
+      "image": "/home/ubuntu/hwr/state/downstairs_sector9_chair_clearance_canary_20260731/attempt_01_success.jpg",
+      "outcome": "success",
+      "pose": [
+        2.214488011014285,
+        3.538394036973717,
+        -0.13367999428124677
+      ]
+    }
+  ],
+  "consecutive_failures": 0,
+  "failures": 0,
+  "finished_at": 1785490323.4382365,
+  "reason": "translation_attempt_target_reached",
+  "rotations": 1,
+  "started_at": 1785490315.7275126,
+  "stop_results": {
+    "estop": {
+      "message": "estop tripped",
+      "success": true
+    },
+    "explore_stop": {
+      "message": "exploration stopped",
+      "success": true
+    }
+  },
+  "translation_attempt_target": 1,
+  "translation_attempts": 1,
+  "translations_succeeded": 1
+}

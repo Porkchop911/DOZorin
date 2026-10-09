@@ -82,7 +82,8 @@ class OdomFusion:
 
     def update_scan(self, keyframe_pose: tuple[float, float, float],
                     delta: tuple[float, float, float],
-                    delta_cov: np.ndarray, score: float) -> bool:
+                    delta_cov: np.ndarray, score: float, *,
+                    observe_translation: bool = True) -> bool:
         """Fuse a scan-match delta measured against a keyframe.
 
         `keyframe_pose` is the fused pose stored when the keyframe scan
@@ -108,6 +109,25 @@ class OdomFusion:
         R += np.diag([self.cfg.meas_floor_xy ** 2,
                       self.cfg.meas_floor_xy ** 2,
                       self.cfg.meas_floor_theta ** 2])
+
+        if not observe_translation:
+            # During commanded pure yaw, scan correlation may trade rotation
+            # for a large fictitious x/y shift in repetitive scenes. Preserve
+            # the gyro/model translation baseline and fuse only scan yaw.
+            innovation = _wrap(float(z[2]) - float(self.x[2]))
+            variance = float(self.P[2, 2] + R[2, 2])
+            d2 = innovation * innovation / variance
+            if d2 > self.cfg.gate_mahalanobis:
+                self.rejected += 1
+                return False
+            gain = float(self.P[2, 2] / variance)
+            self.x[2] = _wrap(float(self.x[2]) + gain * innovation)
+            self.P[2, 2] = ((1.0 - gain) ** 2 * self.P[2, 2]
+                            + gain * gain * R[2, 2])
+            self.P[0, 2] = self.P[2, 0] = 0.0
+            self.P[1, 2] = self.P[2, 1] = 0.0
+            self.accepted += 1
+            return True
 
         nu = z - self.x
         nu[2] = _wrap(nu[2])

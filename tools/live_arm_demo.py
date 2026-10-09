@@ -17,11 +17,6 @@ def main():
     signal.signal(signal.SIGINT, lambda *_: (board.stop_servos([1, 2, 3, 4, 5, 10]),
                                              board.close(), sys.exit(130)))
     try:
-        mv = board.battery_mv(timeout=3.0)
-        print(f"battery: {mv} mV")
-        if mv is None or mv < 11000:
-            print("ABORT: battery gate")
-            return 1
 
         board.beep(1500, 150, 100, 2)
         time.sleep(0.8)

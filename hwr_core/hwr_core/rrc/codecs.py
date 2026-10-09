@@ -51,6 +51,8 @@ def encode_motor_speeds(speeds: Sequence[tuple[int, float]]) -> bytes:
     for motor_id, rps in speeds:
         if not 1 <= motor_id <= 4:
             raise ValueError(f"motor id {motor_id} out of range 1..4")
+        if not math.isfinite(float(rps)):
+            raise ValueError(f"motor {motor_id} speed must be finite")
         out += struct.pack("<Bf", motor_id - 1, float(rps))
     return bytes(out)
 
@@ -70,8 +72,18 @@ class ImuSample(NamedTuple):
     gz: float
 
 
-def parse_imu(data: bytes) -> ImuSample:
-    """IMU report: 6x float32 ax,ay,az in g / gx,gy,gz in deg/s -> SI units."""
+def scale_imu_gyro(sample: ImuSample, *, z_scale: float = 1.0) -> ImuSample:
+    """Apply the hardware-calibrated yaw-rate scale to an SI IMU sample."""
+    z_scale = float(z_scale)
+    if not math.isfinite(z_scale) or z_scale <= 0.0:
+        raise ValueError("gyro z scale must be finite and positive")
+    return sample._replace(gz=sample.gz * z_scale)
+
+
+def parse_imu(data: bytes) -> ImuSample | None:
+    """IMU report in SI units, or ``None`` for a malformed payload."""
+    if len(data) != struct.calcsize("<6f"):
+        return None
     ax, ay, az, gx, gy, gz = struct.unpack("<6f", data)
     return ImuSample(
         ax * GRAVITY, ay * GRAVITY, az * GRAVITY,
@@ -145,12 +157,13 @@ def parse_servo_reply(data: bytes, sub: int, value_format: str):
     failure (success != 0, e.g. servo offline).
     """
     head = struct.calcsize("<BBb")
-    if len(data) < head or data[1] != sub:
+    value_size = struct.calcsize(value_format)
+    if len(data) < head + value_size or data[1] != sub:
         return None
     servo_id, _, success = struct.unpack("<BBb", data[:head])
     if success != 0:
         return None
-    return (servo_id, *struct.unpack(value_format, data[head:head + struct.calcsize(value_format)]))
+    return (servo_id, *struct.unpack(value_format, data[head:head + value_size]))
 
 
 def parse_servo_position(data: bytes) -> tuple[int, int] | None:

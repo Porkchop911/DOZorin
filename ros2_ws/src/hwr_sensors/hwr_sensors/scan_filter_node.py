@@ -12,7 +12,7 @@ from rclpy.qos import QoSProfile, QoSReliabilityPolicy
 
 from sensor_msgs.msg import LaserScan
 
-from hwr_sensors.scan_crop import BAND_HI, BAND_LO, MIN_RANGE, crop_scan
+from hwr_sensors.scan_crop import BAND_HI, BAND_LO, MIN_RANGE, crop_scan, crop_indices
 
 
 class ScanFilterNode(Node):
@@ -33,16 +33,23 @@ class ScanFilterNode(Node):
         new_min, ranges = crop_scan(msg.angle_min, msg.angle_increment,
                                     msg.ranges, self.lo, self.hi,
                                     self.min_range)
+        _, indices = crop_indices(msg.angle_min, msg.angle_increment,
+                                  len(msg.ranges), self.lo, self.hi)
         out = LaserScan()
         out.header = msg.header
         out.angle_min = new_min
         out.angle_increment = msg.angle_increment
         out.angle_max = new_min + msg.angle_increment * max(len(ranges) - 1, 0)
-        out.time_increment = msg.time_increment
+        # A wrapped input is reordered into one angular arc, so acquisition
+        # timestamps are no longer monotonic and must not be advertised.
+        contiguous = len(indices) < 2 or bool((indices[1:] - indices[:-1] == 1).all())
+        out.time_increment = msg.time_increment if contiguous else 0.0
         out.scan_time = msg.scan_time
         out.range_min = max(msg.range_min, self.min_range)
         out.range_max = msg.range_max
         out.ranges = [float(r) for r in ranges]
+        if len(msg.intensities) == len(msg.ranges):
+            out.intensities = [float(msg.intensities[i]) for i in indices]
         self.pub.publish(out)
 
 
@@ -55,7 +62,7 @@ def main() -> None:
         pass
     finally:
         node.destroy_node()
-        rclpy.shutdown()
+        rclpy.try_shutdown()
 
 
 if __name__ == "__main__":

@@ -1,0 +1,45 @@
+{
+  "time": 1785406179.8526342,
+  "step": 3,
+  "pose": [
+    0.02,
+    0.0,
+    1.653489095053311
+  ],
+  "observation": {
+    "zone_type": "dining_area",
+    "floor_surface": "light_wood_floor",
+    "visible_boundaries": [
+      "white_wall",
+      "wooden_floor_edge",
+      "wall_baseboard"
+    ],
+    "traversable_openings": [
+      "floor_space_under_table",
+      "floor_space_between_chairs"
+    ],
+    "stable_landmarks": [
+      "table_legs",
+      "chair_legs",
+      "wall_socket"
+    ],
+    "furniture_and_fixtures": [
+      "dining_table",
+      "chairs",
+      "wall_socket"
+    ],
+    "navigation_constraints": [
+      "narrow_space_between_chairs",
+      "obstacle_under_table"
+    ],
+    "likely_hazards": [
+      "low_clearance_under_table",
+      "chair_legs_as_obstacles"
+    ],
+    "unexplored_directions": [
+      "direction_to_wall_socket",
+      "direction_to_wall_baseboard"
+    ],
+    "uncertainty": "low"
+  }
+}

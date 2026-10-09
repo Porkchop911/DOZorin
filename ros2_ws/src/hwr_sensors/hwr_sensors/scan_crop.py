@@ -31,9 +31,19 @@ def crop_scan(angle_min: float, angle_increment: float, ranges,
     kept beam's bearing, equal mod 2pi to its original bearing.
     """
     ranges = np.asarray(ranges, dtype=float)
-    n = len(ranges)
+    new_min, idx = crop_indices(angle_min, angle_increment, len(ranges), lo, hi)
+    out = ranges[idx].copy()
+    out[~np.isfinite(out) | (out < min_range)] = np.inf
+    return new_min, out
+
+
+def crop_indices(angle_min: float, angle_increment: float, count: int,
+                 lo: float = BAND_LO, hi: float = BAND_HI
+                 ) -> tuple[float, np.ndarray]:
+    """Return the new angle origin and source indices for the usable arc."""
+    n = int(count)
     if n == 0 or angle_increment <= 0.0:
-        return angle_min, ranges.copy()
+        return angle_min, np.empty(0, dtype=int)
 
     two_pi = 2.0 * math.pi
     angles = angle_min + np.arange(n) * angle_increment
@@ -41,10 +51,8 @@ def crop_scan(angle_min: float, angle_increment: float, ranges,
     width = (hi - lo) % two_pi
     keep = rel <= width + 1e-9
     if not keep.any():
-        return lo, np.empty(0)
+        return lo, np.empty(0, dtype=int)
 
     idx = np.nonzero(keep)[0]
     idx = idx[np.argsort(rel[idx])]             # ascending along the arc
-    out = ranges[idx].copy()
-    out[~np.isfinite(out) | (out < min_range)] = np.inf
-    return lo + float(rel[idx[0]]), out
+    return lo + float(rel[idx[0]]), idx

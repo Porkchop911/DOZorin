@@ -1,0 +1,41 @@
+{
+  "captures": [
+    {
+      "attempt": 1,
+      "clearance": {
+        "forward": 1.2000000178813934,
+        "front_left": 1.3000000193715096,
+        "front_right": 0.2500000037252903,
+        "left": 1.1500000171363354,
+        "right": 0.15000000223517418
+      },
+      "context": "evidence/phase9/downstairs_sector12_20260731/attempt_01_failed_context.json",
+      "image": "evidence/phase9/downstairs_sector12_20260731/attempt_01_failed.jpg",
+      "outcome": "failed",
+      "pose": [
+        2.6275164708582963,
+        3.7199913902469817,
+        0.2360097816670662
+      ]
+    }
+  ],
+  "consecutive_failures": 1,
+  "failures": 4,
+  "finished_at": 1785492483.307103,
+  "reason": "exploration_session_finished",
+  "rotations": 16,
+  "started_at": 1785492390.5054355,
+  "stop_results": {
+    "estop": {
+      "message": "estop tripped",
+      "success": true
+    },
+    "explore_stop": {
+      "message": "exploration stopped",
+      "success": true
+    }
+  },
+  "translation_attempt_target": 3,
+  "translation_attempts": 1,
+  "translations_succeeded": 0
+}

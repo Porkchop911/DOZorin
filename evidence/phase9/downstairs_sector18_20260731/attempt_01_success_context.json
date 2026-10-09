@@ -1,0 +1,69 @@
+{
+  "camera_forward": true,
+  "camera_fresh": true,
+  "clearance_limit_m": 1.5,
+  "current_goal": null,
+  "dead_reckoning": {
+    "fresh": true,
+    "pose": [
+      0.46090815505988403,
+      0.06108241797514627,
+      3.131556599869805
+    ]
+  },
+  "drive_active": false,
+  "escape_profiles": {
+    "forward": {
+      "blocked_prefix_m": 0.0,
+      "clearance_m": null,
+      "trapped": false
+    },
+    "front_left": {
+      "blocked_prefix_m": 0.0,
+      "clearance_m": 1.0500000156462193,
+      "trapped": false
+    },
+    "front_right": {
+      "blocked_prefix_m": 0.0,
+      "clearance_m": 0.45000000670552254,
+      "trapped": false
+    },
+    "left": {
+      "blocked_prefix_m": 0.0,
+      "clearance_m": null,
+      "trapped": false
+    },
+    "right": {
+      "blocked_prefix_m": 0.0,
+      "clearance_m": null,
+      "trapped": false
+    }
+  },
+  "hard_clearance_m": {
+    "forward": null,
+    "front_left": 1.0500000156462193,
+    "front_right": 0.45000000670552254,
+    "left": null,
+    "right": null
+  },
+  "localization": {
+    "fresh": true,
+    "healthy": true,
+    "score": 0.0,
+    "state": "mapping"
+  },
+  "odometry": {
+    "fresh": true,
+    "pose": [
+      0.7080176245516261,
+      0.011542728771142183,
+      1.2787160621232272
+    ]
+  },
+  "pose": [
+    3.419809219128014,
+    3.965497877078405,
+    1.4432095643647131
+  ],
+  "trapped_start": false
+}

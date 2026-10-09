@@ -48,6 +48,13 @@ def test_encode_motor_speeds_rejects_bad_id():
         codecs.encode_motor_speeds([(5, 1.0)])
 
 
+def test_encode_motor_speeds_rejects_nonfinite():
+    with pytest.raises(ValueError):
+        codecs.encode_motor_speeds([(1, float("nan"))])
+    with pytest.raises(ValueError):
+        codecs.encode_motor_speeds([(1, float("inf"))])
+
+
 def test_encode_motor_type():
     assert codecs.encode_motor_type(codecs.MOTOR_TYPE_JGB37) == b"\x05\x01"
 
@@ -61,6 +68,20 @@ def test_parse_imu_si_conversion():
     assert s.gx == pytest.approx(math.pi / 2)
     assert s.gy == pytest.approx(-math.pi / 2)
     assert s.gz == pytest.approx(math.pi / 4)
+
+
+def test_parse_imu_rejects_wrong_size():
+    assert codecs.parse_imu(b"short") is None
+
+
+def test_scale_imu_gyro_applies_calibrated_yaw_rate_only():
+    sample = codecs.ImuSample(1.0, 2.0, 3.0, 0.1, 0.2, 0.4)
+    calibrated = codecs.scale_imu_gyro(sample, z_scale=2.0)
+    assert calibrated == codecs.ImuSample(1.0, 2.0, 3.0, 0.1, 0.2, 0.8)
+    with pytest.raises(ValueError):
+        codecs.scale_imu_gyro(sample, z_scale=float("nan"))
+    with pytest.raises(ValueError):
+        codecs.scale_imu_gyro(sample, z_scale=0.0)
 
 
 # ---------------------------------------------------------------- key
@@ -105,6 +126,7 @@ def test_servo_reply_failure_and_mismatch():
     wrong_sub = struct.pack("<BBbH", 4, 0x07, 0, 7400)
     assert codecs.parse_servo_position(wrong_sub) is None
     assert codecs.parse_servo_vin(wrong_sub) == (4, 7400)
+    assert codecs.parse_servo_position(b"\x04\x05\x00") is None
 
 
 def test_servo_temp_parse():

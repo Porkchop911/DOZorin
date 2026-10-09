@@ -1,0 +1,40 @@
+{
+  "pose": [
+    0.7493526785894412,
+    1.7512168142541928,
+    1.1079986029346391
+  ],
+  "odometry": {
+    "pose": [
+      0.7689474620730219,
+      1.6525688802145357,
+      0.9595025090067397
+    ],
+    "fresh": true
+  },
+  "dead_reckoning": {
+    "pose": [
+      -1.1566657243042036,
+      1.2863003371613513,
+      1.7794929370272698
+    ],
+    "fresh": true
+  },
+  "localization": {
+    "healthy": true,
+    "state": "mapping",
+    "score": 0.0,
+    "fresh": true
+  },
+  "current_goal": null,
+  "drive_active": false,
+  "camera_forward": true,
+  "hard_clearance_m": {
+    "forward": null,
+    "front_left": 0.3500000052154064,
+    "left": 0.15000000223517418,
+    "front_right": 1.4500000216066837,
+    "right": 1.2500000186264515
+  },
+  "trapped_start": false
+}

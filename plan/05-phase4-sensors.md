@@ -23,6 +23,19 @@
 
 - Sensors only; no motion beyond slow attended teleop for data capture. Camera work with arm at forward-look pose set via Phase 1 servo path.
 
+## 2026-07-22 live depth acceptance
+
+- Corrected the camera optical TF so optical +Z maps to robot-forward.
+- Replaced calibration-sensitive absolute floor rejection with deterministic
+  ground-plane subtraction; synthetic tilted-floor/low-leg tests pass.
+- Live forward view produced 53–54/64 valid beams. The nearest stand leg was
+  detected at 1.17–1.19 m and every endpoint entered the navigation costmap as
+  lethal; 51–52 endpoints raised cells beyond the saved static map.
+- Added conservative invalid-depth-gap projection for very low structured-light
+  obstacles that appear mainly as supported depth holes. Live acceptance marked
+  the low stand bar on the forward centerline at 1.25 m while the robot remained
+  stationary; isolated, horizon, and bottom-border holes are rejected in tests.
+
 **Effort.** 1–1.5 days (+1 day stretch 4.7).
 
 **Open questions.** Does `scan_raw` from the binary already embed any angular offset (vendor's `version=4` param)? Settled by 4.3. Aurora node CPU cost with RGB+depth at 12 fps under our stack — measure with `top` during 4.4.

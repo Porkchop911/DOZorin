@@ -81,5 +81,5 @@ Also on robot but being **replaced by our code**: `robot_localization` (EKF), `r
 
 - Robot: `ssh ubuntu@192.168.0.223` (key auth, passwordless sudo). PowerShell quoting mangles SSH args — use the base64 pattern: build script → `[Convert]::ToBase64String` → `ssh … "echo <b64> | base64 -d | zsh"` (zsh needed for ROS env: bash drops `ROS_LOCALHOST_ONLY=0` and silently kills DDS discovery). Never retry-storm SSH (sshd MaxStartups self-DoS).
 - Factory autostart: `start_app_node.service` → `bringup.launch.py`. `ROS_DOMAIN_ID=0`, FastDDS.
-- Battery: `/ros_robot_controller/battery` (mV). **<11000 wrap up, <10500 stop immediately.** Check at session start/end. Pack: 11.1 V 6000 mAh; charge only powered off.
+- Battery telemetry: `/ros_robot_controller/battery` (mV). It is observational only in HWR; the human operator makes all power decisions. Pack: 11.1 V 6000 mAh; charge only powered off.
 - Full hardware datasheet: `D:\robot\Hiwonder_software_stack\docs\HARDWARE.md`; User Manual PDF §1.10 for component specs.

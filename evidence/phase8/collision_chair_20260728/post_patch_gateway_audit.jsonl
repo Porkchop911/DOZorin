@@ -1,0 +1,1017 @@
+{"time":1784802106.1269464,"action":"arm_aim","outcome":"accepted","detail":{"bearing":0.785398,"elevation":0.0,"duration_ms":1200}}
+{"time":1784802109.1808732,"action":"arm_aim","outcome":"accepted","detail":{"bearing":-0.785398,"elevation":0.0,"duration_ms":1200}}
+{"time":1784802112.0946667,"action":"arm_pose","outcome":"accepted","detail":{"name":"forward","duration_ms":1500}}
+{"time":1784803546.69587,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1784803553.360085,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1784803584.873562,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1784803593.010294,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1784803622.230597,"action":"arm_aim","outcome":"accepted","detail":{"bearing":0.785398,"elevation":0.0,"duration_ms":1200}}
+{"time":1784803624.3554993,"action":"arm_pose","outcome":"accepted","detail":{"name":"forward","duration_ms":1500}}
+{"time":1784803644.0506558,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1784803654.6999896,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1784803681.971924,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1784803688.7724552,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1784803712.552729,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1784803719.2658951,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1784803739.3167088,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1784803745.049859,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1784803766.7868814,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1784803773.2928765,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1784803791.7712445,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1784803800.1668992,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1784804066.0124016,"action":"arm_pose","outcome":"rejected","detail":{"name":"forward","duration_ms":1500}}
+{"time":1784804086.946527,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1784804087.1756675,"action":"arm_pose","outcome":"accepted","detail":{"name":"forward","duration_ms":1500}}
+{"time":1784804089.2671006,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1784824153.1184673,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1784824153.5047636,"action":"arm_pose","outcome":"accepted","detail":{"name":"forward","duration_ms":1800}}
+{"time":1784824156.1368585,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1784824219.5441132,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1784824229.510467,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1784824507.831921,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1784824509.3331885,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1784824538.1294522,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1784824539.0873828,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1784824563.511633,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1784824568.8597689,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1784824595.7236357,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1784824600.5556655,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1784824673.0021515,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1784824679.5209084,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1784824741.3523962,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1784824746.1542656,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1784824804.0275967,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1784824814.6044793,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1784827256.0715067,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1784827339.0113847,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1784827526.3404746,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1784827600.79821,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1784827678.5202022,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1784827727.6587074,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1784827769.8368747,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1784827841.3580537,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1784827914.7468445,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1784827955.6603444,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1784828070.7233436,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1784828165.7923722,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1784828261.6543803,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1784828327.9972806,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1784828360.1707504,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1784828411.7286918,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1784828562.3816,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1784828658.0315273,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1784828747.1514149,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1784828883.7887883,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1784828958.005135,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1784829069.427235,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1784829187.4011943,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1784829235.315173,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1784829271.7548263,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1784829318.8433936,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1784829367.198918,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1784829372.1886225,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1784829954.8023863,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1784830055.2940044,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1784830150.4717083,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1784830524.1900017,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1784830568.3333592,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+                     {"time":1785134152.9619246,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785134206.9323916,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785134207.1478715,"action":"arm_pose","outcome":"accepted","detail":{"name":"forward","duration_ms":1500}}
+{"time":1785134210.4047601,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785134317.0322168,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785134317.2415442,"action":"arm_pose","outcome":"accepted","detail":{"name":"ceiling","duration_ms":1500}}
+{"time":1785134320.4982917,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785134393.709002,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785134427.3819838,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785134604.7448323,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785134625.2481346,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785134771.6534872,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785134778.4459195,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785135024.571034,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785135060.9945781,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785135189.5908813,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785135227.0990715,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785135251.3758488,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785135930.5784168,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785136030.5917702,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785136070.819743,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785136657.179127,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785136767.7467513,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785137393.7959335,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785137505.3001206,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785138504.7834148,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785140108.1759155,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785141144.1676278,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785152318.0687,"action":"arm_pose","outcome":"rejected","detail":{"name":"forward","duration_ms":1500}}
+{"time":1785152329.6319287,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785152330.4138834,"action":"arm_pose","outcome":"accepted","detail":{"name":"forward","duration_ms":1500}}
+{"time":1785152332.6592734,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785152508.579571,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785152508.6508203,"action":"goto","outcome":"accepted","detail":{"x":1.0058727459980688,"y":-0.3286983647112616,"yaw":-0.8252341552989679}}
+{"time":1785152510.3942416,"action":"goto_result","outcome":"succeeded","detail":{"x":1.0058727459980688,"y":-0.3286983647112616,"yaw":-0.8252341552989679,"state":"succeeded","message":"goal reached"}}
+{"time":1785152510.9946713,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785152775.494169,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785152775.5465767,"action":"goto","outcome":"accepted","detail":{"x":1.0106911858548564,"y":-0.32994723479014,"yaw":0.6747162964628709}}
+{"time":1785152778.8258398,"action":"goto_result","outcome":"succeeded","detail":{"x":1.0106911858548564,"y":-0.32994723479014,"yaw":0.6747162964628709,"state":"succeeded","message":"goal reached"}}
+{"time":1785152779.1710033,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785153333.5511332,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785153333.6323922,"action":"goto","outcome":"accepted","detail":{"x":1.013856017290927,"y":-0.2997893442738402,"yaw":-0.9091636335506229}}
+{"time":1785153337.0464554,"action":"goto_result","outcome":"succeeded","detail":{"x":1.013856017290927,"y":-0.2997893442738402,"yaw":-0.9091636335506229,"state":"succeeded","message":"goal reached"}}
+{"time":1785153337.4131997,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785153471.7016447,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785153471.7871137,"action":"goto","outcome":"accepted","detail":{"x":1.012835017227701,"y":-0.32888336765401727,"yaw":-1.2255783330785188}}
+{"time":1785153472.7185326,"action":"goto_result","outcome":"succeeded","detail":{"x":1.012835017227701,"y":-0.32888336765401727,"yaw":-1.2255783330785188,"state":"succeeded","message":"goal reached"}}
+{"time":1785153473.112107,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785153517.0687668,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785153517.102677,"action":"goto","outcome":"accepted","detail":{"x":1.425,"y":-1.475,"yaw":-1.1930472867320352}}
+{"time":1785153519.4634998,"action":"goto_result","outcome":"failed","detail":{"x":1.425,"y":-1.475,"yaw":-1.1930472867320352,"state":"failed","message":"no collision-free path"}}
+{"time":1785153519.6269736,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785154096.6623294,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785154096.7356348,"action":"goto","outcome":"accepted","detail":{"x":1.113890841936486,"y":-0.6342346261562485,"yaw":-0.3855314846683974}}
+{"time":1785154098.7962775,"action":"goto_result","outcome":"succeeded","detail":{"x":1.113890841936486,"y":-0.6342346261562485,"yaw":-0.3855314846683974,"state":"succeeded","message":"goal reached"}}
+{"time":1785154099.0772393,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785154147.5151722,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785154147.6260586,"action":"goto","outcome":"accepted","detail":{"x":1.721988198706197,"y":-0.873349700330359,"yaw":-0.4070870156469931}}
+{"time":1785154152.0485802,"action":"goto_result","outcome":"succeeded","detail":{"x":1.721988198706197,"y":-0.873349700330359,"yaw":-0.4070870156469931,"state":"succeeded","message":"goal reached"}}
+{"time":1785154152.2193506,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785154185.2040172,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785154185.581066,"action":"goto","outcome":"accepted","detail":{"x":2.025,"y":-1.004,"yaw":-0.4070870156469931}}
+{"time":1785154188.975053,"action":"goto_result","outcome":"succeeded","detail":{"x":2.025,"y":-1.004,"yaw":-0.4070870156469931,"state":"succeeded","message":"goal reached"}}
+{"time":1785154189.382681,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785154377.321853,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785154377.4443517,"action":"goto","outcome":"accepted","detail":{"x":2.025,"y":-1.004,"yaw":5.8817595792208905,"place":"window","place_kind":"object","object_x":2.289,"object_y":-1.22,"max_object_distance_m":0.5,"planned_object_distance_m":0.34110408968524564}}
+{"time":1785154377.4669356,"action":"goto_result","outcome":"succeeded","detail":{"x":2.025,"y":-1.004,"yaw":5.8817595792208905,"state":"succeeded","place":"window","place_kind":"object","object_x":2.289,"object_y":-1.22,"max_object_distance_m":0.5,"planned_object_distance_m":0.34110408968524564,"object_distance_m":0.38577477111848124,"object_reached":true,"message":"goal reached"}}
+{"time":1785154378.0780003,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785157388.212542,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785157388.2864008,"action":"goto","outcome":"accepted","detail":{"x":2.0042993604656316,"y":-0.9834778120170046,"yaw":2.768565473411632}}
+{"time":1785157394.9293916,"action":"goto_result","outcome":"succeeded","detail":{"x":2.0042993604656316,"y":-0.9834778120170046,"yaw":2.768565473411632,"state":"succeeded","message":"goal reached"}}
+{"time":1785157395.1566527,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785157425.485235,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785157425.5838788,"action":"goto","outcome":"accepted","detail":{"x":1.722,"y":-0.873,"yaw":2.768565473411632}}
+{"time":1785157427.5086803,"action":"goto_result","outcome":"succeeded","detail":{"x":1.722,"y":-0.873,"yaw":2.768565473411632,"state":"succeeded","message":"goal reached"}}
+{"time":1785157427.5788126,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785157441.1430728,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785157441.2051523,"action":"goto","outcome":"accepted","detail":{"x":1.7467031340117225,"y":-0.9159110446918186,"yaw":2.3404036123857925}}
+{"time":1785157442.2356942,"action":"goto_result","outcome":"succeeded","detail":{"x":1.7467031340117225,"y":-0.9159110446918186,"yaw":2.3404036123857925,"state":"succeeded","message":"goal reached"}}
+{"time":1785157442.5735052,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785157559.1100657,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785157559.2096472,"action":"goto","outcome":"accepted","detail":{"x":1.179,"y":-0.439,"yaw":2.455}}
+{"time":1785157564.3236804,"action":"goto_result","outcome":"succeeded","detail":{"x":1.179,"y":-0.439,"yaw":2.455,"state":"succeeded","message":"goal reached"}}
+{"time":1785157564.5862901,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785157677.2756457,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785157677.426366,"action":"goto","outcome":"accepted","detail":{"x":0.966,"y":-0.24,"yaw":2.502}}
+{"time":1785157679.6185706,"action":"goto_result","outcome":"succeeded","detail":{"x":0.966,"y":-0.24,"yaw":2.502,"state":"succeeded","message":"goal reached"}}
+{"time":1785157679.9118867,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785157762.5096226,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785157762.5659292,"action":"goto","outcome":"accepted","detail":{"x":0.73,"y":-0.068,"yaw":2.62}}
+{"time":1785157764.4539938,"action":"goto_result","outcome":"succeeded","detail":{"x":0.73,"y":-0.068,"yaw":2.62,"state":"succeeded","message":"goal reached"}}
+{"time":1785157764.599402,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785157862.2682679,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785157862.3444898,"action":"goto","outcome":"accepted","detail":{"x":0.73,"y":-0.068,"yaw":2.6179938779914944,"place":"drums","place_kind":"object","object_x":0.323,"object_y":0.103,"max_object_distance_m":0.5,"planned_object_distance_m":0.44146347527287005}}
+{"time":1785157862.358288,"action":"goto_result","outcome":"succeeded","detail":{"x":0.73,"y":-0.068,"yaw":2.6179938779914944,"state":"succeeded","place":"drums","place_kind":"object","object_x":0.323,"object_y":0.103,"max_object_distance_m":0.5,"planned_object_distance_m":0.44146347527287005,"object_distance_m":0.40988693530055065,"object_reached":true,"message":"goal reached"}}
+{"time":1785157862.65483,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785157885.5789218,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785157885.6443179,"action":"goto","outcome":"accepted","detail":{"x":0.6912386198828315,"y":-0.0911874498933794,"yaw":-0.49637623604292835}}
+{"time":1785157892.4163969,"action":"goto_result","outcome":"succeeded","detail":{"x":0.6912386198828315,"y":-0.0911874498933794,"yaw":-0.49637623604292835,"state":"succeeded","message":"goal reached"}}
+{"time":1785157892.6386864,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785157925.6071575,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785157925.6801834,"action":"goto","outcome":"accepted","detail":{"x":0.9076322815960836,"y":-0.1131975661775057,"yaw":2.5942273491757843}}
+{"time":1785157932.1143906,"action":"goto_result","outcome":"succeeded","detail":{"x":0.9076322815960836,"y":-0.1131975661775057,"yaw":2.5942273491757843,"state":"succeeded","message":"goal reached"}}
+{"time":1785157932.344587,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785157967.6230628,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785157967.7675352,"action":"goto","outcome":"accepted","detail":{"x":0.6913957190079054,"y":-0.09098147730261465,"yaw":3.679354457788766}}
+{"time":1785157970.140647,"action":"goto_result","outcome":"succeeded","detail":{"x":0.6913957190079054,"y":-0.09098147730261465,"yaw":3.679354457788766,"state":"succeeded","message":"goal reached"}}
+{"time":1785157970.2512655,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785158010.8364084,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785158010.913744,"action":"goto","outcome":"accepted","detail":{"x":0.8116544402304852,"y":-0.12846241105567704,"yaw":-3.0676324323234287}}
+{"time":1785158012.0559435,"action":"goto_result","outcome":"succeeded","detail":{"x":0.8116544402304852,"y":-0.12846241105567704,"yaw":-3.0676324323234287,"state":"succeeded","message":"goal reached"}}
+{"time":1785158012.2123325,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785158168.127724,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785158168.199931,"action":"goto","outcome":"accepted","detail":{"x":0.7532004113685116,"y":-0.13041955133879565,"yaw":-2.0926978791955873}}
+{"time":1785158170.50578,"action":"goto_result","outcome":"succeeded","detail":{"x":0.7532004113685116,"y":-0.13041955133879565,"yaw":-2.0926978791955873,"state":"succeeded","message":"goal reached"}}
+{"time":1785158170.719198,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785158210.536189,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785158210.643665,"action":"goto","outcome":"accepted","detail":{"x":0.554,"y":-0.558,"yaw":-2.181}}
+{"time":1785158214.159196,"action":"goto_result","outcome":"succeeded","detail":{"x":0.554,"y":-0.558,"yaw":-2.181,"state":"succeeded","message":"goal reached"}}
+{"time":1785158214.2766554,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785158244.0024397,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785158244.1446362,"action":"goto","outcome":"accepted","detail":{"x":0.5884725744188458,"y":-0.5629545984102627,"yaw":1.7147237743555028}}
+{"time":1785158249.3491569,"action":"goto_result","outcome":"succeeded","detail":{"x":0.5884725744188458,"y":-0.5629545984102627,"yaw":1.7147237743555028,"state":"succeeded","message":"goal reached"}}
+{"time":1785158249.4615831,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785158286.7734523,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785158286.9464939,"action":"goto","outcome":"accepted","detail":{"x":0.5817478210128152,"y":-0.5277674236743167,"yaw":-2.302551298493499}}
+{"time":1785158291.7754054,"action":"goto_result","outcome":"succeeded","detail":{"x":0.5817478210128152,"y":-0.5277674236743167,"yaw":-2.302551298493499,"state":"succeeded","message":"goal reached"}}
+{"time":1785158291.8885632,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785158378.9702237,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785158379.1082652,"action":"goto","outcome":"accepted","detail":{"x":0.5797325336507736,"y":-0.5367059773487017,"yaw":-0.8146042859824636}}
+{"time":1785158382.3910837,"action":"goto_result","outcome":"succeeded","detail":{"x":0.5797325336507736,"y":-0.5367059773487017,"yaw":-0.8146042859824636,"state":"succeeded","message":"goal reached"}}
+{"time":1785158382.7806566,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785158423.6653538,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785158423.730855,"action":"goto","outcome":"accepted","detail":{"x":0.6631751208944013,"y":-0.5660673878721739,"yaw":-0.30869697401672613}}
+{"time":1785158425.1708753,"action":"goto_result","outcome":"succeeded","detail":{"x":0.6631751208944013,"y":-0.5660673878721739,"yaw":-0.30869697401672613,"state":"succeeded","message":"goal reached"}}
+{"time":1785158425.342336,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785158469.3254108,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785158469.4238544,"action":"goto","outcome":"accepted","detail":{"x":1.255,"y":-0.765,"yaw":-0.346}}
+{"time":1785158474.683705,"action":"goto_result","outcome":"succeeded","detail":{"x":1.255,"y":-0.765,"yaw":-0.346,"state":"succeeded","message":"goal reached"}}
+{"time":1785158474.8369932,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785158502.259108,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785158502.3389413,"action":"goto","outcome":"accepted","detail":{"x":1.1984236354218167,"y":-0.7497260945714695,"yaw":2.8752651097077857}}
+{"time":1785158508.9909368,"action":"goto_result","outcome":"succeeded","detail":{"x":1.1984236354218167,"y":-0.7497260945714695,"yaw":2.8752651097077857,"state":"succeeded","message":"goal reached"}}
+{"time":1785158509.1822412,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785158538.714412,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785158538.8243065,"action":"goto","outcome":"accepted","detail":{"x":1.0842797187558766,"y":-0.73980558924542,"yaw":2.3838619754303187}}
+{"time":1785158540.0647542,"action":"goto_result","outcome":"succeeded","detail":{"x":1.0842797187558766,"y":-0.73980558924542,"yaw":2.3838619754303187,"state":"succeeded","message":"goal reached"}}
+{"time":1785158540.163489,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785158581.3186617,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785158581.4517326,"action":"goto","outcome":"accepted","detail":{"x":0.752,"y":-0.376,"yaw":2.397}}
+{"time":1785158584.889903,"action":"goto_result","outcome":"succeeded","detail":{"x":0.752,"y":-0.376,"yaw":2.397,"state":"succeeded","message":"goal reached"}}
+{"time":1785158585.1011527,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785158665.5582697,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785158665.6304774,"action":"goto","outcome":"accepted","detail":{"x":0.7915054274864819,"y":-0.37241214350858853,"yaw":-2.3686303199277035}}
+{"time":1785158669.0133247,"action":"goto_result","outcome":"succeeded","detail":{"x":0.7915054274864819,"y":-0.37241214350858853,"yaw":-2.3686303199277035,"state":"succeeded","message":"goal reached"}}
+{"time":1785158669.188597,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785158711.578068,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785158711.6475902,"action":"goto","outcome":"accepted","detail":{"x":0.603,"y":-0.61,"yaw":-2.46}}
+{"time":1785158713.776982,"action":"goto_result","outcome":"succeeded","detail":{"x":0.603,"y":-0.61,"yaw":-2.46,"state":"succeeded","message":"goal reached"}}
+{"time":1785158713.914429,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785158742.0829096,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785158742.2205906,"action":"goto","outcome":"accepted","detail":{"x":0.6450391635773182,"y":-0.6133193344339241,"yaw":1.958824782258707}}
+{"time":1785158746.6275277,"action":"goto_result","outcome":"succeeded","detail":{"x":0.6450391635773182,"y":-0.6133193344339241,"yaw":1.958824782258707,"state":"succeeded","message":"goal reached"}}
+{"time":1785158746.7093318,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785158778.0263903,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785158778.103245,"action":"goto","outcome":"accepted","detail":{"x":0.6270914213592176,"y":-0.5847426235805434,"yaw":0.40949448780864217}}
+{"time":1785158781.378819,"action":"goto_result","outcome":"succeeded","detail":{"x":0.6270914213592176,"y":-0.5847426235805434,"yaw":0.40949448780864217,"state":"succeeded","message":"goal reached"}}
+{"time":1785158781.4185739,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785158829.0618834,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785158829.1574392,"action":"goto","outcome":"accepted","detail":{"x":1.009,"y":-0.453,"yaw":0.406}}
+{"time":1785158831.9243581,"action":"goto_result","outcome":"succeeded","detail":{"x":1.009,"y":-0.453,"yaw":0.406,"state":"succeeded","message":"goal reached"}}
+{"time":1785158832.0694256,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785158858.9233375,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785158859.0639315,"action":"goto","outcome":"accepted","detail":{"x":1.0161869323531108,"y":-0.49048867775300586,"yaw":3.134004725093747}}
+{"time":1785158864.90699,"action":"goto_result","outcome":"succeeded","detail":{"x":1.0161869323531108,"y":-0.49048867775300586,"yaw":3.134004725093747,"state":"succeeded","message":"goal reached"}}
+{"time":1785158865.1254988,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785158894.1363332,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785158894.206962,"action":"goto","outcome":"accepted","detail":{"x":0.9630578414910022,"y":-0.45498984082720256,"yaw":3.8848223802948847}}
+{"time":1785158896.0617788,"action":"goto_result","outcome":"succeeded","detail":{"x":0.9630578414910022,"y":-0.45498984082720256,"yaw":3.8848223802948847,"state":"succeeded","message":"goal reached"}}
+{"time":1785158896.2169285,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785232577.1100204,"action":"arm_pose","outcome":"rejected","detail":{"name":"forward","duration_ms":1500}}
+{"time":1785232580.3863072,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785232595.9683135,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785232596.207126,"action":"arm_pose","outcome":"accepted","detail":{"name":"forward","duration_ms":1500}}
+{"time":1785232599.434379,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785233349.0796065,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785233349.1231637,"action":"goto","outcome":"accepted","detail":{"x":-0.20058807501774992,"y":0.07054526720836775,"yaw":0.03545670102268698}}
+{"time":1785233349.9507198,"action":"goto_result","outcome":"failed","detail":{"x":-0.20058807501774992,"y":0.07054526720836775,"yaw":0.03545670102268698,"state":"failed","message":"localization health lost or stale"}}
+{"time":1785233350.5045881,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785233350.541694,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785233558.0577135,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785233570.1810691,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785233718.4966595,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785233728.8223038,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785234260.5787032,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785234271.7425313,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785234726.4476488,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785234862.9651692,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785234862.9819736,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234863.1977215,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234863.4086852,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234863.6211615,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234863.8353891,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234864.046761,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234864.2702136,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234864.486259,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234864.6973646,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234864.9130418,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234865.1230953,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234865.335907,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234865.548651,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234865.7610776,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234865.974582,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234866.189864,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234866.4069939,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234866.6188314,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234866.8268561,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234867.0377512,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234867.248025,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234867.4699538,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234867.6792605,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234867.8873239,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234868.096534,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234868.3076415,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234868.5163116,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234868.7265627,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234868.9492486,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234869.180252,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234869.3976116,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234869.6080155,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234869.8185368,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234870.0336988,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234870.2502317,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234870.4723036,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234870.6854727,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234870.8937829,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234871.1054287,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234871.314347,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234871.5257108,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234871.7770915,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234871.9890447,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234872.2049499,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234872.4157221,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234872.6237764,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234872.837057,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234873.046186,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234873.2798164,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234873.4893804,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234873.7218022,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234873.9336379,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234874.161214,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234874.3820312,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234874.5895982,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234874.807015,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234875.016347,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234875.225343,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234875.4428926,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234875.662994,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234875.878748,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234876.0873113,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234876.3017678,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234876.5120707,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234876.7211154,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234876.9541087,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234877.1934433,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234877.4115317,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234877.6257486,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234877.8580046,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234878.0692108,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234878.2781587,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234878.485937,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234878.7069817,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234878.9369862,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234879.1641228,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234879.3761663,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234879.58586,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234879.7943313,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234880.0090475,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234880.2178404,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234880.428141,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234880.64665,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234880.863341,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234881.073881,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234881.2811987,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234881.4937453,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234881.7140722,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234881.9334548,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234882.1418414,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234882.3571444,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234882.573964,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234882.7860518,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234882.9937046,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234883.2110863,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234883.422546,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234883.636962,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234883.8450813,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234884.0583327,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234884.2756789,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234884.4846466,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234884.6946235,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234884.9129975,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234885.134495,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234885.3521824,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234885.5672586,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234885.7770736,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234885.9853714,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234886.2010005,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234886.426804,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234886.6382248,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234886.8469994,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234887.0639849,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234887.275188,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234887.4881105,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234887.698798,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234887.908638,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234888.1172233,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234888.3347752,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234888.5446122,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234888.7555249,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234888.965677,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234889.1739948,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234889.385766,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234889.6111674,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234889.8310058,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234890.0402977,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234890.2490416,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234890.4586186,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234890.6691792,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234890.888565,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234891.1147895,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234891.3295715,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234891.5384834,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234891.7462304,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234891.962857,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234892.1730037,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234892.3889465,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.4}}
+{"time":1785234892.6110446,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.36248707917505385}}
+{"time":1785234892.8227355,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.22,"duration":0.14167916117506252}}
+{"time":1785234892.9907184,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785235173.7515416,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785235174.3460324,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.0,"duration":0.05}}
+{"time":1785235175.3308394,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785235299.916803,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785235339.2127056,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785235339.2304635,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235339.483891,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235339.7099147,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235339.9324496,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235340.1879237,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235340.4950633,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235340.5808342,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785235421.7870684,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785235454.0582879,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785235454.6504235,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.5}}
+{"time":1785235455.785405,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785235474.6100879,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785235474.6223803,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235474.8429189,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235475.0820048,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235475.3009303,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235475.5218716,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235475.7616928,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235476.0013409,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235476.2396545,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235476.488947,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235476.708236,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235476.939301,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235477.1803293,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235477.404362,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235477.6255085,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235477.8952563,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235478.1240962,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235478.3794186,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235478.612652,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235478.8413324,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235479.0869725,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235479.3690686,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235479.5906925,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235479.8178961,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235480.0784466,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235480.3090067,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235480.5317044,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235480.77293,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235481.0181425,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235481.2540598,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235481.4838579,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235481.711324,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235481.9340317,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235482.1716754,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235482.398671,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235482.616402,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235482.844043,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235483.079896,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235483.2993376,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235483.5225606,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235483.769816,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235483.9982924,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235484.2336192,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235484.4742596,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235484.695492,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235484.9167855,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235485.1446211,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235485.4023263,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235485.6237671,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235485.876704,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235486.1047,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235486.342084,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235486.5841627,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235486.8309834,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235487.0747857,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235487.312028,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235487.535005,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235487.7927382,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235488.025239,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235488.2450955,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235488.4931214,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235488.78371,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235489.045618,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235489.268902,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235489.4855223,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235489.7104049,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235489.932762,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235490.1847823,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235490.4174592,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235490.650983,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235490.8993964,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235491.1242535,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235491.377259,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235491.6063085,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235491.8242886,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235492.0912085,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235492.3684938,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235492.5967176,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235492.8207517,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235493.0517414,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235493.3053777,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235493.5204005,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235493.7467172,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235493.984989,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235494.2230825,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235494.478543,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235494.7116258,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235494.9342146,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235495.1789746,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235495.4166512,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235495.653534,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235495.8846056,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235496.1079917,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235496.347512,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235496.5918171,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235496.8445406,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235497.0694077,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235497.2899096,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235497.5138648,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235497.7394478,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235497.9812627,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235498.2136273,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235498.4543934,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235498.6828325,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235498.906239,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235499.1259968,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235499.3691323,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235499.6011858,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235499.81869,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235500.0531032,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235500.2794356,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235500.4993746,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235500.7169583,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235500.9606612,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235501.1850092,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235501.4067156,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235501.6379209,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235501.8761957,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235502.0985243,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235502.315523,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235502.5505815,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235502.7971132,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235503.0444603,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235503.2775085,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235503.508149,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235503.737427,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235503.984663,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235504.2096796,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235504.4409473,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235504.669612,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235504.911366,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235505.1573653,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235505.393668,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235505.6205428,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235505.8683379,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235506.095537,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235506.31428,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235506.5438342,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235506.7700944,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235507.0042887,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235507.2247307,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235507.4695206,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235507.7098541,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235507.9478776,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.3,"duration":0.4}}
+{"time":1785235508.1833804,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785235548.190756,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785235548.2121139,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235548.4616292,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235548.6893568,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235548.9146168,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235549.143721,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235549.3877232,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235549.651786,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235549.8841975,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235550.1105874,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235550.3445244,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235550.5717149,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235550.795589,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235551.0540037,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235551.2862165,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235551.5214174,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235551.7560112,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235551.9920557,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235552.2448437,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235552.4878762,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235552.7209578,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235552.9489236,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235553.1763341,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235553.4125192,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235553.6396263,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235553.856671,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235554.0847902,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235554.314965,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235554.5551524,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235554.799899,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235555.069597,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235555.307243,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235555.5586512,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235555.7863836,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235556.0142357,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235556.2488647,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235556.4769127,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235556.711317,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235556.9440002,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235557.1793804,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235557.4040852,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235557.6441538,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235557.8704946,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235558.088157,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235558.3391488,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235558.5648494,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235558.801225,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235559.0532374,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235559.2853613,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235559.5143237,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235559.743139,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235559.9712174,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235560.2198565,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235560.45539,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235560.6817167,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235560.899883,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235561.1443064,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235561.3658614,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235561.583479,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235561.808009,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235562.0369437,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235562.2936234,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235562.5398266,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235562.7813787,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235563.045504,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235563.28744,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235563.5590723,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235563.89128,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235564.152372,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235564.381903,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235564.6021833,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235564.8475716,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235565.0733926,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235565.2907636,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235565.5511513,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235565.7937503,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235566.024472,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235566.259996,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235566.4824028,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235566.701131,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235566.9689713,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235567.1933959,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235567.4367783,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235567.658442,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235567.888209,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235568.127851,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235568.3709116,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235568.591765,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235568.8262181,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235569.051662,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235569.2915683,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235569.5414472,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235569.7791595,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235570.0125904,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235570.257021,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235570.4960043,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235570.7248254,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235570.9480247,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235571.1903713,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235571.4502454,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235571.6752048,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235571.9160717,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235572.1414592,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235572.3599632,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235572.5899599,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235572.8472342,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785235629.4100125,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785235722.5480468,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785235752.1880298,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785235752.227351,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235752.4578216,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235752.6921859,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235752.9374764,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235753.1567702,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235753.3715694,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235753.597654,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235753.8462465,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235754.0802028,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235754.3435209,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235754.573126,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235754.811472,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235755.0443215,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235755.268388,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235755.4960568,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235755.751278,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235755.9838998,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235756.2224605,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235756.4487607,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235756.6762323,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235756.9073095,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235757.1414337,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235757.3658652,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235757.5910616,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235757.8416255,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235758.0722222,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235758.3027737,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235758.5260646,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235758.7572045,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235758.9839115,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235759.2240508,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235759.478053,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235759.7178454,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235759.9621744,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235760.1848702,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235760.4169335,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235760.6557794,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235760.888469,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235761.1423497,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235761.3654766,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235761.584309,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235761.8481042,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235762.0862458,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235762.3174925,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235762.5507712,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235762.8493724,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235763.085426,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235763.3385663,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235763.793971,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785235891.5925455,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785235891.6101515,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235891.8453274,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235892.073663,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235892.3134,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235892.5361793,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235892.7584283,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235893.005501,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235893.2379794,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235893.5170422,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235893.7639163,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235894.0331025,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235894.2652435,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235894.5116308,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235894.7343504,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235894.9500973,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785235895.4232671,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785236091.52638,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785236129.0072854,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785236129.0208757,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236129.2559204,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236129.5091012,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236129.7255526,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236130.0240657,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236130.251966,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236130.4954357,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236130.7171152,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236130.9724128,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236131.2125344,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785236181.4341524,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785236181.4598367,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236181.685058,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236181.9129732,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236182.1579487,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236182.378758,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236182.5997336,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236182.8342178,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236183.0540583,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236183.2734225,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236183.4952896,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236183.7266324,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236183.97439,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236184.197832,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236184.4324193,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236184.6671512,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236184.8860893,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236185.1574464,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236185.3830285,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236185.6150005,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236185.8590415,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236186.0779054,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236186.2972915,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236186.5683804,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236186.8070512,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236187.055698,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236187.2769608,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236187.5001447,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236187.7243032,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236187.9620183,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236188.1832776,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236188.4235811,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236188.6646287,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236188.8928266,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236189.1703541,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236189.4018009,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236189.6403008,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236189.8770163,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236190.1001692,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236190.3438709,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236190.5751874,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236190.8091273,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236191.0582023,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236191.3098457,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236191.552056,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236191.8005702,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236192.0419524,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236192.2635212,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236192.5015113,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236192.7450368,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236192.991072,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236193.2343776,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236193.482575,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236193.7755527,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236194.0060918,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785236269.3991954,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785236269.4094338,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236269.629001,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236269.8541813,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236270.07982,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236270.3005052,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236270.5228348,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236270.7499647,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236270.9925475,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236271.2253735,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236271.4439864,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236271.6669903,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236271.9107943,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236272.1463654,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236272.3836725,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236272.616941,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236272.8351288,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236273.0628448,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236273.2920604,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236273.514652,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236273.7441046,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236273.9856448,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236274.2196226,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236274.446921,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236274.6740327,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236274.9066865,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236275.1235287,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785236275.3905635,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785236489.887838,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785236693.2042236,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785236693.2404974,"action":"goto","outcome":"accepted","detail":{"x":-0.4703717528877498,"y":-0.0797940489562891,"yaw":-1.4182941543666734}}
+{"time":1785236701.4799912,"action":"goto_result","outcome":"failed","detail":{"x":-0.4703717528877498,"y":-0.0797940489562891,"yaw":-1.4182941543666734,"state":"failed","message":"localization health lost or stale"}}
+{"time":1785236701.5440397,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785236701.5701003,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785236935.9571435,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785237019.1411922,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785237151.640168,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785237151.6582625,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785237151.9244862,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785237152.1649227,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785237152.4063995,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785237152.648547,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785237152.8826535,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785237153.13872,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785237153.3609135,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785237153.6050384,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785237153.8541498,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785237154.1088648,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785237154.3358579,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785237154.5822322,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785237154.819475,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785237155.0486298,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785237155.3019037,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785237155.5236757,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785237155.7805614,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785237156.0054517,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785237156.2604222,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785237156.6367993,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785237156.8823898,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785237157.113648,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785237157.3426747,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785237157.5823035,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785237157.8236825,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785237158.0567136,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785237158.3543766,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785237158.6262023,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785237158.8654914,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785237159.0997758,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785237159.3205276,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785237159.547071,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785237159.8373885,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785237160.0787423,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785237160.324044,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785237160.549952,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785237160.7744062,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785237161.001238,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785237161.2231207,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785237161.4434607,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785237161.6939304,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785237161.973102,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785237162.203917,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785237162.4288118,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785237162.677748,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785237162.8971052,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785237163.1347046,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785237163.3988962,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785237163.6298053,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785237163.9008474,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785237195.769903,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785237195.7828422,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785237196.0156076,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785237196.2594965,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785237196.4794564,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785237196.716707,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785237196.9461455,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785237197.1797302,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785237197.411683,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785237197.6479821,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785237197.8832784,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785237198.131047,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785237198.372657,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785237198.6389055,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785237198.8629735,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785237199.0840755,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785237199.3333817,"action":"drive","outcome":"accepted","detail":{"vx":0.0,"vy":0.0,"wz":0.5,"duration":0.4}}
+{"time":1785237199.5880885,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785237284.4582217,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785237284.485416,"action":"goto","outcome":"accepted","detail":{"x":-0.40937966851678004,"y":-0.35372292772508046,"yaw":-0.07467984198847123}}
+{"time":1785237287.1240232,"action":"goto_result","outcome":"succeeded","detail":{"x":-0.40937966851678004,"y":-0.35372292772508046,"yaw":-0.07467984198847123,"state":"succeeded","message":"goal reached"}}
+{"time":1785237287.3086882,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785237289.934678,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785237330.0921254,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785237330.1503942,"action":"goto","outcome":"accepted","detail":{"x":-0.4180084069479717,"y":-0.3489926185299406,"yaw":-0.08852759525426435}}
+{"time":1785237330.1811051,"action":"goto_result","outcome":"succeeded","detail":{"x":-0.4180084069479717,"y":-0.3489926185299406,"yaw":-0.08852759525426435,"state":"succeeded","message":"goal reached"}}
+{"time":1785237330.781128,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785237334.8917499,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785237334.9235013,"action":"goto","outcome":"accepted","detail":{"x":-0.41810684977561274,"y":-0.34900149032274386,"yaw":-0.08846798566900067}}
+{"time":1785237334.9495354,"action":"goto_result","outcome":"succeeded","detail":{"x":-0.41810684977561274,"y":-0.34900149032274386,"yaw":-0.08846798566900067,"state":"succeeded","message":"goal reached"}}
+{"time":1785237335.3557138,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785237339.0096927,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785237339.0261676,"action":"goto","outcome":"accepted","detail":{"x":-0.4188441637614264,"y":-0.3488872116782874,"yaw":-0.0886330288355903}}
+{"time":1785237339.0795121,"action":"goto_result","outcome":"succeeded","detail":{"x":-0.4188441637614264,"y":-0.3488872116782874,"yaw":-0.0886330288355903,"state":"succeeded","message":"goal reached"}}
+{"time":1785237339.384799,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785237341.0342276,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785237341.1144748,"action":"goto","outcome":"accepted","detail":{"x":-0.4189705115035873,"y":-0.3489105204508008,"yaw":-0.08851646437438687}}
+{"time":1785237341.146728,"action":"goto_result","outcome":"succeeded","detail":{"x":-0.4189705115035873,"y":-0.3489105204508008,"yaw":-0.08851646437438687,"state":"succeeded","message":"goal reached"}}
+{"time":1785237341.4237874,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785237343.2709076,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785237343.2834692,"action":"goto","outcome":"accepted","detail":{"x":-0.4190774363135498,"y":-0.34890547359626484,"yaw":-0.08850147568373505}}
+{"time":1785237343.3239317,"action":"goto_result","outcome":"succeeded","detail":{"x":-0.4190774363135498,"y":-0.34890547359626484,"yaw":-0.08850147568373505,"state":"succeeded","message":"goal reached"}}
+{"time":1785237343.6296215,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785237345.271676,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785237345.3122156,"action":"goto","outcome":"accepted","detail":{"x":-0.41918782882016403,"y":-0.3488873943561777,"yaw":-0.08852941367431663}}
+{"time":1785237345.34658,"action":"goto_result","outcome":"succeeded","detail":{"x":-0.41918782882016403,"y":-0.3488873943561777,"yaw":-0.08852941367431663,"state":"succeeded","message":"goal reached"}}
+{"time":1785237345.6167252,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785237347.2744792,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785237347.2853465,"action":"goto","outcome":"accepted","detail":{"x":-0.4193060347907611,"y":-0.3488769833034479,"yaw":-0.08852914034111009}}
+{"time":1785237347.322529,"action":"goto_result","outcome":"succeeded","detail":{"x":-0.4193060347907611,"y":-0.3488769833034479,"yaw":-0.08852914034111009,"state":"succeeded","message":"goal reached"}}
+{"time":1785237347.6195624,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785237349.4867465,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785237349.5084355,"action":"goto","outcome":"accepted","detail":{"x":-0.41938647395629564,"y":-0.3488408298455636,"yaw":-0.08862692516772663}}
+{"time":1785237349.5873287,"action":"goto_result","outcome":"succeeded","detail":{"x":-0.41938647395629564,"y":-0.3488408298455636,"yaw":-0.08862692516772663,"state":"succeeded","message":"goal reached"}}
+{"time":1785237350.174584,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785237353.7340713,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785237353.7481976,"action":"goto","outcome":"accepted","detail":{"x":-0.4195550824523347,"y":-0.3488446314589564,"yaw":0.09719512047393288}}
+{"time":1785237354.707045,"action":"goto_result","outcome":"succeeded","detail":{"x":-0.4195550824523347,"y":-0.3488446314589564,"yaw":0.09719512047393288,"state":"succeeded","message":"goal reached"}}
+{"time":1785237354.9178345,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785237359.063345,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785237359.082997,"action":"goto","outcome":"accepted","detail":{"x":-0.41942305825976034,"y":-0.34913494360922237,"yaw":-0.08762475798916033}}
+{"time":1785237360.1399562,"action":"goto_result","outcome":"succeeded","detail":{"x":-0.41942305825976034,"y":-0.34913494360922237,"yaw":-0.08762475798916033,"state":"succeeded","message":"goal reached"}}
+{"time":1785237360.7783027,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785237364.8457203,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785237364.8755145,"action":"goto","outcome":"accepted","detail":{"x":-0.41908498729150606,"y":-0.3497249082841384,"yaw":-0.08573392356682681}}
+{"time":1785237364.9002619,"action":"goto_result","outcome":"succeeded","detail":{"x":-0.41908498729150606,"y":-0.3497249082841384,"yaw":-0.08573392356682681,"state":"succeeded","message":"goal reached"}}
+{"time":1785237365.1874108,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785237369.136412,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785237369.150464,"action":"goto","outcome":"accepted","detail":{"x":-0.41897669458853704,"y":-0.35033130061027823,"yaw":0.2508517502324846}}
+{"time":1785237370.6439176,"action":"goto_result","outcome":"succeeded","detail":{"x":-0.41897669458853704,"y":-0.35033130061027823,"yaw":0.2508517502324846,"state":"succeeded","message":"goal reached"}}
+{"time":1785237370.8369868,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785237374.9744446,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785237654.0402746,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785237654.061724,"action":"goto","outcome":"accepted","detail":{"x":-0.4163648066112914,"y":-0.3564352088916436,"yaw":-0.06363038798886397}}
+{"time":1785237655.668863,"action":"goto_result","outcome":"succeeded","detail":{"x":-0.4163648066112914,"y":-0.3564352088916436,"yaw":-0.06363038798886397,"state":"succeeded","message":"goal reached"}}
+{"time":1785237655.9457047,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785237662.8514817,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785237662.8894272,"action":"goto","outcome":"accepted","detail":{"x":-0.12499992735683918,"y":-0.3749999310821295,"yaw":-0.06363038798886397}}
+{"time":1785237684.8345504,"action":"goto_result","outcome":"failed","detail":{"x":-0.12499992735683918,"y":-0.3749999310821295,"yaw":-0.06363038798886397,"state":"failed","message":"localization health lost"}}
+{"time":1785237685.008654,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785237690.692999,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785237690.7163043,"action":"goto","outcome":"accepted","detail":{"x":-0.2187366394512323,"y":-0.3953367552527831,"yaw":0.26733985850670405}}
+{"time":1785237692.959983,"action":"goto_result","outcome":"succeeded","detail":{"x":-0.2187366394512323,"y":-0.3953367552527831,"yaw":0.26733985850670405,"state":"succeeded","message":"goal reached"}}
+{"time":1785237693.1827743,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785237697.5790937,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785237697.5894287,"action":"goto","outcome":"accepted","detail":{"x":0.0829999999999998,"y":-0.3126921938165304,"yaw":0.26733985850670405}}
+{"time":1785237703.27228,"action":"goto_result","outcome":"failed","detail":{"x":0.0829999999999998,"y":-0.3126921938165304,"yaw":0.26733985850670405,"state":"failed","message":"no collision-free path"}}
+{"time":1785237703.746059,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785237703.7755122,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785237753.7793329,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785239214.9509795,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785239319.0195475,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785239363.4437852,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785239363.799565,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785239396.407655,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785239396.9198945,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785239448.1242368,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785239505.2350767,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785239505.4548304,"action":"goto","outcome":"accepted","detail":{"x":1.733,"y":-0.153,"yaw":-2.881}}
+{"time":1785239505.7051349,"action":"goto_result","outcome":"failed","detail":{"x":1.733,"y":-0.153,"yaw":-2.881,"state":"failed","message":"blocked after live-costmap replans"}}
+{"time":1785239506.3995697,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+                                                                                                      {"time":1785255428.2233658,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785255623.9487524,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785255722.0863538,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785255761.7426102,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785255873.8459904,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}
+{"time":1785255908.9919326,"action":"estop_reset","outcome":"accepted","detail":{"message":"estop reset"}}
+{"time":1785255909.5963874,"action":"goto","outcome":"accepted","detail":{"x":0.9273007061796068,"y":-1.1273832106250188,"yaw":0.6494164959543783}}
+{"time":1785255910.9618986,"action":"goto_result","outcome":"succeeded","detail":{"x":0.9273007061796068,"y":-1.1273832106250188,"yaw":0.6494164959543783,"state":"succeeded","message":"goal reached"}}
+{"time":1785255911.974785,"action":"stop","outcome":"accepted","detail":{"message":"estop tripped"}}

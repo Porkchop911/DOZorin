@@ -31,6 +31,8 @@ class Transport:
         self._cond = threading.Condition()
         self._mail = {f: _Mailbox() for f in range(11)}
         self._subs: dict[int, list[Callable[[bytes, float], None]]] = {}
+        self.callback_errors = 0
+        self.last_callback_error: Exception | None = None
         self.decoder = Decoder()
         self._alive = True
         self._rx = threading.Thread(target=self._rx_loop, daemon=True)
@@ -68,7 +70,13 @@ class Transport:
             box.seq += 1
             self._cond.notify_all()
         for cb in self._subs.get(frame.function, ()):
-            cb(frame.data, now)
+            try:
+                cb(frame.data, now)
+            except Exception as exc:
+                # A consumer must never be able to kill serial reception: the
+                # same thread carries asynchronous sensor telemetry.
+                self.callback_errors += 1
+                self.last_callback_error = exc
 
     # ------------------------------------------------------------- API
 

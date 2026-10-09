@@ -1,0 +1,159 @@
+{
+  "goal": {
+    "time": 1785407830.1178648,
+    "event": "goal_selected",
+    "kind": "translation",
+    "pose": [
+      0.5364127388559558,
+      1.3510907430634764,
+      0.988210811544273
+    ],
+    "waypoint": [
+      0.657465627270159,
+      1.507465639936146
+    ],
+    "target_yaw": 0.9120364649494102,
+    "frontier_goal": [
+      1.775000100955367,
+      5.625000158324838
+    ],
+    "score": 9.772986058562113,
+    "information_gain": 108,
+    "path_length_m": 4.809188380866168,
+    "clearance_m": 0.2915475990866627,
+    "heading_change_rad": 0.2907519562609625,
+    "eligible_frontiers": 9,
+    "preflight": {
+      "assessment": {
+        "visibility_sufficient": true,
+        "doorway_visible": true,
+        "person_visible": false,
+        "person_in_corridor": false,
+        "hazards": [],
+        "visual_corridor": "clear",
+        "recommendation": "sensor_preflight",
+        "rationale": "No visible hazards or people in swept envelope; corridor clear per visual inspection.",
+        "doorway_evidence": "Dark doorway visible to left, partially occluded by wall.",
+        "person_evidence": "",
+        "visual_path_clear": true,
+        "safe_to_translate": true
+      },
+      "navigation_context": {
+        "pose": [
+          0.5364127388559558,
+          1.3510907430634764,
+          0.9964911026253666
+        ],
+        "odometry": {
+          "pose": [
+            0.5226317686760539,
+            1.2889972865726576,
+            0.9866530879329554
+          ],
+          "fresh": true
+        },
+        "dead_reckoning": {
+          "pose": [
+            -0.9723504604909129,
+            0.8899401803061333,
+            1.988061301149428
+          ],
+          "fresh": true
+        },
+        "localization": {
+          "healthy": true,
+          "state": "mapping",
+          "score": 0.0,
+          "fresh": true
+        },
+        "current_goal": null,
+        "drive_active": false,
+        "camera_fresh": true,
+        "camera_forward": true,
+        "hard_clearance_m": {
+          "forward": null,
+          "front_left": 0.2500000037252903,
+          "left": 0.30000000447034836,
+          "front_right": null,
+          "right": 0.7500000111758709
+        },
+        "trapped_start": false,
+        "escape_profiles": {
+          "forward": {
+            "trapped": false,
+            "blocked_prefix_m": 0.0,
+            "clearance_m": null
+          },
+          "front_left": {
+            "trapped": false,
+            "blocked_prefix_m": 0.0,
+            "clearance_m": 0.2500000037252903
+          },
+          "left": {
+            "trapped": false,
+            "blocked_prefix_m": 0.0,
+            "clearance_m": 0.30000000447034836
+          },
+          "front_right": {
+            "trapped": false,
+            "blocked_prefix_m": 0.0,
+            "clearance_m": null
+          },
+          "right": {
+            "trapped": false,
+            "blocked_prefix_m": 0.0,
+            "clearance_m": 0.7500000111758709
+          }
+        },
+        "clearance_limit_m": 1.5
+      },
+      "distance": 0.1977546716650698,
+      "metric_margin": 0.2,
+      "vlm_attempts": 1,
+      "metric_allowed": true,
+      "reasons": [],
+      "floor_support_allowed": true,
+      "floor_support_required_m": 0.2977546716650698
+    }
+  },
+  "context": {
+    "pose": [
+      0.6787333071377685,
+      1.555245903519294,
+      0.9015160140306083
+    ],
+    "odometry": {
+      "pose": [
+        0.6750523372496601,
+        1.4740948882372495,
+        0.6885349873057345
+      ],
+      "fresh": true
+    },
+    "dead_reckoning": {
+      "pose": [
+        -1.0290260660016777,
+        1.134302761271701,
+        1.598182406314462
+      ],
+      "fresh": true
+    },
+    "localization": {
+      "healthy": true,
+      "state": "mapping",
+      "score": 0.7987021207809448,
+      "fresh": true
+    },
+    "current_goal": null,
+    "drive_active": false,
+    "camera_forward": true,
+    "hard_clearance_m": {
+      "forward": null,
+      "front_left": 0.2500000037252903,
+      "left": 0.15000000223517418,
+      "front_right": 1.4000000208616257,
+      "right": 0.7500000111758709
+    },
+    "trapped_start": false
+  }
+}

@@ -13,7 +13,7 @@ import pytest
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2]
                        / "ros2_ws" / "src" / "hwr_sensors"))
-from hwr_sensors.scan_crop import BAND_HI, BAND_LO, crop_scan  # noqa: E402
+from hwr_sensors.scan_crop import BAND_HI, BAND_LO, crop_indices, crop_scan  # noqa: E402
 
 TWO_PI = 2.0 * math.pi
 N = 720
@@ -88,3 +88,12 @@ def test_band_outside_scan_returns_empty():
 def test_empty_scan():
     new_min, out = crop_scan(0.0, INC, [])
     assert len(out) == 0
+
+
+def test_crop_indices_preserve_parallel_arrays():
+    intensities = np.arange(N)
+    new_min, idx = crop_indices(-math.pi, INC, N)
+    bearings = np.mod(new_min + np.arange(len(idx)) * INC, TWO_PI)
+    original_bearings = np.mod(-math.pi + idx * INC, TWO_PI)
+    assert np.allclose(bearings, original_bearings)
+    assert np.array_equal(intensities[idx], idx)

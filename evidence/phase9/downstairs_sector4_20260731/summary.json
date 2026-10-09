@@ -1,0 +1,73 @@
+{
+  "captures": [
+    {
+      "clearance": {
+        "forward": null,
+        "front_left": 1.0000000149011612,
+        "front_right": 0.6500000096857548,
+        "left": 0.4000000059604645,
+        "right": 0.5500000081956387
+      },
+      "context": "/home/ubuntu/hwr/state/downstairs_sector4_20260731/leg_01_context.json",
+      "image": "/home/ubuntu/hwr/state/downstairs_sector4_20260731/leg_01.jpg",
+      "leg": 1,
+      "pose": [
+        1.1611360063433784,
+        2.8786215725211792,
+        0.7625077695589844
+      ]
+    },
+    {
+      "clearance": {
+        "forward": 0.7000000104308128,
+        "front_left": 1.1000000163912773,
+        "front_right": 0.4000000059604645,
+        "left": 0.6000000089406967,
+        "right": 0.45000000670552254
+      },
+      "context": "/home/ubuntu/hwr/state/downstairs_sector4_20260731/leg_02_context.json",
+      "image": "/home/ubuntu/hwr/state/downstairs_sector4_20260731/leg_02.jpg",
+      "leg": 2,
+      "pose": [
+        1.2607057433265672,
+        2.927725256087067,
+        0.5545236860172041
+      ]
+    },
+    {
+      "clearance": {
+        "forward": null,
+        "front_left": 0.850000012665987,
+        "front_right": 0.45000000670552254,
+        "left": 0.7000000104308128,
+        "right": 0.5000000074505806
+      },
+      "context": "/home/ubuntu/hwr/state/downstairs_sector4_20260731/leg_03_context.json",
+      "image": "/home/ubuntu/hwr/state/downstairs_sector4_20260731/leg_03.jpg",
+      "leg": 3,
+      "pose": [
+        1.4105735758293159,
+        3.130044720400934,
+        0.657908843825931
+      ]
+    }
+  ],
+  "consecutive_failures": 0,
+  "failures": 2,
+  "finished_at": 1785489348.9259272,
+  "reason": "translation_target_reached",
+  "rotations": 8,
+  "started_at": 1785489286.722304,
+  "stop_results": {
+    "estop": {
+      "message": "estop tripped",
+      "success": true
+    },
+    "explore_stop": {
+      "message": "exploration stopped",
+      "success": true
+    }
+  },
+  "translation_target": 3,
+  "translations": 3
+}

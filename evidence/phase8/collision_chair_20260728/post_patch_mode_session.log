@@ -1,0 +1,130 @@
+[INFO] [launch]: All log files can be found below /home/ubuntu/.ros/log/2026-07-28-18-21-44-781511-ubuntu-10581
+[INFO] [launch]: Default logging verbosity is set to INFO
+[INFO] [driver_node-1]: process started with pid [10617]
+[INFO] [robot_state_publisher-2]: process started with pid [10619]
+[INFO] [base_node-3]: process started with pid [10621]
+[INFO] [sclidar-4]: process started with pid [10623]
+[INFO] [scan_filter_node-5]: process started with pid [10625]
+[INFO] [aurora930_node-6]: process started with pid [10627]
+[INFO] [depth_to_ranges_node-7]: process started with pid [10646]
+[INFO] [imu_filter_node-8]: process started with pid [10649]
+[INFO] [sensor_supervisor_node-9]: process started with pid [10651]
+[INFO] [odom_node-10]: process started with pid [10653]
+[INFO] [arm_node-11]: process started with pid [10660]
+[INFO] [localizer_node-12]: process started with pid [10662]
+[INFO] [nav_node-13]: process started with pid [10664]
+[INFO] [gateway_node-14]: process started with pid [10666]
+[sclidar-4] version M1CT_D2
+[sclidar-4] ***/dev/lidar
+[robot_state_publisher-2] [0m[INFO] [1785255705.238131081] [robot_state_publisher]: got segment base_footprint[0m
+[robot_state_publisher-2] [0m[INFO] [1785255705.244822872] [robot_state_publisher]: got segment base_link[0m
+[robot_state_publisher-2] [0m[INFO] [1785255705.244896217] [robot_state_publisher]: got segment camera_link[0m
+[robot_state_publisher-2] [0m[INFO] [1785255705.244908185] [robot_state_publisher]: got segment camera_link0[0m
+[robot_state_publisher-2] [0m[INFO] [1785255705.244917465] [robot_state_publisher]: got segment depth_cam_frame[0m
+[robot_state_publisher-2] [0m[INFO] [1785255705.244925433] [robot_state_publisher]: got segment depth_camera_link[0m
+[robot_state_publisher-2] [0m[INFO] [1785255705.244934170] [robot_state_publisher]: got segment end_effector_link[0m
+[robot_state_publisher-2] [0m[INFO] [1785255705.244942170] [robot_state_publisher]: got segment gripper_link[0m
+[robot_state_publisher-2] [0m[INFO] [1785255705.244949978] [robot_state_publisher]: got segment imu_link[0m
+[robot_state_publisher-2] [0m[INFO] [1785255705.244957658] [robot_state_publisher]: got segment lidar_frame[0m
+[robot_state_publisher-2] [0m[INFO] [1785255705.244965338] [robot_state_publisher]: got segment link1[0m
+[robot_state_publisher-2] [0m[INFO] [1785255705.244973082] [robot_state_publisher]: got segment link2[0m
+[robot_state_publisher-2] [0m[INFO] [1785255705.244980474] [robot_state_publisher]: got segment link3[0m
+[robot_state_publisher-2] [0m[INFO] [1785255705.244988090] [robot_state_publisher]: got segment link4[0m
+[robot_state_publisher-2] [0m[INFO] [1785255705.244995578] [robot_state_publisher]: got segment link5[0m
+[robot_state_publisher-2] [0m[INFO] [1785255705.245003130] [robot_state_publisher]: got segment wheel_fl_link[0m
+[robot_state_publisher-2] [0m[INFO] [1785255705.245010650] [robot_state_publisher]: got segment wheel_fr_link[0m
+[robot_state_publisher-2] [0m[INFO] [1785255705.245018171] [robot_state_publisher]: got segment wheel_rl_link[0m
+[robot_state_publisher-2] [0m[INFO] [1785255705.245025883] [robot_state_publisher]: got segment wheel_rr_link[0m
+[sclidar-4] [0m[INFO] [1785255705.334586688] [sclidar]: sclidar start scan[0m
+[aurora930_node-6] W0728 18:21:45.343640 10627 ros2_node.cc:35] hello aurora 900/930
+[aurora930_node-6] 2026-07-28 18:21:45.384 (   0.167s) [        80464840] device_manager_impl.cc:89    INFO| hotplug has registed by user
+[aurora930_node-6] device_count==========1
+[aurora930_node-6] I0728 18:21:45.420068 10627 aurora900_ros2_device.cc:153] BOOT_ORDER_1::Found 1 deptrum device
+[aurora930_node-6] I0728 18:21:45.420486 10627 aurora900_ros2_device.cc:162] BOOT_ORDER_1::No serial number provided: picking first device
+[aurora930_node-6] 2026-07-28 18:21:45.420 (   0.204s) [        80464840] device_manager_impl.cc:318   INFO| Device information:
+[aurora930_node-6] 	ir_pid:0x1930, rgb_pid:0x0 
+[aurora930_node-6] 	serial number:HY400516001016421G00066
+[aurora930_node-6] I0728 18:21:45.420580 10627 aurora900_ros2_device.cc:195] open sdk log
+[aurora930_node-6] 2026-07-28 18:21:45.420 (   0.204s) [        80464840]             loguru.cpp:1027  INFO| Logging to '/tmp/deptrum-stream.log', mode: 'a', verbosity: 0
+[aurora930_node-6] I0728 18:21:45.420738 10627 aurora900_ros2_device.cc:206] BOOT_ORDER_1::0:device start opening
+[aurora930_node-6] 2026-07-28 18:21:45.422 (   0.205s) [        80464840]   custom_usb_device.cc:101   INFO| bulk in endpoint addr:129
+[aurora930_node-6] 2026-07-28 18:21:45.422 (   0.205s) [        80464840]   custom_usb_device.cc:98    INFO| bulk out endpoint addr:2
+[aurora930_node-6] 2026-07-28 18:21:45.810 (   0.594s) [        80464840]deptrum_camera_aurora93:53    INFO| doe_broken:0 ito_support:1 crash_count:0 wdt_count:11 hard_reset_count:1 heart_boot_count:0 boot_total:67 last_crash_time:N
+[aurora930_node-6] I0728 18:21:45.810415 10627 aurora900_ros2_device.cc:247] device supported frame_mode:
+[aurora930_node-6] I0728 18:21:45.810463 10627 aurora900_ros2_device.cc:252] [0]:ir_mode:=13 kRes320x200Ir8Bit rgb_mode:=31 kRes320x200RgbYuv depth_mode:=0 kInvalid
+[aurora930_node-6] I0728 18:21:45.810482 10627 aurora900_ros2_device.cc:252] [1]:ir_mode:=17 kRes480x300Depth16Bit rgb_mode:=32 kRes480x300RgbYuv depth_mode:=0 kInvalid
+[aurora930_node-6] I0728 18:21:45.810493 10627 aurora900_ros2_device.cc:252] [2]:ir_mode:=20 kRes640x400Ir8Bit rgb_mode:=33 kRes640x400RgbYuv depth_mode:=0 kInvalid
+[aurora930_node-6] I0728 18:21:45.810503 10627 aurora900_ros2_device.cc:266] current set mode ir_mode:20:kRes640x400Ir8Bit,rgb_mode:33:kRes640x400RgbYuv
+[aurora930_node-6] I0728 18:21:46.308338 10627 aurora900_ros2_device.cc:387] Switch Auto Exposure
+[aurora930_node-6] 2026-07-28 18:21:46.388 (   1.172s) [        80464840]      aurora900_impl.cc:1106  INFO| SetHeartbeat user set heartbeat enable: 0
+[aurora930_node-6] I0728 18:21:46.834609 10627 aurora900_ros2_device.cc:304] BOOT_ORDER_1::Device information: 
+[aurora930_node-6] I0728 18:21:46.834728 10627 aurora900_ros2_device.cc:305] 	 sdk version: 1.1.22
+[aurora930_node-6] I0728 18:21:46.834746 10627 aurora900_ros2_device.cc:306] 	 device name: Aurora 930
+[aurora930_node-6] I0728 18:21:46.834755 10627 aurora900_ros2_device.cc:307] 	 serial number: HY400516001016421G00066
+[aurora930_node-6] I0728 18:21:46.834764 10627 aurora900_ros2_device.cc:308] 	 firmware version: 2.0.8
+[aurora930_node-6] I0728 18:21:46.834793 10627 camera_parameters.cc:134] BOOT_ORDER_1::Camera Parameters:
+[aurora930_node-6] I0728 18:21:46.834803 10627 camera_parameters.cc:135] BOOT_ORDER_1::	 Ir Intrinsics:
+[aurora930_node-6] I0728 18:21:46.834811 10627 camera_parameters.cc:146] 		 Resolution:
+[aurora930_node-6] I0728 18:21:46.834818 10627 camera_parameters.cc:147] 			 Rows:400
+[aurora930_node-6] I0728 18:21:46.834826 10627 camera_parameters.cc:148] 			 Cols:640
+[aurora930_node-6] I0728 18:21:46.834833 10627 camera_parameters.cc:149] 		 Intrinsics:
+[aurora930_node-6] I0728 18:21:46.834841 10627 camera_parameters.cc:150] 			 fx: 422.848
+[aurora930_node-6] I0728 18:21:46.834892 10627 camera_parameters.cc:151] 			 fy: 423.639
+[aurora930_node-6] I0728 18:21:46.834903 10627 camera_parameters.cc:152] 			 cx: 318.781
+[aurora930_node-6] I0728 18:21:46.834913 10627 camera_parameters.cc:153] 			 cy: 196.154
+[aurora930_node-6] I0728 18:21:46.834921 10627 camera_parameters.cc:154] 			 k1: 0.0566891
+[aurora930_node-6] I0728 18:21:46.834930 10627 camera_parameters.cc:155] 			 k2: -0.104452
+[aurora930_node-6] I0728 18:21:46.834940 10627 camera_parameters.cc:156] 			 p1: 0.00046164
+[aurora930_node-6] I0728 18:21:46.834949 10627 camera_parameters.cc:157] 			 p2: -0.000712055
+[aurora930_node-6] I0728 18:21:46.834959 10627 camera_parameters.cc:158] 			 k3: 0.0475389
+[aurora930_node-6] I0728 18:21:46.834966 10627 camera_parameters.cc:138] BOOT_ORDER_1::	 Rgb Intrinsics:
+[aurora930_node-6] I0728 18:21:46.834975 10627 camera_parameters.cc:146] 		 Resolution:
+[aurora930_node-6] I0728 18:21:46.834981 10627 camera_parameters.cc:147] 			 Rows:400
+[aurora930_node-6] I0728 18:21:46.834988 10627 camera_parameters.cc:148] 			 Cols:640
+[aurora930_node-6] I0728 18:21:46.834996 10627 camera_parameters.cc:149] 		 Intrinsics:
+[aurora930_node-6] I0728 18:21:46.835002 10627 camera_parameters.cc:150] 			 fx: 418.604
+[aurora930_node-6] I0728 18:21:46.835011 10627 camera_parameters.cc:151] 			 fy: 419.462
+[aurora930_node-6] I0728 18:21:46.835019 10627 camera_parameters.cc:152] 			 cx: 324.133
+[aurora930_node-6] I0728 18:21:46.835028 10627 camera_parameters.cc:153] 			 cy: 184.232
+[aurora930_node-6] I0728 18:21:46.835036 10627 camera_parameters.cc:154] 			 k1: 0.0102873
+[aurora930_node-6] I0728 18:21:46.835044 10627 camera_parameters.cc:155] 			 k2: -0.0489347
+[aurora930_node-6] I0728 18:21:46.835053 10627 camera_parameters.cc:156] 			 p1: 0.000389377
+[aurora930_node-6] I0728 18:21:46.835062 10627 camera_parameters.cc:157] 			 p2: -0.000870379
+[aurora930_node-6] I0728 18:21:46.835069 10627 camera_parameters.cc:158] 			 k3: 0.0271237
+[aurora930_node-6] I0728 18:21:46.835078 10627 camera_parameters.cc:141] BOOT_ORDER_1::	 Ir to Rgb Extrinsic:
+[aurora930_node-6] I0728 18:21:46.835084 10627 camera_parameters.cc:162] 		 Extrinsics:
+[aurora930_node-6] I0728 18:21:46.835091 10627 camera_parameters.cc:163] 			 Rotation[0]: 0.999979, 0.00612867, 0.00200131
+[aurora930_node-6] I0728 18:21:46.835101 10627 camera_parameters.cc:165] 			 Rotation[1]: -0.00611854, 0.999969, -0.00502306
+[aurora930_node-6] I0728 18:21:46.835142 10627 camera_parameters.cc:167] 			 Rotation[2]: -0.00203203, 0.00501071, 0.999986
+[aurora930_node-6] I0728 18:21:46.835155 10627 camera_parameters.cc:169] 			 Translation: -9.96678, 0.221675, 0.617611
+[aurora930_node-6] 2026-07-28 18:21:46.835 (   1.619s) [        80464840]      aurora900_impl.cc:578   INFO| stream_mask_:0, rgb_stream_count_:1
+[aurora930_node-6] 2026-07-28 18:21:47.144 (   1.928s) [        551C4840]deptrum_camera_aurora93:407    ERR| recv first frame time is 1785255707144
+[driver_node-1] [0m[INFO] [1785255707.530623557] [hwr_driver]: board open on /dev/rrc[0m
+[driver_node-1] [0m[INFO] [1785255708.156564174] [hwr_driver]: joint-state publisher shape names=5 positions=5[0m
+[gateway_node-14] INFO:     Started server process [10666]
+[gateway_node-14] INFO:     Waiting for application startup.
+[gateway_node-14] INFO:     Application startup complete.
+[gateway_node-14] INFO:     Uvicorn running on http://0.0.0.0:8090 (Press CTRL+C to quit)
+[imu_filter_node-8] [0m[INFO] [1785255710.142541532] [hwr_imu_filter]: gyro bias established: (-0.0076457011314415655, 0.056161081952210506, 0.0029057004968749346)[0m
+[base_node-3] [0m[INFO] [1785255710.159050333] [hwr_base]: gyro z bias: +0.00291 rad/s[0m
+[driver_node-1] [33m[WARN] [1785255722.078530808] [hwr_driver]: estop tripped[0m
+[gateway_node-14] INFO:     192.168.0.148:54796 - "POST /stop HTTP/1.1" 200 OK
+[gateway_node-14] INFO:     192.168.0.148:54798 - "GET /navigation/context HTTP/1.1" 200 OK
+[gateway_node-14] INFO:     192.168.0.148:57043 - "GET /navigation/context HTTP/1.1" 200 OK
+[driver_node-1] [33m[WARN] [1785255761.733351456] [hwr_driver]: estop tripped[0m
+[gateway_node-14] INFO:     192.168.0.148:57043 - "POST /stop HTTP/1.1" 200 OK
+[gateway_node-14] INFO:     192.168.0.148:57043 - "GET /navigation/context HTTP/1.1" 200 OK
+[gateway_node-14] INFO:     192.168.0.148:53031 - "GET /snapshot HTTP/1.1" 200 OK
+[gateway_node-14] INFO:     192.168.0.223:51106 - "GET /navigation/context HTTP/1.1" 200 OK
+[gateway_node-14] INFO:     192.168.0.223:51108 - "GET /snapshot HTTP/1.1" 200 OK
+[gateway_node-14] INFO:     192.168.0.148:57065 - "GET /navigation/context HTTP/1.1" 200 OK
+[driver_node-1] [33m[WARN] [1785255873.838595934] [hwr_driver]: estop tripped[0m
+[gateway_node-14] INFO:     192.168.0.148:57065 - "POST /stop HTTP/1.1" 200 OK
+[gateway_node-14] INFO:     192.168.0.148:57065 - "GET /navigation/context HTTP/1.1" 200 OK
+[gateway_node-14] INFO:     192.168.0.148:51341 - "GET /navigation/context HTTP/1.1" 200 OK
+[driver_node-1] [33m[WARN] [1785255908.979323153] [hwr_driver]: estop reset[0m
+[gateway_node-14] INFO:     192.168.0.148:51341 - "POST /estop/reset HTTP/1.1" 200 OK
+[gateway_node-14] INFO:     192.168.0.148:51341 - "POST /goto HTTP/1.1" 200 OK
+[driver_node-1] [33m[WARN] [1785255911.964696598] [hwr_driver]: estop tripped[0m
+[gateway_node-14] INFO:     192.168.0.148:51341 - "POST /stop HTTP/1.1" 200 OK
+[gateway_node-14] INFO:     192.168.0.148:51341 - "GET /navigation/context HTTP/1.1" 200 OK

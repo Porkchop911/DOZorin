@@ -7,27 +7,30 @@ Subs:  wheel_speeds (hwr_msgs/WheelSpeeds), servo_cmd (hwr_msgs/ServoCommand),
 Srv:   estop (std_srvs/SetBool: data=true trip, false reset)
 
 Safety (hwr_core primitives, unit-tested): watchdog auto-zeros motors 0.4 s
-after the last nonzero wheel_speeds; battery gate refuses motion <11.0 V and
-hard-stops + latches estop <10.5 V; SIGINT/shutdown always stops motors.
+after the last nonzero wheel_speeds; estop and invalid-command latches stop
+motors and servos; SIGINT/shutdown always stops motors.
 Jazzy-ready: plain rclpy, no distro-specific APIs.
 """
 import math
 
 import rclpy
 from rclpy.node import Node
-from rclpy.qos import QoSProfile, QoSReliabilityPolicy
+from rclpy.qos import (QoSDurabilityPolicy, QoSProfile,
+                       QoSReliabilityPolicy)
 
 from hwr_msgs.msg import ServoCommand, WheelSpeeds
 from sensor_msgs.msg import BatteryState, Imu, JointState
-from std_msgs.msg import String, UInt16
+from std_msgs.msg import Bool, String, UInt16
 from std_srvs.srv import SetBool
 
 from hwr_core.rrc import Board, codecs
-from hwr_core.safety import BatteryGate, EStop, Watchdog
+from hwr_core.safety import EStop, Watchdog, validate_wheel_rps
 
 ARM_JOINTS = {1: "joint1", 2: "joint2", 3: "joint3", 4: "joint4", 5: "joint5"}
 PULSE_CENTER = 500
 RAD_PER_PULSE = math.radians(240.0 / 1000.0)
+MAX_WHEEL_RPS = 4.0
+VALID_SERVO_IDS = frozenset((*ARM_JOINTS, 10))
 
 
 class DriverNode(Node):
@@ -37,7 +40,9 @@ class DriverNode(Node):
         self.declare_parameter("imu_rate", 50.0)
         self.declare_parameter("joint_state_rate", 5.0)
         self.declare_parameter("imu_frame", "imu_link")
+        self.declare_parameter("gyro_z_scale", 2.0)
         self.declare_parameter("watchdog_timeout", 0.4)
+        self.declare_parameter("max_wheel_rps", MAX_WHEEL_RPS)
 
         device = self.get_parameter("device").value
         self.board = Board.open(device)
@@ -45,7 +50,9 @@ class DriverNode(Node):
         self.get_logger().info(f"board open on {device}")
 
         self.estop = EStop()
-        self.gate = BatteryGate(on_hard_stop=self._battery_hard_stop)
+        self.estop.trip("startup")
+        self.board.stop_all_motors()
+        self.board.stop_servos(list(ARM_JOINTS) + [10])
         self.watchdog = Watchdog(
             self._watchdog_stop,
             timeout=float(self.get_parameter("watchdog_timeout").value))
@@ -55,6 +62,10 @@ class DriverNode(Node):
         self.pub_batt = self.create_publisher(BatteryState, "battery", 10)
         self.pub_joints = self.create_publisher(JointState, "joint_states", 10)
         self.pub_button = self.create_publisher(String, "button", 10)
+        state_qos = QoSProfile(depth=1,
+                               reliability=QoSReliabilityPolicy.RELIABLE,
+                               durability=QoSDurabilityPolicy.TRANSIENT_LOCAL)
+        self.pub_estop_state = self.create_publisher(Bool, "estop_state", state_qos)
 
         self.create_subscription(WheelSpeeds, "wheel_speeds", self._on_wheel_speeds, 10)
         self.create_subscription(ServoCommand, "servo_cmd", self._on_servo_cmd, 10)
@@ -62,6 +73,14 @@ class DriverNode(Node):
         self.create_service(SetBool, "estop", self._on_estop_srv)
 
         self._latest_imu = None  # (ImuSample, stamp) cached from the RX thread
+        # A partial servo response must not disconnect the articulated camera
+        # subtree in robot_state_publisher.  Seed every joint and retain the
+        # last successful readback for individual timeouts.
+        self._joint_positions = {name: 0.0 for name in ARM_JOINTS.values()}
+        self._joint_message = JointState(
+            name=list(ARM_JOINTS.values()),
+            position=[0.0] * len(ARM_JOINTS))
+        self._joint_shape_logged = False
         self.board.subscribe_imu(lambda s, t: setattr(self, "_latest_imu", (s, t)))
         self.board.subscribe_battery(self._on_battery)
         self.board.subscribe_key(self._on_key)
@@ -71,6 +90,7 @@ class DriverNode(Node):
         js_rate = float(self.get_parameter("joint_state_rate").value)
         if js_rate > 0:
             self.create_timer(1.0 / js_rate, self._publish_joint_states)
+        self._publish_estop_state()
 
     # ------------------------------------------------------------- safety paths
 
@@ -78,26 +98,35 @@ class DriverNode(Node):
         self.board.stop_all_motors()
         self.get_logger().warning("watchdog: wheel_speeds source went silent -> motors stopped")
 
-    def _battery_hard_stop(self) -> None:
-        self.estop.trip("battery hard stop")
+    def _trip_estop(self, reason: str) -> None:
+        self.estop.trip(reason)
         self.watchdog.disarm()
         self.board.stop_all_motors()
         self.board.stop_servos(list(ARM_JOINTS) + [10])
-        self.get_logger().error("battery below hard-stop threshold: estop latched")
+        self._publish_estop_state()
+
+    def _publish_estop_state(self) -> None:
+        msg = Bool()
+        msg.data = self.estop.tripped
+        self.pub_estop_state.publish(msg)
+
+    def _motion_allowed(self) -> bool:
+        return not self.estop.tripped
 
     # ------------------------------------------------------------- subscriptions
 
     def _on_wheel_speeds(self, msg: WheelSpeeds) -> None:
-        if self.estop.tripped:
+        if not self._motion_allowed():
             self.board.stop_all_motors()
             return
-        if not self.gate.allow_motion():
-            self.board.stop_all_motors()
-            self.get_logger().warning(
-                f"battery gate: motion refused ({self.gate.latest_mv} mV)",
-                throttle_duration_sec=5.0)
+        limit = float(self.get_parameter("max_wheel_rps").value)
+        try:
+            rps = validate_wheel_rps(msg.rps, limit)
+        except ValueError as exc:
+            self._trip_estop("invalid wheel command")
+            self.get_logger().error(
+                f"invalid wheel command {list(msg.rps)!r}: {exc}")
             return
-        rps = list(msg.rps)
         self.board.set_motor_rps(list(zip((1, 2, 3, 4), rps)))
         if any(r != 0.0 for r in rps):
             self.watchdog.feed()
@@ -105,9 +134,18 @@ class DriverNode(Node):
             self.watchdog.disarm()
 
     def _on_servo_cmd(self, msg: ServoCommand) -> None:
-        if self.estop.tripped:
+        if not self._motion_allowed():
             return
-        positions = list(zip(msg.ids, msg.positions))
+        ids = [int(sid) for sid in msg.ids]
+        pulses = [int(pulse) for pulse in msg.positions]
+        if (len(ids) != len(pulses) or not ids
+                or any(sid not in VALID_SERVO_IDS for sid in ids)
+                or any(not 0 <= pulse <= 1000 for pulse in pulses)):
+            self._trip_estop("invalid servo command")
+            self.get_logger().error(
+                f"invalid servo command ids={ids!r} positions={pulses!r}")
+            return
+        positions = list(zip(ids, pulses))
         if positions:
             self.board.set_servo_positions(int(msg.duration_ms), positions)
 
@@ -116,14 +154,12 @@ class DriverNode(Node):
 
     def _on_estop_srv(self, request, response):
         if request.data:
-            self.estop.trip("service")
-            self.watchdog.disarm()
-            self.board.stop_all_motors()
-            self.board.stop_servos(list(ARM_JOINTS) + [10])
+            self._trip_estop("service")
             response.message = "estop tripped"
         else:
             self.estop.reset()
             response.message = "estop reset"
+            self._publish_estop_state()
         self.get_logger().warning(response.message)
         response.success = True
         return response
@@ -131,7 +167,6 @@ class DriverNode(Node):
     # ------------------------------------------------------------- report relays
 
     def _on_battery(self, mv: int, stamp: float) -> None:
-        self.gate.update(mv)
         msg = BatteryState()
         msg.header.stamp = self.get_clock().now().to_msg()
         msg.voltage = mv / 1000.0
@@ -151,6 +186,8 @@ class DriverNode(Node):
         if self._latest_imu is None:
             return
         sample, _ = self._latest_imu
+        sample = codecs.scale_imu_gyro(
+            sample, z_scale=float(self.get_parameter("gyro_z_scale").value))
         msg = Imu()
         msg.header.stamp = self.get_clock().now().to_msg()
         msg.header.frame_id = self.get_parameter("imu_frame").value
@@ -164,16 +201,23 @@ class DriverNode(Node):
         self.pub_imu.publish(msg)
 
     def _publish_joint_states(self) -> None:
-        msg = JointState()
-        msg.header.stamp = self.get_clock().now().to_msg()
         for sid, name in ARM_JOINTS.items():
             pulse = self.board.servo_position(sid, timeout=0.2)
-            if pulse is None:
-                continue
-            msg.name.append(name)
-            msg.position.append((pulse - PULSE_CENTER) * RAD_PER_PULSE)
-        if msg.name:
-            self.pub_joints.publish(msg)
+            if pulse is not None:
+                self._joint_positions[name] = (pulse - PULSE_CENTER) * RAD_PER_PULSE
+        msg = self._joint_message
+        for index, name in enumerate(msg.name):
+            msg.position[index] = float(self._joint_positions[name])
+        msg.header.stamp = self.get_clock().now().to_msg()
+        if len(msg.name) != len(msg.position):
+            self.get_logger().error("refusing malformed joint-state publication")
+            return
+        if not self._joint_shape_logged:
+            self.get_logger().info(
+                f"joint-state publisher shape names={len(msg.name)} "
+                f"positions={len(msg.position)}")
+            self._joint_shape_logged = True
+        self.pub_joints.publish(msg)
 
     # ------------------------------------------------------------- lifecycle
 

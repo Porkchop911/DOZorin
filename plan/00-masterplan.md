@@ -70,7 +70,7 @@ Ordering is strict through Phase 5; Phases 6–8 iterate together on bags; 9–1
 
 ## Cross-cutting rules
 
-See `91-conventions.md`. Non-negotiables: bench-first (wheels off ground) for any new actuator path; battery check at session start/end (<11000 mV = wrap up); every acceptance test leaves an artifact under `evidence/` before its checkbox flips; PC-side unit tests before robot time for all algorithmic code; no Humble-only APIs.
+See `91-conventions.md`. Non-negotiables: bench-first (wheels off ground) for any new actuator path; power decisions belong solely to the human operator and never gate software; every acceptance test leaves an artifact under `evidence/` before its checkbox flips; PC-side unit tests before robot time for all algorithmic code; no Humble-only APIs.
 
 ## Risks
 

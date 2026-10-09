@@ -5,3 +5,8 @@ set +u
 source $HOME/ros2_ws/.robotrc >/dev/null 2>&1
 source $HOME/hwr/ros2_ws/install/setup.zsh
 export PYTHONPATH=$HOME/hwr/hwr_core:$PYTHONPATH
+if [[ -f $HOME/hwr/config/hwr.env ]]; then
+  set -a
+  source $HOME/hwr/config/hwr.env
+  set +a
+fi

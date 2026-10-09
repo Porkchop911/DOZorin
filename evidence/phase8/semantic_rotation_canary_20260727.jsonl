@@ -1,0 +1,2 @@
+{"time":1785134777.9441428,"event":"start","goals":1,"seed":39,"min_leg":0.35,"max_leg":0.75,"semantic_preflight":true,"start_pose":[-0.233208200501187,-0.0063513584763676195,-0.3919622004845206]}
+{"time":1785134777.9476607,"event":"abort","error":"no semantically and metrically safe candidate in bounded search","succeeded":0,"failed":0,"reverse_samples":0,"max_reverse":0.0}

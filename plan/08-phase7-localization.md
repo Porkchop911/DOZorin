@@ -6,12 +6,12 @@
 
 ## Subtasks
 
-- [ ] **7.1 Likelihood field.** Precompute distance-transform of the saved map → Gaussian likelihood lookup (scipy.ndimage). Shared with the matcher (same rasterization as 6.2 — one code path).
-- [ ] **7.2 Particle filter.** `hwr_loc/mcl.py` (ROS-free, numpy): N≈500 particles; motion model = fused-odom delta + tunable noise (per-axis, boosted while rotating); weight = likelihood-field score of a decimated scan (~60 beams); low-variance resampling; adaptive N optional later. Unit tests on synthetic map+scans (convergence from spread init, tracking under noise).
-- [ ] **7.3 Global relocalization.** Coarse correlative search of the current scan over the map's free space (the proven `global_loc.py` approach from the old stack, reimplemented on our matcher core): score grid of candidate poses → seed MCL cloud at the top hypotheses. Runs on demand (service) and automatically when health collapses.
-- [ ] **7.4 Localizer node.** Publishes `map→odom` TF (replacing the mapper's when in localization mode), `pose` with covariance, and **health**: effective sample size + mean scan score on a topic; mode services (localize-on-map vs mapping handled by a small mode manager so SLAM and MCL never both own `map→odom`).
+- [x] **7.1 Likelihood field.** Precompute distance-transform of the saved map → Gaussian likelihood lookup. Implemented in `hwr_core.localization` and covered by synthetic-map tests.
+- [x] **7.2 Particle filter.** ROS-free numpy MCL with 500 particles, fused-odom prediction, decimated scan likelihoods, and low-variance resampling. Synthetic convergence/tracking tests pass.
+- [x] **7.3 Global relocalization.** Coarse scan correlation seeds the strongest hypotheses; available on demand and after sustained health collapse. Live cold-start score 0.760 on 2026-07-22.
+- [x] **7.4 Localizer node.** Sole `map→odom` owner in localization mode; publishes pose and ESS/scan-score health. `deploy/mode.sh` now performs exclusive process-group mode swaps.
 - [ ] **7.5 Offline tests.** Bags replayed against `hwr_map_01`: convergence time from unknown pose, tracking error along a teleop tour (visual RViz + score plot).
-- [ ] **7.6 Live acceptance.** ① cold start anywhere → global loc → converged (verify with the scan-overlay-on-map plot, the old stack's proven evidence style); ② kidnap: carry the robot ≥3 m mid-run, 3 trials; ③ full teleop tour without losing lock.
+- [ ] **7.6 Live acceptance.** Cold start and short-motion tracking passed on 2026-07-22 (`evidence/phase7/live_localization_20260722.md`). Still open: scan-overlay plot, three ≥3 m kidnap trials, and full teleop tour.
 
 ## Acceptance & evidence
 

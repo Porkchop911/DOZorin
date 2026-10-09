@@ -30,11 +30,6 @@ def held_drive(robot, vx, vy, wz, seconds):
 
 def main():
     with Robot.connect("/dev/rrc") as robot:
-        mv = robot.battery_mv(timeout=3.0)
-        print(f"battery: {mv} mV")
-        if mv is None or mv < 11000:
-            print("ABORT: battery gate")
-            return 1
 
         tests = [("+vx 0.1 (all wheels forward sense)", (0.1, 0.0, 0.0), 1),
                  ("+vy 0.1 strafe left (FL back, RL fwd, FR fwd, RR back)", (0.0, 0.1, 0.0), 2),
@@ -65,8 +60,6 @@ def main():
             print("  FAIL: watchdog never fired")
             return 1
 
-        mv2 = robot.battery_mv()
-        print(f"battery end: {mv2} mV")
         print(f"decoder: ok={robot._board._t.decoder.frames_ok} "
               f"crc_errors={robot._board._t.decoder.crc_errors} "
               f"resyncs={robot._board._t.decoder.resyncs}")

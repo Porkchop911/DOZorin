@@ -122,6 +122,45 @@ def test_subscribe_streams_all_reports():
         t.close()
 
 
+def test_bad_subscriber_does_not_kill_rx_thread():
+    fake, t = make()
+    try:
+        got = []
+
+        def bad(data, stamp):
+            raise RuntimeError("consumer failed")
+
+        t.subscribe(Function.KEY, bad)
+        t.subscribe(Function.KEY, lambda data, stamp: got.append(data))
+        fake.inject(encode(Function.KEY, b"\x01\x20"))
+        fake.inject(encode(Function.KEY, b"\x01\x20"))
+        deadline = time.monotonic() + 1.0
+        while len(got) < 2 and time.monotonic() < deadline:
+            time.sleep(0.005)
+        assert got == [b"\x01\x20", b"\x01\x20"]
+        assert t.callback_errors == 2
+        assert isinstance(t.last_callback_error, RuntimeError)
+    finally:
+        t.close()
+
+
+def test_malformed_imu_is_ignored_without_stopping_rx():
+    fake, t = make()
+    board = Board(t)
+    try:
+        got = []
+        board.subscribe_imu(lambda sample, stamp: got.append(sample))
+        fake.inject(encode(Function.IMU, b"short"))
+        sample = struct.pack("<6f", 0, 0, 1, 0, 0, 0)
+        fake.inject(encode(Function.IMU, sample))
+        deadline = time.monotonic() + 1.0
+        while not got and time.monotonic() < deadline:
+            time.sleep(0.005)
+        assert len(got) == 1
+    finally:
+        board.close()
+
+
 def test_board_battery_and_actuators():
     fake, t = make()
     board = Board(t)

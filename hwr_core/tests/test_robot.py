@@ -3,8 +3,8 @@ import time
 
 import pytest
 
-from hwr_core.robot import ARM_POSES, BatteryLowError, EStopError, Robot
-from hwr_core.rrc import Board, Function, encode
+from hwr_core.robot import ARM_POSES, EStopError, Robot
+from hwr_core.rrc import Board, Function
 from hwr_core.rrc.transport import Transport
 
 from test_transport import FakeSerial
@@ -28,6 +28,16 @@ def make_robot(watchdog_timeout=0.4):
     fake = FakeSerial()
     robot = Robot(Board(Transport(fake)), watchdog_timeout=watchdog_timeout)
     return fake, robot
+
+
+def test_drive_does_not_require_power_telemetry():
+    fake = FakeSerial()
+    robot = Robot(Board(Transport(fake)))
+    try:
+        assert robot.drive(0.1, 0, 0) == (0.1, 0.0, 0.0)
+        assert len(motor_cmds(fake)) == 1
+    finally:
+        robot.close()
 
 
 def test_drive_sends_mixed_wheel_speeds():
@@ -88,35 +98,18 @@ def test_estop_latches_and_refuses_motion():
         assert motor_cmds(fake)[-1] == (0.0, 0.0, 0.0, 0.0)
         with pytest.raises(EStopError):
             robot.drive(0.1, 0, 0)
+        with pytest.raises(EStopError):
+            robot.arm.set_pose("forward")
         robot.reset_estop()
         robot.drive(0.05, 0, 0)                            # allowed again
     finally:
         robot.close()
 
 
-def test_battery_gate_refuses_and_hard_stops():
-    fake, robot = make_robot()
-    try:
-        fake.inject(encode(Function.SYS, b"\x04" + struct.pack("<H", 10900)))
-        deadline = time.monotonic() + 1.0
-        while robot.battery_gate.latest_mv is None and time.monotonic() < deadline:
-            time.sleep(0.005)
-        with pytest.raises(BatteryLowError):
-            robot.drive(0.1, 0, 0)
-
-        fake.inject(encode(Function.SYS, b"\x04" + struct.pack("<H", 10400)))
-        deadline = time.monotonic() + 1.0
-        while not robot.estop_latch.tripped and time.monotonic() < deadline:
-            time.sleep(0.005)
-        assert robot.estop_latch.tripped                   # hard stop -> estop
-        assert robot.estop_latch.reason == "battery hard stop"
-    finally:
-        robot.close()
-
-
 def test_arm_pose_and_context_manager():
     fake = FakeSerial()
-    with Robot(Board(Transport(fake))) as robot:
+    robot = Robot(Board(Transport(fake)))
+    with robot:
         robot.arm.set_pose("forward", 1500)
     # context exit must have sent a final all-stop
     assert motor_cmds(fake)[-1] == (0.0, 0.0, 0.0, 0.0)

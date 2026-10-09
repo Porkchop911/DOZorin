@@ -1,0 +1,5 @@
+velocity trace ready
+nav max vx/vy/wz: [0.05551126602982096, 0.005806042091097977, 0.27961662868207265]; samples: 15; nonzero samples: 13
+applied max vx/vy/wz: [0.055510297338919816, 0.005806042091097977, 0.27961662868207265]; samples: 241; nonzero samples: 36
+wheel max rps: [0.20108167827129364, 0.20108167827129364, 0.3566630184650421, 0.3093860149383545]; samples: 241; nonzero samples: 36
+mux sources observed: ['agent', 'nav', 'none']

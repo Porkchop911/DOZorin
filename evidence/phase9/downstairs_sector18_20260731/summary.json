@@ -1,0 +1,59 @@
+{
+  "captures": [
+    {
+      "attempt": 1,
+      "clearance": {
+        "forward": null,
+        "front_left": 1.0500000156462193,
+        "front_right": 0.45000000670552254,
+        "left": null,
+        "right": null
+      },
+      "context": "evidence/phase9/downstairs_sector18_20260731/attempt_01_success_context.json",
+      "image": "evidence/phase9/downstairs_sector18_20260731/attempt_01_success.jpg",
+      "outcome": "success",
+      "pose": [
+        3.419809219128014,
+        3.965497877078405,
+        1.4432095643647131
+      ]
+    },
+    {
+      "attempt": 2,
+      "clearance": {
+        "forward": 0.6000000089406967,
+        "front_left": 1.5000000223517418,
+        "front_right": 0.3500000052154064,
+        "left": null,
+        "right": null
+      },
+      "context": "evidence/phase9/downstairs_sector18_20260731/attempt_02_success_context.json",
+      "image": "evidence/phase9/downstairs_sector18_20260731/attempt_02_success.jpg",
+      "outcome": "success",
+      "pose": [
+        3.4678163082253746,
+        4.0066258614848,
+        1.0749790995415864
+      ]
+    }
+  ],
+  "consecutive_failures": 5,
+  "failures": 9,
+  "finished_at": 1785493694.7979293,
+  "reason": "failure_limit_reached",
+  "rotations": 10,
+  "started_at": 1785493606.9730752,
+  "stop_results": {
+    "estop": {
+      "message": "estop tripped",
+      "success": true
+    },
+    "explore_stop": {
+      "message": "exploration stopped",
+      "success": true
+    }
+  },
+  "translation_attempt_target": 3,
+  "translation_attempts": 2,
+  "translations_succeeded": 2
+}

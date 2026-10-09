@@ -1,0 +1,6 @@
+float32 bearing
+float32 elevation
+uint16 duration_ms
+---
+bool success
+string message

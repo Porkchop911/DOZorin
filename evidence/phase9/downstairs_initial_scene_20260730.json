@@ -1,0 +1,51 @@
+{
+  "time": 1785406118.589932,
+  "pose": [
+    0.0,
+    0.0,
+    -0.0033914937706430296
+  ],
+  "observation": {
+    "zone_type": "living_area",
+    "floor_surface": "wooden_floor",
+    "visible_boundaries": [
+      "bookshelf_edge",
+      "furniture_legs",
+      "plant_pot_base",
+      "window_frame"
+    ],
+    "traversable_openings": [
+      "floor_between_chairs",
+      "floor_between_table_and_shelf"
+    ],
+    "stable_landmarks": [
+      "bookshelf",
+      "plant_pots",
+      "triangular_table",
+      "fan_base"
+    ],
+    "furniture_and_fixtures": [
+      "chair",
+      "bookshelf",
+      "triangular_table",
+      "fan",
+      "plant_pots"
+    ],
+    "navigation_constraints": [
+      "narrow_gap_between_chairs",
+      "bookshelf_obstruction",
+      "plant_pots_in_way"
+    ],
+    "likely_hazards": [
+      "bookshelf_edge",
+      "fan_base",
+      "plant_pots"
+    ],
+    "unexplored_directions": [
+      "behind_bookshelf",
+      "behind_triangular_table",
+      "behind_chairs"
+    ],
+    "uncertainty": "low"
+  }
+}

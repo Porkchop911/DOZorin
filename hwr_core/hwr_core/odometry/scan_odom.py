@@ -37,7 +37,8 @@ class ScanOdometry:
         """Model velocity (post-slew command) + IMU yaw rate, every tick."""
         self.fusion.predict(vx, vy, wz, dt)
 
-    def process_scan(self, points) -> MatchResult | None:
+    def process_scan(self, points, *,
+                     observe_translation: bool = True) -> MatchResult | None:
         """Feed one scan's base-frame points (~5 Hz). Returns the match,
         or None for the scan that (re)seeds a keyframe."""
         if self._key_pose is None:
@@ -54,7 +55,8 @@ class ScanOdometry:
         result = self.matcher.match(points, prior=prior)
         if result.valid:
             self.fusion.update_scan(self._key_pose, result.delta,
-                                    result.cov, result.score)
+                                    result.cov, result.score,
+                                    observe_translation=observe_translation)
 
         moved = math.hypot(prior[0], prior[1])
         if (not result.valid or moved > self.rekey_dist

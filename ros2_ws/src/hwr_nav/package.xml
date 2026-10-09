@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<package format="3"><name>hwr_nav</name><version>0.0.1</version>
+<description>Hand-written costmap, A-star planner, and controller.</description>
+<maintainer email="adam9x6loeb@googlemail.com">Niko</maintainer><license>MIT</license>
+<depend>rclpy</depend><depend>geometry_msgs</depend><depend>hwr_msgs</depend>
+<depend>nav_msgs</depend><depend>sensor_msgs</depend><depend>std_srvs</depend>
+<exec_depend>hwr_arm</exec_depend><exec_depend>hwr_loc</exec_depend><exec_depend>hwr_odom</exec_depend>
+<export><build_type>ament_python</build_type></export></package>

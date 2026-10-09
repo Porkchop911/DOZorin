@@ -1,0 +1,1 @@
+"""Authenticated HWR command gateway."""

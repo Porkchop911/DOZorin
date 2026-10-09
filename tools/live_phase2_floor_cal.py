@@ -10,9 +10,13 @@ Measure each linear run with tape: straight-line distance start->end, and
 note sideways drift. Ctrl-C stops safely at any time.
 """
 import math
+import argparse
+import json
 import signal
+import statistics
 import sys
 import time
+from pathlib import Path
 
 from hwr_core.robot import Robot
 
@@ -82,6 +86,15 @@ def run_linear(robot, gyro, axis, run_no):
     robot.stop()
     drift = math.degrees(gyro.stop())
     print(f"    commanded {dist:.3f} m, heading drift {drift:+.1f} deg -> measure actual distance")
+    while True:
+        try:
+            actual = float(input("    tape-measured distance (m): "))
+            if actual > 0.0:
+                return {"commanded_m": dist, "actual_m": actual,
+                        "heading_drift_deg": drift}
+        except ValueError:
+            pass
+        print("    enter a positive distance in metres")
 
 
 def run_rotation(robot, gyro, run_no):
@@ -100,31 +113,56 @@ def run_rotation(robot, gyro, run_no):
     actual = math.degrees(gyro.stop())
     print(f"    commanded {math.degrees(cmd_int):.1f} deg, gyro-measured {actual:.1f} deg "
           f"(correction {math.degrees(cmd_int) / actual:.4f})" if actual else "    gyro dead?")
+    if abs(actual) < 1.0:
+        raise RuntimeError("gyro rotation measurement unavailable")
+    return {"commanded_deg": math.degrees(cmd_int), "actual_deg": actual}
+
+
+def write_results(config_path: Path, evidence_dir: Path, runs: dict) -> None:
+    linear = TARGET_M / statistics.median(r["actual_m"] for r in runs["forward"])
+    strafe = TARGET_M / statistics.median(r["actual_m"] for r in runs["strafe"])
+    angular = 360.0 / statistics.median(abs(r["actual_deg"]) for r in runs["rotate"])
+    calibration = {"linear": linear, "strafe": strafe, "angular": angular}
+
+    config_path.parent.mkdir(parents=True, exist_ok=True)
+    config_path.write_text(
+        "hwr_base:\n  ros__parameters:\n"
+        f"    cal_linear: {linear:.6f}\n"
+        f"    cal_strafe: {strafe:.6f}\n"
+        f"    cal_angular: {angular:.6f}\n",
+        encoding="utf-8")
+    evidence_dir.mkdir(parents=True, exist_ok=True)
+    (evidence_dir / "floor_calibration.json").write_text(
+        json.dumps({"runs": runs, "calibration": calibration}, indent=2) + "\n",
+        encoding="utf-8")
+    print(f"calibration written to {config_path}")
+    print(f"evidence written to {evidence_dir / 'floor_calibration.json'}")
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--config", type=Path,
+        default=Path.home() / "hwr/ros2_ws/src/hwr_base/config/calibration.yaml")
+    parser.add_argument(
+        "--evidence-dir", type=Path,
+        default=Path.home() / "hwr/evidence/phase2")
+    args = parser.parse_args()
     with Robot.connect("/dev/rrc") as robot:
         signal.signal(signal.SIGINT, lambda *_: (robot.stop(), robot.close(), sys.exit(130)))
-        mv = robot.battery_mv(timeout=3.0)
-        print(f"battery: {mv} mV")
-        if mv is None or mv < 11200:
-            print("ABORT: battery")
-            return 1
-
         gyro = GyroIntegrator(robot)
         print("calibrating gyro bias (keep robot still, 2 s) ...")
         gyro.calibrate_bias()
         print(f"gyro z bias: {math.degrees(gyro.bias):+.3f} deg/s")
 
-        for i in (1, 2, 3):
-            run_linear(robot, gyro, "x", i)
-        for i in (4, 5, 6):
-            run_linear(robot, gyro, "y", i)
-        for i in (7, 8, 9):
-            run_rotation(robot, gyro, i)
+        runs = {
+            "forward": [run_linear(robot, gyro, "x", i) for i in (1, 2, 3)],
+            "strafe": [run_linear(robot, gyro, "y", i) for i in (4, 5, 6)],
+            "rotate": [run_rotation(robot, gyro, i) for i in (7, 8, 9)],
+        }
+        write_results(args.config, args.evidence_dir, runs)
 
-        print(f"\nbattery end: {robot.battery_mv()} mV")
-        print("done - report the six tape measurements")
+        print("done - rebuild hwr_base before the square acceptance run")
         return 0
 
 

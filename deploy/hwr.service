@@ -1,0 +1,21 @@
+[Unit]
+Description=Highwonder rework autonomous stack
+After=network-online.target dev-rrc.device dev-lidar.device
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ubuntu
+EnvironmentFile=-/home/ubuntu/hwr/config/hwr.env
+ExecStartPre=+/bin/systemctl start start_app_node.service
+ExecStartPre=/bin/sleep 8
+ExecStartPre=/home/ubuntu/hwr/deploy/takeover.sh
+ExecStart=/bin/zsh -lc 'source /home/ubuntu/hwr/deploy/env.zsh; exec ros2 launch hwr_gateway autonomy.launch.py map_yaml:=${HWR_MAP_YAML:-/home/ubuntu/hwr/maps/hwr_map_01.yaml}'
+ExecStop=/home/ubuntu/hwr/deploy/handback.sh
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=75
+KillSignal=SIGTERM
+
+[Install]
+WantedBy=multi-user.target

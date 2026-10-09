@@ -17,3 +17,36 @@
 2026-07-07 22:04:21 handback OK battery=12679mV elapsed=11s
 2026-07-07 22:12:09 takeover OK battery=12320mV
 2026-07-07 21:52:39 handback OK battery=12180mV elapsed=8s
+2026-07-07 22:52:40 takeover OK battery=12160mV
+2026-07-07 23:03:10 handback OK battery=12013mV elapsed=12s
+2026-07-07 23:03:14 handback OK battery=12025mV elapsed=7s
+2026-07-21 13:50:54 takeover OK battery=11532mV
+2026-07-21 13:53:22 handback OK battery=11528mV elapsed=11s
+2026-07-21 13:54:28 takeover OK battery=11500mV
+2026-07-21 13:55:04 handback OK battery=11483mV elapsed=12s
+2026-07-21 13:56:24 takeover OK battery=11463mV
+2026-07-21 13:57:38 handback OK battery=11438mV elapsed=12s
+2026-07-21 13:58:52 takeover OK battery=11397mV
+2026-07-21 13:59:45 handback OK battery=11396mV elapsed=13s
+2026-07-21 14:00:13 takeover OK battery=11426mV
+2026-07-21 14:01:00 handback OK battery=11373mV elapsed=13s
+2026-07-22 10:18:15 takeover OK battery=11897mV
+2026-07-22 11:29:29 handback OK battery=10937mV elapsed=11s
+2026-07-22 11:38:33 takeover FAIL battery=10767mV reason=low-battery
+2026-07-22 14:53:15 takeover OK
+2026-07-23 10:50:24 takeover STALE previous=2026-07-22_14:53:15
+2026-07-23 10:50:25 takeover OK
+2026-07-23 18:28:08 takeover STALE previous=b635578e-5439-4d92-ae91-d47b1f77bab1_2026-07-23_10:50:25
+2026-07-23 18:28:09 takeover OK
+2026-07-27 08:35:24 takeover STALE previous=b5945ff5-199b-40f4-abf8-f6682c2ab00f_2026-07-23_18:28:09
+2026-07-27 08:35:24 takeover OK
+2026-07-27 13:34:57 takeover STALE previous=86fa11e8-76fb-4440-9492-dc610221dae6_2026-07-27_08:35:24
+2026-07-27 13:34:57 takeover OK
+2026-07-28 18:21:28 takeover STALE previous=37d7f81d-71f3-4949-800c-0f713c3e9d3d_2026-07-27_13:34:57
+2026-07-28 18:21:29 takeover OK
+2026-07-29 11:43:54 takeover STALE previous=8b841480-454a-4292-9213-456f98c484b4_2026-07-28_18:21:29
+2026-07-29 11:43:54 takeover OK
+2026-07-30 11:44:29 takeover STALE previous=63c27261-2f8c-480f-a7cd-2c5e3e4c530f_2026-07-29_11:43:54
+2026-07-30 11:44:30 takeover OK
+2026-07-31 10:57:08 takeover STALE previous=58bd5e37-5dcb-4c4d-bc31-39445a3e60da_2026-07-30_11:44:30
+2026-07-31 10:57:08 takeover OK

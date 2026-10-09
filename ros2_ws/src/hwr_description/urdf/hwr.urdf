@@ -75,7 +75,7 @@
   <link name="lidar_frame">
     <visual>
       <origin xyz="0 0 -0.01" rpy="0 0 0"/>
-      <geometry><cylinder radius="0.033 " length="0.035"/></geometry>
+      <geometry><cylinder radius="0.033" length="0.035"/></geometry>
       <material name="dark"/>
     </visual>
   </link>
@@ -184,7 +184,18 @@
   <link name="depth_cam_frame"/>
   <joint name="depth_cam_joint" type="fixed">
     <parent link="camera_link"/><child link="depth_cam_frame"/>
-    <origin xyz="0 0 0" rpy="-1.5707963267948966 0 -1.5707963267948966"/>
+    <!-- ROS optical axes: +Z forward, +X right, +Y down.  The positive roll
+         is essential: the former negative roll pointed optical +Z toward
+         base -X, causing every visible depth point to fail the forward gate. -->
+    <origin xyz="0 0 0" rpy="1.5707963267948966 0 -1.5707963267948966"/>
+  </joint>
+
+  <!-- Frame name emitted by the closed Aurora driver; equivalent to our
+       depth optical frame so TF consumers can use either spelling. -->
+  <link name="depth_camera_link"/>
+  <joint name="depth_camera_alias_joint" type="fixed">
+    <parent link="depth_cam_frame"/><child link="depth_camera_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
   </joint>
 
 </robot>

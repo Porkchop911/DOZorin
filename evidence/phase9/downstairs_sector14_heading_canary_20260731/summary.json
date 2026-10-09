@@ -1,0 +1,41 @@
+{
+  "captures": [
+    {
+      "attempt": 1,
+      "clearance": {
+        "forward": 1.3000000193715096,
+        "front_left": null,
+        "front_right": 0.20000000298023224,
+        "left": 1.1000000163912773,
+        "right": 0.15000000223517418
+      },
+      "context": "evidence/phase9/downstairs_sector14_heading_canary_20260731/attempt_01_failed_context.json",
+      "image": "evidence/phase9/downstairs_sector14_heading_canary_20260731/attempt_01_failed.jpg",
+      "outcome": "failed",
+      "pose": [
+        2.771872640590084,
+        3.723619674287025,
+        0.0999839438691229
+      ]
+    }
+  ],
+  "consecutive_failures": 1,
+  "failures": 1,
+  "finished_at": 1785493174.3652167,
+  "reason": "translation_attempt_target_reached",
+  "rotations": 1,
+  "started_at": 1785493159.7042189,
+  "stop_results": {
+    "estop": {
+      "message": "estop tripped",
+      "success": true
+    },
+    "explore_stop": {
+      "message": "exploration stopped",
+      "success": true
+    }
+  },
+  "translation_attempt_target": 1,
+  "translation_attempts": 1,
+  "translations_succeeded": 0
+}

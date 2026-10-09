@@ -41,13 +41,17 @@ class Board:
 
     def imu(self, timeout: float = 1.0) -> codecs.ImuSample | None:
         """Next IMU sample in SI units."""
-        data = self._t.wait_report(Function.IMU, timeout)
+        data = self._t.wait_report(
+            Function.IMU, timeout, lambda d: codecs.parse_imu(d) is not None)
         return codecs.parse_imu(data) if data else None
 
     def subscribe_imu(self, callback: Callable[[codecs.ImuSample, float], None]) -> None:
         """Stream IMU samples from the RX thread (full wire rate)."""
-        self._t.subscribe(
-            Function.IMU, lambda data, stamp: callback(codecs.parse_imu(data), stamp))
+        def _relay(data: bytes, stamp: float) -> None:
+            sample = codecs.parse_imu(data)
+            if sample is not None:
+                callback(sample, stamp)
+        self._t.subscribe(Function.IMU, _relay)
 
     def subscribe_battery(self, callback: Callable[[int, float], None]) -> None:
         """Battery reports (millivolts) from the RX thread, ~1 Hz."""

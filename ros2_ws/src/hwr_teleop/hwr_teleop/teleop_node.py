@@ -9,7 +9,7 @@ Keys (hold to drive; releasing = keys stop repeating = robot stops):
     x        ESTOP (latches via hwr_driver service; X again resets)
     ctrl-c   quit (stops first)
 
-Publishes cmd_vel at 10 Hz; hwr_base's staleness timeout plus the driver
+Publishes cmd_vel_teleop at 10 Hz; hwr_base's staleness timeout plus the driver
 watchdog back this up if the terminal dies.
 """
 import select
@@ -32,7 +32,7 @@ SPEEDS = [(0.05, 0.2), (0.1, 0.3), (0.15, 0.4), (0.2, 0.5)]  # (m/s, rad/s)
 class TeleopNode(Node):
     def __init__(self) -> None:
         super().__init__("hwr_teleop")
-        self.pub = self.create_publisher(Twist, "cmd_vel", 10)
+        self.pub = self.create_publisher(Twist, "cmd_vel_teleop", 10)
         self.estop_client = self.create_client(SetBool, "estop")
         self.speed_idx = 1
         self.estopped = False

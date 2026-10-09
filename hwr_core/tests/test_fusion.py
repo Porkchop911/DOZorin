@@ -82,6 +82,19 @@ def test_degenerate_axis_follows_model():
     assert f.pose[1] == pytest.approx(0.05, abs=0.005)
 
 
+def test_pure_yaw_scan_update_cannot_inject_translation():
+    f = OdomFusion()
+    predict_for(f, 0.0, 0.0, math.radians(30.0), 1.0)
+    before_xy = f.pose[:2]
+    assert f.update_scan(
+        (0.0, 0.0, 0.0),
+        (0.165, -0.08, math.radians(31.0)),
+        np.diag([0.02 ** 2, 0.02 ** 2, math.radians(1.0) ** 2]),
+        0.9, observe_translation=False)
+    assert f.pose[:2] == before_xy
+    assert f.pose[2] == pytest.approx(math.radians(31.0), abs=math.radians(2.0))
+
+
 def test_low_score_rejected():
     f = OdomFusion()
     predict_for(f, 0.1, 0.0, 0.0, 1.0)

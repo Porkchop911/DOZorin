@@ -32,11 +32,6 @@ def main():
 
     signal.signal(signal.SIGINT, panic)
     try:
-        mv = board.battery_mv(timeout=3.0)
-        print(f"battery: {mv} mV")
-        if mv is None or mv < 11000:
-            print("ABORT: battery gate")
-            return 1
 
         # ---------------- 1.5 motors (bench) ----------------
         print("motor type -> JGB37")
@@ -93,8 +88,6 @@ def main():
             print(f"  servo {sid}: target={target} actual={pos} delta={delta}")
         print(f"worst position error: {worst} pulses ({worst * 0.24:.1f} deg)")
 
-        mv2 = board.battery_mv(timeout=3.0)
-        print(f"battery end: {mv2} mV")
         print(f"decoder: ok={board._t.decoder.frames_ok} "
               f"crc_errors={board._t.decoder.crc_errors} "
               f"resyncs={board._t.decoder.resyncs}")

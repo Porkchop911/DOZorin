@@ -10,7 +10,7 @@
 - [ ] **11.2 Crash resilience.** Restart policies per node (driver restarts must re-latch estop safely, i.e. boot into stopped state); gateway supervises node liveness into `/status`; watchdogs re-verified under kill -9 of each critical node while driving (bench).
 - [ ] **11.3 Runbook.** `docs/RUNBOOK.md`: symptoms → causes → commands for the known failure modes (serial wedged → fuser -k + restart; localization lost → global reloc service; costmap imprisonment → recovery/clear; LM Studio unreachable → model pinning `lms load … -y`; factory-stack restore).
 - [ ] **11.4 Docs pass.** README quickstart (PC + robot from zero), PROTOCOL.md completeness vs implementation, ADRs updated with outcomes (incl. ADR-005 decision, 4.4 stretch result).
-- [ ] **11.5 Final audit.** Walk every subplan: each checked box has its evidence artifact; unchecked boxes get an explicit disposition (done-later / dropped-because). Update the masterplan phase table to final state. Battery + hardware condition check.
+- [ ] **11.5 Final audit.** Walk every subplan: each checked box has its evidence artifact; unchecked boxes get an explicit disposition (done-later / dropped-because). Update the masterplan phase table to final state. Human-confirmed hardware condition check.
 
 ## Acceptance & evidence
 
@@ -20,6 +20,15 @@
 ## Safety / rollback
 
 - Boot default flip is reversible with one command and documented in the runbook; `hwr boot disable` restores the factory default from any state.
+
+## 2026-07-23 reboot finding
+
+- Manual post-reboot takeover exposed and fixed a stale-marker bug: `.takeover`
+  now records the Linux boot ID and cannot suppress factory shutdown after a new
+  boot. Clean factory-to-HWR takeover, same-boot idempotence, forward camera-pose
+  restoration, relocalization, and two attended goals passed. This is useful
+  hardening evidence but does not close the automatic `hwr.service` or kill-test
+  gates above.
 
 **Effort.** 1 day.
 

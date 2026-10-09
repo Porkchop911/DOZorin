@@ -1,0 +1,77 @@
+{
+  "captures": [
+    {
+      "attempt": 1,
+      "clearance": {
+        "forward": null,
+        "front_left": 0.7500000111758709,
+        "front_right": 0.4000000059604645,
+        "left": 0.7000000104308128,
+        "right": 0.45000000670552254
+      },
+      "context": "/home/ubuntu/hwr/state/downstairs_sector5_20260731/attempt_01_success_context.json",
+      "image": "/home/ubuntu/hwr/state/downstairs_sector5_20260731/attempt_01_success.jpg",
+      "outcome": "success",
+      "pose": [
+        1.522410738639215,
+        3.178818393612382,
+        0.6487022262026056
+      ]
+    },
+    {
+      "attempt": 2,
+      "clearance": {
+        "forward": null,
+        "front_left": 0.7500000111758709,
+        "front_right": 0.3500000052154064,
+        "left": 0.7500000111758709,
+        "right": 0.45000000670552254
+      },
+      "context": "/home/ubuntu/hwr/state/downstairs_sector5_20260731/attempt_02_failed_context.json",
+      "image": "/home/ubuntu/hwr/state/downstairs_sector5_20260731/attempt_02_failed.jpg",
+      "outcome": "failed",
+      "pose": [
+        1.5747511078492067,
+        3.2177179283696695,
+        0.7786757448227317
+      ]
+    },
+    {
+      "attempt": 3,
+      "clearance": {
+        "forward": 0.7000000104308128,
+        "front_left": 0.6500000096857548,
+        "front_right": null,
+        "left": 0.7000000104308128,
+        "right": 0.30000000447034836
+      },
+      "context": "/home/ubuntu/hwr/state/downstairs_sector5_20260731/attempt_03_failed_context.json",
+      "image": "/home/ubuntu/hwr/state/downstairs_sector5_20260731/attempt_03_failed.jpg",
+      "outcome": "failed",
+      "pose": [
+        1.6495658062911591,
+        3.295601150588799,
+        1.4018196586775304
+      ]
+    }
+  ],
+  "consecutive_failures": 2,
+  "failures": 4,
+  "finished_at": 1785489565.868911,
+  "reason": "translation_attempt_target_reached",
+  "rotations": 14,
+  "started_at": 1785489472.6285362,
+  "stop_results": {
+    "estop": {
+      "message": "estop tripped",
+      "success": true
+    },
+    "explore_stop": {
+      "message": "exploration stopped",
+      "success": true
+    }
+  },
+  "translation_attempt_target": 3,
+  "translation_attempts": 3,
+  "translations_succeeded": 1
+}

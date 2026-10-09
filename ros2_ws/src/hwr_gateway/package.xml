@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>hwr_gateway</name><version>0.0.1</version>
+  <description>Authenticated LAN REST and WebSocket gateway for HWR.</description>
+  <maintainer email="adam9x6loeb@googlemail.com">Niko</maintainer><license>MIT</license>
+  <depend>ament_index_python</depend><depend>geometry_msgs</depend><depend>hwr_msgs</depend><depend>nav_msgs</depend>
+  <exec_depend>hwr_arm</exec_depend><exec_depend>hwr_nav</exec_depend>
+  <depend>rclpy</depend><depend>sensor_msgs</depend><depend>std_msgs</depend><depend>std_srvs</depend>
+  <export><build_type>ament_python</build_type></export>
+</package>

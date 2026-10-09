@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>hwr_arm</name><version>0.0.1</version>
+  <description>Named poses, camera aiming, gripper, and geometric reach services.</description>
+  <maintainer email="adam9x6loeb@googlemail.com">Niko</maintainer><license>MIT</license>
+  <depend>ament_index_python</depend><depend>hwr_msgs</depend><depend>rclpy</depend>
+  <depend>std_msgs</depend>
+  <export><build_type>ament_python</build_type></export>
+</package>

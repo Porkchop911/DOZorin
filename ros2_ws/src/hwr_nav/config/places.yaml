@@ -1,0 +1,21 @@
+# Approach coordinates from old map_04. They are deliberately disabled until
+# re-verified on an accepted HWR-built map. Object anchors must be physically
+# measured; seeing an object is not arrival. The gateway rejects missing
+# anchors and never accepts an object distance limit above 0.50 m.
+places:
+  start:
+    {kind: reference, x: 0.0, y: 0.0, yaw_deg: 0, verified: false}
+  window:
+    # Close-range measurement 2026-07-27: window surface depth median 0.408 m
+    # projected through live map->depth_camera_link. The staged left avenue and
+    # this final approach both passed live collision checks.
+    {kind: object, x: 2.025, y: -1.004, yaw_deg: 337, object_x: 2.289,
+     object_y: -1.220, max_object_distance_m: 0.50, verified: true}
+  drums:
+    # Close-range measurement 2026-07-27 on the white front rack-leg base;
+    # direct depth was 0.397 m at the terminal localized pose.
+    {kind: object, x: 0.730, y: -0.068, yaw_deg: 150, object_x: 0.323,
+     object_y: 0.103, max_object_distance_m: 0.50, verified: true}
+  door:
+    {kind: object, x: -1.55, y: -1.26, yaw_deg: 267, object_x: null,
+     object_y: null, max_object_distance_m: 0.50, verified: false}

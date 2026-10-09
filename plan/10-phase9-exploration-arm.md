@@ -7,9 +7,25 @@
 ## Subtasks
 
 ### Exploration
-- [ ] **9.1 Frontier detection.** On the live SLAM map: boundary cells between free and unknown, clustered; score = cluster size / travel cost / clearance; re-evaluate on map updates. Unit tests on synthetic half-explored maps; sim run in `tools/sim2d.py`.
-- [ ] **9.2 Explore mode.** Mode manager runs SLAM (not MCL) + nav goals to best frontier; termination when no frontier ≥ threshold remains; auto map-save. Safety: same gates as Phase 8, plus per-goal timeout and total-session battery budget.
-- [ ] **9.3 Live run.** From an empty map at the usual start pose, attended: explore the upstairs room to completion; compare coverage against `map_04` free area.
+- [x] **9.1 Frontier detection.** Reachable set-back observation cells, one-pass
+  Dijkstra path cost, clearance/information/heading ranking, trapped-start
+  descent, frontier/approach cooldowns, and focused synthetic tests are in
+  place.
+- [x] **9.2 Explore mode.** Per-goal/session bounds, fresh localization/map/grid
+  synchronization, persistent failure memory and journal, metric/semantic and
+  floor-support preflight, responsive cancellation, stop-latched lifecycle,
+  committed rotation targets, checkpoint saves, and restartable mapper state
+  are implemented.
+- [ ] **9.3 Live run.** Stationary characterization and bounded canaries pass.
+  Sectors 3-11 advanced the 2026-07-31 route about 1.92 m net through the
+  living/dining furniture field with no reported contact. The persistent leg
+  cap is 0.10 m, the metric margin is 0.25 m, and navigation now has a physical
+  odometry leash. The current map, trajectory overlay, pose-linked evidence,
+  and grounded space description are saved. Remaining: reduce excessive yaw
+  staging, explore the darker passage and remaining bright-side sector,
+  complete coverage/frontier replay and loop validation, then meet the 90%
+  safely reachable target. Detailed sequence:
+  `13-downstairs-exploration-session.md`.
 
 ### Arm
 - [ ] **9.4 Pose library + primitives.** `hwr_arm`: named poses YAML (forward-look, floor-look, ceiling-look, carry, tucked — seeded from the known-good pulses), smooth multi-servo interpolation (duration-based, using the protocol's native duration field), gripper open/close/grip-with-timeout.

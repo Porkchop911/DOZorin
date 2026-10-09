@@ -6,45 +6,34 @@ set -u
 
 STATE=$HOME/hwr/.takeover
 LOG=$HOME/hwr/switchover.log
-PORT=/dev/ttyACM0
+# The udev-stable robot-controller link may resolve to ttyACM0 or ttyACM1
+# after a reboot.  Never hard-code the transient kernel enumeration.
+PORT=/dev/rrc
+BOOT_ID=$(</proc/sys/kernel/random/boot_id)
 
 ts() { date '+%Y-%m-%d %H:%M:%S' }
 note() { print "$(ts) takeover $1" >> $LOG }
 
 if [[ -f $STATE ]]; then
-    print "already taken over since $(cat $STATE) - no-op"
-    exit 0
+    state_boot=$(awk 'NR == 1 { print $1 }' $STATE 2>/dev/null)
+    if [[ $state_boot == $BOOT_ID ]] && ! systemctl is-active --quiet start_app_node.service; then
+        print "already taken over in this boot since $(cut -d' ' -f2- $STATE) - no-op"
+        exit 0
+    fi
+    print "discarding stale takeover marker from an earlier boot or active factory state"
+    note "STALE previous=$(tr ' ' '_' <$STATE)"
+    rm -f $STATE
 fi
 
-# vendor rc appends to possibly-unset vars (LD_LIBRARY_PATH) - must source without -u
-set +u
-source $HOME/ros2_ws/.robotrc >/dev/null 2>&1
-set -u
-
-# 1) battery gate: read from the factory topic while the factory stack still runs
-BATT=""
+# 1) stop the factory stack if it is running. Telemetry never controls takeover.
 if systemctl is-active --quiet start_app_node.service; then
-    BATT=$(timeout 12 ros2 topic echo /ros_robot_controller/battery --once 2>/dev/null | awk '/data:/{print $2; exit}')
-    if [[ -z $BATT ]]; then
-        print "ERROR: factory service active but no battery reading - not taking over"
-        note "FAIL reason=no-battery-reading"
-        exit 1
-    fi
-    if (( BATT < 11000 )); then
-        print "ERROR: battery ${BATT} mV < 11000 - charge first"
-        note "FAIL battery=${BATT}mV reason=low-battery"
-        exit 1
-    fi
-    print "battery ${BATT} mV - ok"
+    sudo systemctl stop start_app_node.service
+    print "start_app_node.service stopped"
 else
-    print "WARN: factory service not running, battery gate skipped - verify charge yourself"
+    print "start_app_node.service already inactive"
 fi
 
-# 2) stop the factory stack (button_scan is a separate service and stays up - by design)
-sudo systemctl stop start_app_node.service
-print "start_app_node.service stopped"
-
-# 3) wait until nothing except button_scan holds the serial port (timeout 15 s).
+# 2) wait until nothing except button_scan holds the serial port (timeout 15 s).
 #    Both the factory driver and button_scan appear as python3, so match cmdline per PID.
 deadline=$(( $(date +%s) + 15 ))
 while true; do
@@ -60,14 +49,14 @@ while true; do
     if (( $(date +%s) >= deadline )); then
         print "ERROR: $PORT still held by a non-button_scan process after 15 s:"
         sudo fuser -v $PORT
-        note "FAIL battery=${BATT:-?}mV reason=port-busy"
+        note "FAIL reason=port-busy"
         exit 1
     fi
     sleep 1
 done
 print "$PORT free (button_scan may still hold it - that is fine)"
 
-# 4) state file + log
-ts > $STATE
-note "OK battery=${BATT:-?}mV"
+# 3) state file + log
+print "$BOOT_ID $(ts)" > $STATE
+note "OK"
 print "OK - hardware taken over. Restore with deploy/handback.sh"

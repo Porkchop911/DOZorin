@@ -1,7 +1,7 @@
 """hwr_base — cmd_vel pipeline + model odometry.
 
 Pipeline (20 Hz tick, not per-message, so stale sources decay to stop):
-    cmd_vel (Twist) -> staleness gate -> NO-REVERSE clamp (vx >= 0,
+    teleop/agent/nav command mux -> NO-REVERSE clamp (vx >= 0,
     structural: the robot is rear-blind) -> velocity clamp -> accel ramp ->
     mecanum mixing -> wheel_speeds
 
@@ -14,14 +14,17 @@ import math
 
 import rclpy
 from rclpy.node import Node
-from rclpy.qos import QoSProfile, QoSReliabilityPolicy
+from rclpy.qos import (QoSDurabilityPolicy, QoSProfile,
+                       QoSReliabilityPolicy)
 
-from geometry_msgs.msg import TransformStamped, Twist
+from geometry_msgs.msg import TransformStamped, Twist, TwistStamped
 from hwr_msgs.msg import WheelSpeeds
 from nav_msgs.msg import Odometry
 from sensor_msgs.msg import Imu
+from std_msgs.msg import Bool, String
 from tf2_ros import TransformBroadcaster
 
+from hwr_core.control import CommandMux
 from hwr_core.kinematics import Calibration, wheel_speeds
 from hwr_core.safety import Limits
 
@@ -32,7 +35,9 @@ class BaseNode(Node):
     def __init__(self) -> None:
         super().__init__("hwr_base")
         self.declare_parameter("rate", 20.0)
-        self.declare_parameter("cmd_timeout", 0.5)
+        self.declare_parameter("teleop_timeout", 0.35)
+        self.declare_parameter("agent_timeout", 0.5)
+        self.declare_parameter("nav_timeout", 0.5)
         self.declare_parameter("allow_reverse", False)  # keep False: rear-blind robot
         self.declare_parameter("publish_tf", True)
         self.declare_parameter("odom_frame", "odom")
@@ -49,15 +54,25 @@ class BaseNode(Node):
 
         self.pub_wheels = self.create_publisher(WheelSpeeds, "wheel_speeds", 10)
         self.pub_odom = self.create_publisher(Odometry, "odom_model", 10)
+        self.pub_applied = self.create_publisher(TwistStamped, "cmd_vel_applied", 10)
+        self.pub_source = self.create_publisher(String, "cmd_vel_source", 10)
         self.tf_broadcaster = TransformBroadcaster(self)
 
-        self.create_subscription(Twist, "cmd_vel", self._on_cmd_vel, 10)
+        self.mux = CommandMux(
+            ("teleop", "agent", "nav"),
+            {source: float(self.get_parameter(f"{source}_timeout").value)
+             for source in ("teleop", "agent", "nav")})
+        for source in ("teleop", "agent", "nav"):
+            self.create_subscription(
+                Twist, f"cmd_vel_{source}",
+                lambda msg, source=source: self._on_cmd_vel(source, msg), 10)
         sensor_qos = QoSProfile(depth=10, reliability=QoSReliabilityPolicy.BEST_EFFORT)
         self.create_subscription(Imu, "imu", self._on_imu, sensor_qos)
 
-        self._target = (0.0, 0.0, 0.0)
-        self._target_stamp = None
         self._applied = (0.0, 0.0, 0.0)
+        # Fail closed until the driver's transient-local startup latch arrives.
+        self._estop_latched = True
+        self._active_source = None
         # odometry state
         self._x = self._y = self._yaw = 0.0
         self._gz = 0.0
@@ -65,14 +80,20 @@ class BaseNode(Node):
         self._bias_buf: list[float] = []
         self._last_tick = None
 
+        state_qos = QoSProfile(
+            depth=1, reliability=QoSReliabilityPolicy.RELIABLE,
+            durability=QoSDurabilityPolicy.TRANSIENT_LOCAL)
+        self.create_subscription(
+            Bool, "estop_state", self._on_estop, state_qos)
+
         period = 1.0 / float(self.get_parameter("rate").value)
         self.create_timer(period, self._tick)
 
     # ------------------------------------------------------------- inputs
 
-    def _on_cmd_vel(self, msg: Twist) -> None:
-        self._target = (msg.linear.x, msg.linear.y, msg.angular.z)
-        self._target_stamp = self.get_clock().now()
+    def _on_cmd_vel(self, source: str, msg: Twist) -> None:
+        stamp = self.get_clock().now().nanoseconds * 1e-9
+        self.mux.update(source, (msg.linear.x, msg.linear.y, msg.angular.z), stamp)
 
     def _on_imu(self, msg: Imu) -> None:
         gz = msg.angular_velocity.z
@@ -84,6 +105,13 @@ class BaseNode(Node):
             return
         self._gz = gz - self._gz_bias
 
+    def _on_estop(self, msg: Bool) -> None:
+        self._estop_latched = bool(msg.data)
+        if self._estop_latched:
+            # Estop is an instantaneous physical stop, not an acceleration-ramp
+            # request.  Keep "applied" telemetry and model odometry truthful.
+            self._applied = (0.0, 0.0, 0.0)
+
     # ------------------------------------------------------------- 20 Hz pipeline
 
     def _tick(self) -> None:
@@ -91,19 +119,30 @@ class BaseNode(Node):
         dt = 0.0 if self._last_tick is None else (now - self._last_tick).nanoseconds * 1e-9
         self._last_tick = now
 
-        # staleness: dead source -> decelerate to zero through the accel ramp
-        target = self._target
-        if (self._target_stamp is None or
-                (now - self._target_stamp).nanoseconds * 1e-9 >
-                float(self.get_parameter("cmd_timeout").value)):
-            target = (0.0, 0.0, 0.0)
+        # Dead sources fall through by priority; no fresh source ramps to stop.
+        source, target = self.mux.select(now.nanoseconds * 1e-9)
+        if source != self._active_source:
+            self._active_source = source
+            source_msg = String()
+            source_msg.data = source or "none"
+            self.pub_source.publish(source_msg)
 
         vx, vy, wz = target
-        if not self.get_parameter("allow_reverse").value and vx < 0.0:
-            vx = 0.0  # structural no-reverse: rear ~140 deg is lidar-blind
-        cmd = self.limits.clamp_velocity(vx, vy, wz)
-        cmd = self.limits.clamp_accel(cmd, self._applied, dt)
+        if self._estop_latched:
+            cmd = (0.0, 0.0, 0.0)
+        else:
+            if not self.get_parameter("allow_reverse").value and vx < 0.0:
+                vx = 0.0  # structural no-reverse: rear ~140 deg is lidar-blind
+            cmd = self.limits.clamp_velocity(vx, vy, wz)
+            cmd = self.limits.clamp_accel(cmd, self._applied, dt)
         self._applied = cmd
+
+        applied = TwistStamped()
+        applied.header.stamp = now.to_msg()
+        applied.header.frame_id = self.get_parameter("base_frame").value
+        applied.twist.linear.x, applied.twist.linear.y = cmd[0], cmd[1]
+        applied.twist.angular.z = cmd[2]
+        self.pub_applied.publish(applied)
 
         msg = WheelSpeeds()
         msg.header.stamp = now.to_msg()

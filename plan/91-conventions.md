@@ -3,7 +3,7 @@
 ## Safety (non-negotiable)
 
 1. **Bench-first.** The first time any new code path can move an actuator, the robot is on a stand with wheels off the ground (motors) or in open space with the arm clear (servos). Floor tests only after bench behavior is understood.
-2. **Battery discipline.** Check `/ros_robot_controller/battery` (or our equivalent) at session start and end. <11000 mV: wrap up. <10500 mV: stop immediately. Never charge powered on.
+2. **Operator power responsibility.** Power telemetry is observational only and never gates software behavior. The human operator alone decides when to continue, stop, or charge.
 3. **No reverse, ever.** The robot is rear-blind (lidar ~140° aft blocked). No controller, recovery, or teleop default may command negative vx unless a rear-sensing story exists first.
 4. **Watchdog before power.** Any node that can command motion ships its command watchdog (auto-stop on stale input) in the same commit — never later.
 5. **Attended actuation.** Until Phase 8's soak test, every run that can move the robot is attended with a hand on the estop path.

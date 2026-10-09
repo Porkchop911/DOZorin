@@ -1,0 +1,12 @@
+# forward is live-verified. The view variants retain its safe arm geometry and
+# only move camera tilt; carry/tucked remain conservative aliases until their
+# physical clearance gates are accepted.
+poses:
+  forward: {1: 500, 2: 701, 3: 120, 4: 300, 5: 500}
+  floor: {1: 500, 2: 701, 3: 120, 4: 88, 5: 500}
+  ceiling: {1: 500, 2: 701, 3: 120, 4: 500, 5: 500}
+  carry: {1: 500, 2: 701, 3: 120, 4: 300, 5: 500}
+  tucked: {1: 500, 2: 701, 3: 120, 4: 300, 5: 500}
+gripper:
+  open: 200
+  close: 500

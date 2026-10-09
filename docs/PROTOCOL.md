@@ -13,7 +13,7 @@ codecs to byte-identical frames.
 | Battery report (SYS sub 0x04) | u16 LE **millivolts**, cadence ≈ **1 Hz** (0.93 Hz measured) |
 | Battery agreement with factory topic | +48 mV (within ±50 mV acceptance; unloaded upward drift after factory stop) |
 | IMU report rate | ≈ **113 Hz** (112.7 Hz avg over 30 s, worst 1-s bucket 112) |
-| IMU units | accel in g (az at rest ≈ 1.07 g — scale/bias uncalibrated; calibrate before use in fusion), gyro in deg/s (rest ≈ 0) |
+| IMU units | accel in g (az at rest ≈ 1.07 g — scale/bias uncalibrated); gyro wire values are deg/s and yaw requires a 2.0 hardware scale after SI conversion |
 | Link quality @1 Mbaud | 4088 frames / 30 s: 0 CRC errors, 0 resyncs |
 | Buzzer `<HHHH>`, LED `<BHHH>`, OLED `[line,len,utf8]` | accepted by firmware, no faults |
 | Port sharing | our Transport + vendor `button_scan.py` coexist on ttyACM0 (same as factory driver does) |
@@ -34,6 +34,11 @@ codecs to byte-identical frames.
 - Motor wire ids are 0-based (API takes 1-based); **no sign handling in Board** —
   the m3/m4 inversion belongs to the kinematics layer (Phase 2).
 - RTS/DTR must be low before opening the port or the STM32 resets.
+- **Yaw-rate calibration (2026-07-28):** a rotation-only scan pair correlated at
+  80.75° while raw gyro integration reported 40.31° (ratio 2.003). The HWR
+  driver applies configurable `gyro_z_scale: 2.0` before publishing `/imu`, so
+  base odometry, filtered IMU, localization, and panorama aggregation share the
+  calibrated rate.
 
 ## Hard-learned firmware behavior
 

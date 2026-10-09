@@ -1,6 +1,8 @@
 import time
 
-from hwr_core.safety import BatteryGate, EStop, Limits, Watchdog
+import pytest
+
+from hwr_core.safety import EStop, Limits, Watchdog, validate_wheel_rps
 
 
 # ---------------------------------------------------------------- Limits
@@ -21,6 +23,13 @@ def test_accel_clamp():
     assert out == (0.02, 0.0, 0.1)
     # dt<=0 keeps previous
     assert lim.clamp_accel((1, 1, 1), (0.1, 0.0, 0.0), 0.0) == (0.1, 0.0, 0.0)
+
+
+def test_wheel_command_hard_limit():
+    assert validate_wheel_rps([1, -2, 3, -4]) == (1.0, -2.0, 3.0, -4.0)
+    for bad in ([0, 0, 0], [0, 0, 0, float("nan")], [4.01, 0, 0, 0]):
+        with pytest.raises(ValueError):
+            validate_wheel_rps(bad)
 
 
 # ---------------------------------------------------------------- Watchdog
@@ -82,7 +91,7 @@ def test_watchdog_action_exception_does_not_kill_thread():
         dog.close()
 
 
-# ---------------------------------------------------------------- EStop / BatteryGate
+# ---------------------------------------------------------------- EStop
 
 def test_estop_latch():
     e = EStop()
@@ -92,26 +101,3 @@ def test_estop_latch():
     assert e.tripped and e.reason == "test"
     e.reset()
     assert not e.tripped
-
-
-def test_battery_gate_thresholds():
-    g = BatteryGate()
-    assert g.allow_motion()             # unknown battery: allowed briefly
-    g.update(12000)
-    assert g.allow_motion()
-    g.update(10900)
-    assert not g.allow_motion()         # refuse zone
-    g.update(11500)
-    assert g.allow_motion()             # recovers
-
-
-def test_battery_gate_hard_stop_latches():
-    stops = []
-    g = BatteryGate(on_hard_stop=lambda: stops.append(1))
-    g.update(10400)
-    assert stops == [1]
-    assert g.hard_latched
-    g.update(12600)                     # charger plugged in: still latched
-    assert not g.allow_motion()
-    g.update(10300)                     # callback fires only once
-    assert stops == [1]

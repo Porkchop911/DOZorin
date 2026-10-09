@@ -25,6 +25,8 @@ def generate_launch_description():
             }],
             remappings=[("/scan", "scan_raw")],
             output="screen",
+            respawn=True,
+            respawn_delay=2.0,
         ),
         Node(
             package="hwr_sensors",

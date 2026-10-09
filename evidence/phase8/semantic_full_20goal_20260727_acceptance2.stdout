@@ -1,0 +1,261 @@
+goal 1: normal candidate 1 rejected - insufficient forward clearance
+goal 1: normal candidate 2 provisionally allowed (score 0.645)
+goal 1: normal candidate 3 rejected - semantic assessment rejected translation
+goal 1: normal candidate 4 rejected - insufficient forward clearance
+goal 1: normal candidate 5 provisionally allowed (score 0.476)
+goal 1: normal candidate 6 rejected - semantic assessment rejected translation
+goal 1: normal candidate 7 rejected - semantic assessment rejected translation
+goal 1: normal candidate 8 rejected - insufficient forward clearance
+goal 1: normal candidate 9 rejected - semantic assessment rejected translation
+goal 1: normal candidate 10 rejected - insufficient forward clearance, semantic assessment rejected translation
+goal 1: candidate 2 failed final revalidation
+goal 1/20: PASS - goal reached
+goal 2: normal candidate 1 rejected - semantic assessment rejected translation
+goal 2: normal candidate 2 provisionally allowed (score 0.532)
+goal 2: normal candidate 3 rejected - semantic assessment rejected translation
+goal 2: normal candidate 4 rejected - semantic assessment rejected translation
+goal 2: normal candidate 5 rejected - semantic assessment rejected translation
+goal 2: normal candidate 6 rejected - insufficient forward clearance, semantic assessment rejected translation
+goal 2: normal candidate 7 provisionally allowed (score 0.576)
+goal 2: normal candidate 8 rejected - semantic assessment rejected translation
+goal 2: normal candidate 9 rejected - insufficient forward clearance
+goal 2: normal candidate 10 rejected - insufficient forward clearance, semantic assessment rejected translation
+goal 2/20: PASS - goal reached
+goal 3: normal candidate 1 provisionally allowed (score 0.513)
+goal 3: normal candidate 2 rejected - semantic assessment rejected translation
+goal 3: normal candidate 3 rejected - semantic assessment rejected translation
+goal 3: normal candidate 4 rejected - semantic assessment rejected translation
+goal 3: normal candidate 5 rejected - semantic assessment rejected translation
+goal 3: normal candidate 6 rejected - semantic assessment rejected translation
+goal 3: normal candidate 7 provisionally allowed (score 0.457)
+goal 3: normal candidate 8 rejected - semantic assessment rejected translation
+goal 3: normal candidate 9 rejected - semantic assessment rejected translation
+goal 3: normal candidate 10 rejected - insufficient forward clearance, semantic assessment rejected translation
+goal 3: candidate 1 failed final revalidation
+goal 3: candidate 7 failed final revalidation
+goal 3: escape candidate 11 provisionally allowed (score 0.084)
+goal 3: escape candidate 12 rejected - semantic assessment rejected translation
+goal 3: escape candidate 13 provisionally allowed (score -0.090)
+goal 3: escape candidate 14 provisionally allowed (score -0.068)
+goal 3: escape candidate 15 rejected - semantic assessment rejected translation
+goal 3: escape candidate 16 rejected - semantic assessment rejected translation
+goal 3: escape candidate 17 rejected - semantic assessment rejected translation
+goal 3: escape candidate 18 rejected - semantic assessment rejected translation
+goal 3: escape candidate 19 rejected - semantic assessment rejected translation
+goal 3: escape candidate 20 rejected - semantic assessment rejected translation
+goal 3/20: PASS - goal reached
+goal 4: normal candidate 1 rejected - insufficient forward clearance
+goal 4: normal candidate 2 rejected - insufficient forward clearance, semantic assessment rejected translation
+goal 4: normal candidate 3 rejected - insufficient forward clearance, semantic assessment rejected translation
+goal 4: normal candidate 4 rejected - semantic assessment rejected translation
+goal 4: normal candidate 5 provisionally allowed (score 0.444)
+goal 4: normal candidate 6 rejected - semantic assessment rejected translation
+goal 4: normal candidate 7 provisionally allowed (score 0.343)
+goal 4: normal candidate 8 rejected - semantic assessment rejected translation
+goal 4: normal candidate 9 rejected - semantic assessment rejected translation
+goal 4: normal candidate 10 provisionally allowed (score 0.553)
+goal 4/20: PASS - goal reached
+goal 5: normal candidate 1 rejected - semantic assessment rejected translation
+goal 5: normal candidate 2 provisionally allowed (score 0.538)
+goal 5: normal candidate 3 rejected - semantic assessment rejected translation
+goal 5: normal candidate 4 rejected - semantic assessment rejected translation
+goal 5: normal candidate 5 provisionally allowed (score 0.568)
+goal 5: normal candidate 6 provisionally allowed (score 0.365)
+goal 5: normal candidate 7 rejected - semantic assessment rejected translation
+goal 5: normal candidate 8 rejected - insufficient forward clearance, semantic assessment rejected translation
+goal 5: normal candidate 9 rejected - semantic assessment rejected translation
+goal 5: normal candidate 10 rejected - insufficient forward clearance, semantic assessment rejected translation
+goal 5/20: PASS - goal reached
+goal 6: normal candidate 1 rejected - semantic assessment rejected translation
+goal 6: normal candidate 2 provisionally allowed (score 0.459)
+goal 6: normal candidate 3 rejected - insufficient forward clearance
+goal 6: normal candidate 4 provisionally allowed (score 0.546)
+goal 6: normal candidate 5 rejected - insufficient forward clearance, semantic assessment rejected translation
+goal 6: normal candidate 6 provisionally allowed (score 0.642)
+goal 6: normal candidate 7 rejected - insufficient forward clearance, semantic assessment rejected translation
+goal 6: normal candidate 8 rejected - insufficient forward clearance, semantic assessment rejected translation
+goal 6: normal candidate 9 provisionally allowed (score 0.544)
+goal 6: normal candidate 10 rejected - insufficient forward clearance, semantic assessment rejected translation
+goal 6/20: PASS - goal reached
+goal 7: normal candidate 1 rejected - semantic assessment rejected translation
+goal 7: normal candidate 2 rejected - insufficient forward clearance
+goal 7: normal candidate 3 provisionally allowed (score 0.563)
+goal 7: normal candidate 4 rejected - semantic assessment rejected translation
+goal 7: normal candidate 5 rejected - insufficient forward clearance
+goal 7: normal candidate 6 rejected - semantic assessment rejected translation
+goal 7: normal candidate 7 rejected - semantic assessment rejected translation
+goal 7: normal candidate 8 rejected - semantic assessment rejected translation
+goal 7: normal candidate 9 rejected - insufficient forward clearance, semantic assessment rejected translation
+goal 7: normal candidate 10 rejected - semantic assessment rejected translation
+goal 7/20: PASS - goal reached
+goal 8: normal candidate 1 rejected - insufficient forward clearance
+goal 8: normal candidate 2 provisionally allowed (score 0.641)
+goal 8: normal candidate 3 provisionally allowed (score 0.515)
+goal 8: normal candidate 4 rejected - semantic assessment rejected translation
+goal 8: normal candidate 5 rejected - insufficient forward clearance, semantic assessment rejected translation
+goal 8: normal candidate 6 rejected - semantic assessment rejected translation
+goal 8: normal candidate 7 provisionally allowed (score 0.683)
+goal 8: normal candidate 8 provisionally allowed (score 0.696)
+goal 8: normal candidate 9 rejected - insufficient forward clearance, semantic assessment rejected translation
+goal 8: normal candidate 10 provisionally allowed (score 0.724)
+goal 8: candidate 10 failed final revalidation
+goal 8/20: PASS - goal reached
+goal 9: normal candidate 1 rejected - semantic assessment rejected translation
+goal 9: normal candidate 2 rejected - semantic assessment rejected translation
+goal 9: normal candidate 3 rejected - semantic assessment rejected translation
+goal 9: normal candidate 4 rejected - semantic assessment rejected translation
+goal 9: normal candidate 5 rejected - insufficient forward clearance, semantic assessment rejected translation
+goal 9: normal candidate 6 provisionally allowed (score 0.616)
+goal 9: normal candidate 7 rejected - semantic assessment rejected translation
+goal 9: normal candidate 8 rejected - semantic assessment rejected translation
+goal 9: normal candidate 9 provisionally allowed (score 0.420)
+goal 9: normal candidate 10 rejected - insufficient forward clearance, semantic assessment rejected translation
+goal 9: candidate 6 failed final revalidation
+goal 9: candidate 9 failed final revalidation
+goal 9: escape candidate 11 provisionally allowed (score 0.246)
+goal 9: escape candidate 12 provisionally allowed (score 0.152)
+goal 9: escape candidate 13 rejected - semantic assessment rejected translation
+goal 9: escape candidate 14 provisionally allowed (score 0.015)
+goal 9: escape candidate 15 rejected - semantic assessment rejected translation
+goal 9: escape candidate 16 rejected - insufficient forward clearance, semantic assessment rejected translation
+goal 9: escape candidate 17 rejected - semantic assessment rejected translation
+goal 9: escape candidate 18 provisionally allowed (score 0.560)
+goal 9: escape candidate 19 provisionally allowed (score 0.552)
+goal 9: escape candidate 20 rejected - semantic assessment rejected translation
+goal 9/20: PASS - goal reached
+goal 10: normal candidate 1 rejected - insufficient forward clearance, semantic assessment rejected translation
+goal 10: normal candidate 2 rejected - semantic assessment rejected translation
+goal 10: normal candidate 3 rejected - insufficient forward clearance, semantic assessment rejected translation
+goal 10: normal candidate 4 rejected - insufficient forward clearance, semantic assessment rejected translation
+goal 10: normal candidate 5 rejected - insufficient forward clearance
+goal 10: normal candidate 6 rejected - insufficient forward clearance, semantic assessment rejected translation
+goal 10: normal candidate 7 rejected - insufficient forward clearance, semantic assessment rejected translation
+goal 10: normal candidate 8 rejected - insufficient forward clearance, semantic assessment rejected translation
+goal 10: normal candidate 9 rejected - insufficient forward clearance, semantic assessment rejected translation
+goal 10: normal candidate 10 rejected - insufficient forward clearance, semantic assessment rejected translation
+goal 10: escape candidate 11 rejected - semantic assessment rejected translation
+goal 10: escape candidate 12 rejected - semantic assessment rejected translation
+goal 10: escape candidate 13 rejected - semantic assessment rejected translation
+goal 10: escape candidate 14 rejected - semantic assessment rejected translation
+goal 10: escape candidate 15 provisionally allowed (score 0.251)
+goal 10: escape candidate 16 provisionally allowed (score 0.500)
+goal 10: escape candidate 17 rejected - semantic assessment rejected translation
+goal 10: escape candidate 18 provisionally allowed (score 0.799)
+goal 10: escape candidate 19 provisionally allowed (score 0.746)
+goal 10: escape candidate 20 provisionally allowed (score -0.037)
+goal 10/20: PASS - goal reached
+goal 11: normal candidate 1 rejected - insufficient forward clearance, semantic assessment rejected translation
+goal 11: normal candidate 2 rejected - insufficient forward clearance, semantic assessment rejected translation
+goal 11: normal candidate 3 rejected - semantic assessment rejected translation
+goal 11: normal candidate 4 rejected - insufficient forward clearance, semantic assessment rejected translation
+goal 11: normal candidate 5 provisionally allowed (score 0.735)
+goal 11: normal candidate 6 rejected - semantic assessment rejected translation
+goal 11: normal candidate 7 rejected - semantic assessment rejected translation
+goal 11: normal candidate 8 rejected - semantic assessment rejected translation
+goal 11: normal candidate 9 rejected - insufficient forward clearance, semantic assessment rejected translation
+goal 11: normal candidate 10 provisionally allowed (score 0.483)
+goal 11/20: PASS - goal reached
+goal 12: normal candidate 1 rejected - semantic assessment rejected translation
+goal 12: normal candidate 2 rejected - insufficient forward clearance
+goal 12: normal candidate 3 rejected - insufficient forward clearance, semantic assessment rejected translation
+goal 12: normal candidate 4 provisionally allowed (score 0.617)
+goal 12: normal candidate 5 rejected - semantic assessment rejected translation
+goal 12: normal candidate 6 rejected - insufficient forward clearance, semantic assessment rejected translation
+goal 12: normal candidate 7 rejected - semantic assessment rejected translation
+goal 12: normal candidate 8 provisionally allowed (score 0.624)
+goal 12: normal candidate 9 rejected - semantic assessment rejected translation
+goal 12: normal candidate 10 rejected - semantic assessment rejected translation
+goal 12/20: PASS - goal reached
+goal 13: normal candidate 1 rejected - semantic assessment rejected translation
+goal 13: normal candidate 2 rejected - insufficient forward clearance, semantic assessment rejected translation
+goal 13: normal candidate 3 provisionally allowed (score 0.802)
+goal 13: normal candidate 4 rejected - semantic assessment rejected translation
+goal 13: normal candidate 5 rejected - semantic assessment rejected translation
+goal 13: normal candidate 6 rejected - semantic assessment rejected translation
+goal 13: normal candidate 7 provisionally allowed (score 0.694)
+goal 13: normal candidate 8 provisionally allowed (score 0.439)
+goal 13: normal candidate 9 rejected - insufficient forward clearance
+goal 13: normal candidate 10 rejected - semantic assessment rejected translation
+goal 13/20: PASS - goal reached
+goal 14: normal candidate 1 rejected - semantic assessment rejected translation
+goal 14: normal candidate 2 rejected - semantic assessment rejected translation
+goal 14: normal candidate 3 provisionally allowed (score 0.418)
+goal 14: normal candidate 4 rejected - semantic assessment rejected translation
+goal 14: normal candidate 5 rejected - semantic assessment rejected translation
+goal 14: normal candidate 6 rejected - insufficient forward clearance, semantic assessment rejected translation
+goal 14: normal candidate 7 rejected - insufficient forward clearance, semantic assessment rejected translation
+goal 14: normal candidate 8 provisionally allowed (score -0.214)
+goal 14: normal candidate 9 rejected - insufficient forward clearance, semantic assessment rejected translation
+goal 14: normal candidate 10 rejected - insufficient forward clearance
+goal 14: candidate 3 failed final revalidation
+goal 14/20: PASS - goal reached
+goal 15: normal candidate 1 provisionally allowed (score 0.413)
+goal 15: normal candidate 2 provisionally allowed (score 0.708)
+goal 15: normal candidate 3 rejected - insufficient forward clearance, semantic assessment rejected translation
+goal 15: normal candidate 4 rejected - semantic assessment rejected translation
+goal 15: normal candidate 5 provisionally allowed (score 0.432)
+goal 15: normal candidate 6 rejected - semantic assessment rejected translation
+goal 15: normal candidate 7 provisionally allowed (score 0.542)
+goal 15: normal candidate 8 provisionally allowed (score 0.584)
+goal 15: normal candidate 9 rejected - semantic assessment rejected translation
+goal 15: normal candidate 10 rejected - semantic assessment rejected translation
+goal 15/20: PASS - goal reached
+goal 16: normal candidate 1 provisionally allowed (score 0.871)
+goal 16: normal candidate 2 rejected - semantic assessment rejected translation
+goal 16: normal candidate 3 rejected - insufficient forward clearance, semantic assessment rejected translation
+goal 16: normal candidate 4 rejected - semantic assessment rejected translation
+goal 16: normal candidate 5 rejected - semantic assessment rejected translation
+goal 16: normal candidate 6 provisionally allowed (score 0.484)
+goal 16: normal candidate 7 rejected - insufficient forward clearance
+goal 16: normal candidate 8 rejected - semantic assessment rejected translation
+goal 16: normal candidate 9 rejected - insufficient forward clearance
+goal 16: normal candidate 10 rejected - insufficient forward clearance
+goal 16/20: PASS - goal reached
+goal 17: normal candidate 1 rejected - insufficient forward clearance, semantic assessment rejected translation
+goal 17: normal candidate 2 provisionally allowed (score 0.571)
+goal 17: normal candidate 3 provisionally allowed (score 0.523)
+goal 17: normal candidate 4 provisionally allowed (score 0.622)
+goal 17: normal candidate 5 rejected - semantic assessment rejected translation
+goal 17: normal candidate 6 provisionally allowed (score 0.546)
+goal 17/20: PASS - goal reached
+goal 18: normal candidate 1 rejected - insufficient forward clearance, semantic assessment rejected translation
+goal 18: normal candidate 2 rejected - semantic assessment rejected translation
+goal 18: normal candidate 3 rejected - semantic assessment rejected translation
+goal 18: normal candidate 4 rejected - semantic assessment rejected translation
+goal 18: normal candidate 5 rejected - semantic assessment rejected translation
+goal 18: normal candidate 6 rejected - semantic assessment rejected translation
+goal 18: normal candidate 7 provisionally allowed (score 0.469)
+goal 18: normal candidate 8 rejected - semantic assessment rejected translation
+goal 18: normal candidate 9 rejected - semantic assessment rejected translation
+goal 18: normal candidate 10 rejected - insufficient forward clearance, semantic assessment rejected translation
+goal 18/20: PASS - goal reached
+goal 19: normal candidate 1 provisionally allowed (score 0.548)
+goal 19: normal candidate 2 provisionally allowed (score 0.473)
+goal 19: normal candidate 3 rejected - insufficient forward clearance
+goal 19: normal candidate 4 provisionally allowed (score 0.794)
+goal 19: normal candidate 5 provisionally allowed (score 0.856)
+goal 19: normal candidate 6 provisionally allowed (score 0.557)
+goal 19: normal candidate 7 rejected - insufficient forward clearance, semantic assessment rejected translation
+goal 19: normal candidate 8 rejected - semantic assessment rejected translation
+goal 19: normal candidate 9 provisionally allowed (score 0.417)
+goal 19: normal candidate 10 provisionally allowed (score 0.401)
+goal 19/20: PASS - goal reached
+goal 20: normal candidate 1 rejected - insufficient forward clearance, semantic assessment rejected translation
+goal 20: normal candidate 2 rejected - insufficient forward clearance
+goal 20: normal candidate 3 rejected - insufficient forward clearance
+goal 20: normal candidate 4 rejected - insufficient forward clearance, semantic assessment rejected translation
+goal 20: normal candidate 5 rejected - insufficient forward clearance, semantic assessment rejected translation
+goal 20: normal candidate 6 provisionally allowed (score -0.177)
+goal 20: normal candidate 7 rejected - insufficient forward clearance, semantic assessment rejected translation
+goal 20: normal candidate 8 rejected - semantic assessment rejected translation
+goal 20: normal candidate 9 rejected - insufficient forward clearance, semantic assessment rejected translation
+goal 20: normal candidate 10 rejected - insufficient forward clearance, semantic assessment rejected translation
+goal 20/20: PASS - goal reached
+{
+  "succeeded": 20,
+  "failed": 0,
+  "reverse_samples": 0,
+  "max_reverse": 0.0,
+  "passed": true,
+  "log": "state/semantic_full_20goal_20260727_acceptance2.jsonl"
+}

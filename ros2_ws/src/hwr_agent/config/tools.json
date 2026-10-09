@@ -1,0 +1,12 @@
+[
+  {"type":"function","function":{"name":"goto_place","description":"Navigate to a verified named place.","parameters":{"type":"object","properties":{"name":{"type":"string"}},"required":["name"]}}},
+  {"type":"function","function":{"name":"goto","description":"Navigate to a free map pose.","parameters":{"type":"object","properties":{"x":{"type":"number"},"y":{"type":"number"},"yaw":{"type":"number"}},"required":["x","y"]}}},
+  {"type":"function","function":{"name":"explore","description":"Explore autonomously for a bounded number of minutes.","parameters":{"type":"object","properties":{"minutes":{"type":"number","minimum":0.1,"maximum":15}},"required":["minutes"]}}},
+  {"type":"function","function":{"name":"look","description":"Aim the camera and save a view.","parameters":{"type":"object","properties":{"direction":{"type":"string","enum":["left","center","right"]},"bearing":{"type":"number"}}}}},
+  {"type":"function","function":{"name":"describe_view","description":"Capture and describe the camera view.","parameters":{"type":"object","properties":{"question":{"type":"string"}}}}},
+  {"type":"function","function":{"name":"assess_scene","description":"Advisory scene assessment combining the camera with battery-free metric navigation context. It cannot command motion.","parameters":{"type":"object","properties":{"question":{"type":"string"}}}}},
+  {"type":"function","function":{"name":"patrol","description":"Visit a bounded sequence of verified places.","parameters":{"type":"object","properties":{"places":{"type":"array","items":{"type":"string"},"minItems":1,"maxItems":10}},"required":["places"]}}},
+  {"type":"function","function":{"name":"arm_pose","description":"Move to a named bounded arm pose.","parameters":{"type":"object","properties":{"name":{"type":"string"}},"required":["name"]}}},
+  {"type":"function","function":{"name":"pick_test","description":"Run the bounded gripper open/close test.","parameters":{"type":"object","properties":{}}}},
+  {"type":"function","function":{"name":"where_am_i","description":"Report pose and localization health.","parameters":{"type":"object","properties":{}}}}
+]
