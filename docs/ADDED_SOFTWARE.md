@@ -1,5 +1,7 @@
 # Added software — everything user/Claude-built (June–July 2026)
 
+For the guided system view, start with `GUIDE.md`. For detailed script-card work, use `CODE_WALKTHROUGH.md` and the local-model task queue in `TASKS.md`.
+
 Lives outside the factory packages: on the robot in `/home/ubuntu/` (authoritative), mirrored on the PC at `D:\robot\robot_scripts` → committed here under `added/robot_scripts/`. Strays that existed only on the robot were fetched live into `added/robot_home/`. PC-side tools: `added/pc_tools/`. Hand-written manuals: `added/guides/` (`OPERATING.md` cheat-sheet, `OPERATING_FOR_BEGINNERS.md` intro, `ROBOT_HANDOFF_GUIDE.md` — the richest operational reference).
 
 Common conventions: shell scripts are `#!/bin/zsh` + `source ~/.zshrc`; a `batt()` helper reads `/ros_robot_controller/battery`; the arm is locked to the forward pose `(1,500)(2,701)(3,120)(4,300)(5,500)` before driving; runs log to `~/scout_out/`.

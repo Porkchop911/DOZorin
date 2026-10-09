@@ -1,5 +1,7 @@
 # Vendor ROS 2 stack — package tour
 
+For the guided system view, start with `GUIDE.md` and `ARCHITECTURE.md`. For detailed package-card work, use `CODE_WALKTHROUGH.md`. For demo-specific behavior, services, launch entry points, and hardware effects, use `VENDOR_DEMOS.md`. For delegated follow-up work, use the local-model task queue in `TASKS.md`.
+
 The factory workspace lives at `~/ros2_ws` on the robot (`src/` mirrored here as `vendor/src_ros2/src/`). All packages ship with placeholder descriptions; the purposes below are inferred from code, the User Manual (§1.12), and operation. Vendor example commands for nearly everything are collected in `vendor/src_ros2/command` (sections separated by 🌸) — build, calibration, SLAM, nav, vision demos, voice, LLM demos.
 
 ## Drivers & control
@@ -41,6 +43,8 @@ The factory workspace lives at `~/ros2_ws` on the robot (`src/` mirrored here as
 | `large_models` (+`_msgs`) | LLM/VLM/ASR/TTS agent framework; provider config in `large_models/config.py` (**modified** → LM Studio) |
 | `large_models_examples` | LLM/VLM demos: voice move, color track, visual patrol, VLM camera/track/navigation, function calling, road network planning |
 | `xf_mic_asr_offline` (+`_msgs`) | iFlytek offline mic ASR / wake word ("HELLO HIWONDER"), voice-control demos (move/color/navigation) |
+
+See `VENDOR_DEMOS.md` for the deeper source-derived guide to these demo packages, including launch files, services, raw motion paths, stale entry points, and local-model delegation slices.
 
 ## Where things run from
 

@@ -1,5 +1,7 @@
 # ROSOrin Mecanum Pro — Operator's Guide
 
+For the broader explanation of how the stack is layered, see `../../docs/GUIDE.md`, `../../docs/ARCHITECTURE.md`, and `../../docs/HARDWARE_INTERACTIONS.md`.
+
 ## 1. Mental model
 
 This is a layered ROS 2 Humble stack. Commands flow **down**, sensor data flows **up**:

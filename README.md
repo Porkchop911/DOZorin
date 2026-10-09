@@ -6,6 +6,15 @@ Documentation + snapshot repo for the **Hiwonder ROSOrin Mecanum Pro** (Jetson O
 
 | Question | Read |
 |---|---|
+| I want a guided explanation of the whole stack | [`docs/GUIDE.md`](docs/GUIDE.md) |
+| How the system is layered and why it is designed this way | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) |
+| How code packages and scripts are being documented | [`docs/CODE_WALKTHROUGH.md`](docs/CODE_WALKTHROUGH.md) |
+| How software talks to motors, sensors, servos, mic, and battery | [`docs/HARDWARE_INTERACTIONS.md`](docs/HARDWARE_INTERACTIONS.md) |
+| Offline static risks and what can be checked without the robot | [`docs/OFFLINE_AUDIT.md`](docs/OFFLINE_AUDIT.md) |
+| Quick lookup for env vars, devices, topics, and output paths | [`docs/REFERENCE.md`](docs/REFERENCE.md) |
+| Which launch files start which parts of the robot | [`docs/LAUNCH_MAP.md`](docs/LAUNCH_MAP.md) |
+| How every vendor demo package works and touches hardware | [`docs/VENDOR_DEMOS.md`](docs/VENDOR_DEMOS.md) |
+| What documentation work remains / can be delegated locally | [`docs/TASKS.md`](docs/TASKS.md) |
 | What's Hiwonder's and what's ours? | [`PROVENANCE.md`](PROVENANCE.md) — master table + proof method |
 | Hardware specs (board, battery, motors, servos, camera, lidar…) | [`docs/HARDWARE.md`](docs/HARDWARE.md) |
 | OS, boot chain, identity env, devices, network, live stack | [`docs/SYSTEM.md`](docs/SYSTEM.md) |
@@ -21,7 +30,8 @@ vendor/            ORIGINAL  factory ROS 2 workspace src (273 MB), STM32 firmwar
                              captured factory system files, pointers to big assets
 vendor-modified/   MODIFIED  live copies of factory files we changed (robot paths preserved)
 added/             ADDED     robot scripts, PC tools, our SLAM maps, robot-home strays, guides
-docs/                        the five documents above
+docs/                        system, architecture, code, hardware, launch, audit, and demo docs
+tools/                       local validation helpers such as Markdown link checking
 PROVENANCE.md                master original-vs-added table
 ```
 
