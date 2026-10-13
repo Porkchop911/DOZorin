@@ -310,6 +310,9 @@ class GatewaySkills:
         return self._act(f"{command} gripper", "/gripper",
                          {"command": command, "duration_ms": 800})
 
+    def say(self, text: str):
+        return self._act(f"say: {text}", "/say", {"text": str(text)})
+
     def reset_estop(self):
         # User decision 2026-10-13: the agent may clear the estop itself (counts against the budget).
         return self._act("reset estop", "/estop/reset")
@@ -325,7 +328,8 @@ class GatewaySkills:
         allowed = {"goto_place", "goto", "explore", "look", "describe_view",
                    "assess_scene", "patrol", "arm_pose", "pick_test",
                    "where_am_i", "stop", "reset_estop",
-                   "drive", "arm_aim", "arm_reach", "gripper"}
+                   "drive", "arm_aim", "arm_reach", "gripper",
+                   "say"}
         if name not in allowed:
             raise ValueError(f"unknown skill {name!r}")
         return getattr(self, name)(**arguments)

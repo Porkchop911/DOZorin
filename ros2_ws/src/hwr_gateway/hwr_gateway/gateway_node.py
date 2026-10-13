@@ -37,6 +37,8 @@ from sensor_msgs.msg import BatteryState, Image, JointState
 from std_msgs.msg import UInt16
 from std_srvs.srv import SetBool
 
+from .voice import Voice
+
 
 class DriveRequest(BaseModel):
     vx: float = 0.0
@@ -76,6 +78,10 @@ class GripperRequest(BaseModel):
     duration_ms: int = 800
 
 
+class SayRequest(BaseModel):
+    text: str
+
+
 class BeepRequest(BaseModel):
     frequency: int = 1500
 
@@ -93,6 +99,7 @@ class GatewayNode(Node):
         self.declare_parameter("joint_state_timeout", 1.0)
         self.group = ReentrantCallbackGroup()
         self.lock = threading.RLock()
+        self.voice = Voice()
         self.voltage = None
         self.battery_stamp = 0.0
         self.pose = None
@@ -527,6 +534,16 @@ class GatewayNode(Node):
             self.beep_pub.publish(msg)
             self._audit("beep", "accepted", {"frequency": body.frequency})
             return {"accepted": True}
+
+        @app.post("/say", dependencies=[Depends(auth)])
+        def say(body: SayRequest):
+            text = body.text.strip()
+            if not 0 < len(text) <= 400:
+                raise HTTPException(422, "text must be 1..400 characters")
+            if not self.voice.say(text):
+                raise HTTPException(409, "speaker busy: 3 utterances already queued")
+            self._audit("say", "accepted", {"text": text})
+            return {"queued": True}
 
         @app.post("/goto", dependencies=[Depends(auth)])
         def goto(body: GotoRequest):
