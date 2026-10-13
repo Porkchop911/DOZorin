@@ -65,6 +65,7 @@ evidence/           acceptance-test artifacts, per phase (photos, plots, logs)
 | 9 | `10-phase9-exploration-arm.md` | frontier exploration; arm behaviors | auto-map ≥90% of map_04 free area |
 | 10 | `11-phase10-agent.md` | gateway, CLI, LLM tool server | ≥4/5 natural-language missions unaided |
 | 11 | `12-phase11-boot.md` | optional boot service, runbook, audit | cold boot→mission→handback, one command each |
+| 12 | `14-personality-autonomy.md` | Soudruhu: voice, YOLO eyes, wake word, persona, free roam | 30-min attended free roam, in-character, zero contacts |
 
 Ordering is strict through Phase 5; Phases 6–8 iterate together on bags; 9–10 can interleave. Stretch: own lidar UART driver (task 4.4).
 

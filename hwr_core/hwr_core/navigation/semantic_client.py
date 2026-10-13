@@ -114,7 +114,9 @@ class SemanticPreflightClient:
             "All 13 requested keys are mandatory. Never omit rationale or any "
             "other key."
         )
-        payload = {"model": self.model, "temperature": 0.1, "messages": [{
+        # Thinking models (Strata/Qwen3.8) reason for minutes on this prompt; servers without the flag ignore it.
+        payload = {"model": self.model, "temperature": 0.1,
+                   "chat_template_kwargs": {"enable_thinking": False}, "messages": [{
             "role": "user", "content": [
                 {"type": "text", "text": prompt},
                 {"type": "image_url", "image_url": {"url":

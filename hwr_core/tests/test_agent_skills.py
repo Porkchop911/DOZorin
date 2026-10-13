@@ -27,8 +27,13 @@ def test_action_budget_and_explore_bounds():
     skills.arm_pose("forward")
     with pytest.raises(RuntimeError, match="budget"):
         skills.arm_pose("floor")
+    assert skills.stop()["dry_run"]  # stop never consumes or respects the budget
     with pytest.raises(ValueError):
         GatewaySkills(dry_run=True).explore(20)
+    with pytest.raises(ValueError):
+        GatewaySkills(dry_run=True).drive(0.1, seconds=10)
+    with pytest.raises(ValueError):
+        GatewaySkills(dry_run=True).gripper("crush")
 
 
 def test_openai_manifest_matches_callable_skills():

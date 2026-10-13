@@ -263,6 +263,57 @@ class GatewaySkills:
                 "close": self._act("close gripper", "/gripper",
                                    {"command": "close", "duration_ms": 800})}
 
+    def stop(self):
+        # Outside the action budget: halting must always be possible.
+        if self.dry_run:
+            return {"dry_run": True, "would": "stop motion and latch estop"}
+        response = requests.post(self.url + "/stop",
+                                 headers={"Authorization": f"Bearer {self.token}"},
+                                 timeout=self.timeout)
+        self._check(response)
+        return response.json()
+
+    def drive(self, vx: float = 0.0, vy: float = 0.0, wz: float = 0.0,
+              seconds: float = 1.0):
+        seconds = float(seconds)
+        if not 0.05 <= seconds <= 5.0:
+            raise ValueError("drive duration must be 0.05..5 seconds")
+        body = {"vx": float(vx), "vy": float(vy), "wz": float(wz), "duration": 0.3}
+        first = self._act(f"drive vx={vx} vy={vy} wz={wz} for {seconds}s", "/drive", body)
+        if self.dry_run:
+            return first
+        # Gateway commands expire after 0.3 s; re-issue so motion stops on its own if this process dies.
+        end = time.monotonic() + seconds
+        while time.monotonic() + 0.2 < end:
+            time.sleep(0.2)
+            self._check(requests.post(self.url + "/drive", json=body, timeout=self.timeout,
+                                      headers={"Authorization": f"Bearer {self.token}"}))
+        time.sleep(max(0.0, end - time.monotonic()))
+        self._check(requests.post(self.url + "/drive", json={**body, "vx": 0.0, "vy": 0.0,
+                                  "wz": 0.0, "duration": 0.05}, timeout=self.timeout,
+                                  headers={"Authorization": f"Bearer {self.token}"}))
+        return {"drove_seconds": seconds, "command": body}
+
+    def arm_aim(self, bearing: float, elevation: float = 0.0):
+        return self._act(f"aim camera bearing={bearing} elevation={elevation}", "/arm/aim",
+                         {"bearing": float(bearing), "elevation": float(elevation),
+                          "duration_ms": 1000})
+
+    def arm_reach(self, x: float, y: float, z: float, tool_pitch: float = 0.0):
+        return self._act(f"reach arm to ({x}, {y}, {z})", "/arm/reach",
+                         {"x": float(x), "y": float(y), "z": float(z),
+                          "tool_pitch": float(tool_pitch), "duration_ms": 1500})
+
+    def gripper(self, command: str):
+        if command not in ("open", "close"):
+            raise ValueError("gripper command must be open or close")
+        return self._act(f"{command} gripper", "/gripper",
+                         {"command": command, "duration_ms": 800})
+
+    def reset_estop(self):
+        # User decision 2026-10-13: the agent may clear the estop itself (counts against the budget).
+        return self._act("reset estop", "/estop/reset")
+
     def where_am_i(self):
         if self.dry_run:
             return {"dry_run": True, "would": "read pose and localization"}
@@ -273,7 +324,8 @@ class GatewaySkills:
     def call(self, name: str, arguments: dict):
         allowed = {"goto_place", "goto", "explore", "look", "describe_view",
                    "assess_scene", "patrol", "arm_pose", "pick_test",
-                   "where_am_i"}
+                   "where_am_i", "stop", "reset_estop",
+                   "drive", "arm_aim", "arm_reach", "gripper"}
         if name not in allowed:
             raise ValueError(f"unknown skill {name!r}")
         return getattr(self, name)(**arguments)
