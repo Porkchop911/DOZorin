@@ -310,6 +310,29 @@ class GatewaySkills:
         return self._act(f"{command} gripper", "/gripper",
                          {"command": command, "duration_ms": 800})
 
+    def wander(self, max_distance: float = 1.5):
+        if self.dry_run:
+            return {"dry_run": True, "would": f"go to a random reachable point within {max_distance} m"}
+        target = self._get(f"/wander/candidate?max_distance={float(max_distance)}")
+        return {"target": target, **self.goto(target["x"], target["y"], target["yaw"])}
+
+    def seen_objects(self):
+        if self.dry_run:
+            return {"dry_run": True, "would": "read tracked objects"}
+        frame = self._get("/vision/objects")
+        lines = []
+        for item in frame["objects"]:
+            where = []
+            if item.get("range_m") is not None:
+                where.append(f"{item['range_m']} m")
+            if item.get("bearing_deg") is not None:
+                side = "left" if item["bearing_deg"] > 0 else "right"
+                where.append(f"{abs(item['bearing_deg'])} deg {side}" if item["bearing_deg"] else "ahead")
+            ident = f" #{item['id']}" if item.get("id") is not None else ""
+            lines.append(f"{item['class']}{ident} ({item['conf']}) " + ", ".join(where))
+        return {"objects": lines or ["nothing detected"], "infer_ms": frame["infer_ms"],
+                "note": "bearing is relative to where the camera points"}
+
     def say(self, text: str):
         return self._act(f"say: {text}", "/say", {"text": str(text)})
 
@@ -329,7 +352,7 @@ class GatewaySkills:
                    "assess_scene", "patrol", "arm_pose", "pick_test",
                    "where_am_i", "stop", "reset_estop",
                    "drive", "arm_aim", "arm_reach", "gripper",
-                   "say"}
+                   "say", "seen_objects", "wander"}
         if name not in allowed:
             raise ValueError(f"unknown skill {name!r}")
         return getattr(self, name)(**arguments)

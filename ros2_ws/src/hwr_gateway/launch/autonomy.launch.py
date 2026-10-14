@@ -19,4 +19,6 @@ def generate_launch_description():
                                                    LaunchConfiguration("map_yaml")}.items()),
         Node(package="hwr_gateway", executable="gateway_node", name="hwr_gateway",
              output="screen"),
+        Node(package="hwr_gateway", executable="vision_node", name="hwr_vision",
+             output="screen"),
     ])

@@ -8,4 +8,5 @@ setup(name=name, version="0.0.1", packages=[name],
                                              "launch/autonomy.launch.py"])],
       install_requires=["setuptools", "fastapi", "uvicorn", "PyYAML"],
       zip_safe=True, description="HWR authenticated HTTP gateway.", license="MIT",
-      entry_points={"console_scripts": ["gateway_node = hwr_gateway.gateway_node:main"]})
+      entry_points={"console_scripts": ["gateway_node = hwr_gateway.gateway_node:main",
+                                      "vision_node = hwr_gateway.vision_node:main"]})

@@ -6,6 +6,7 @@ import hmac
 import json
 import math
 import os
+import random
 import threading
 import time
 from pathlib import Path
@@ -25,7 +26,8 @@ from hwr_msgs.msg import LocalizationHealth
 from hwr_msgs.srv import AimCamera, ArmPose, ArmReach, Gripper
 from hwr_core.navigation import (directional_escape_profile,
                                  evaluate_object_reach,
-                                 normalize_place_definition)
+                                 normalize_place_definition,
+                                 reachable_goal_candidates)
 from nav_msgs.msg import OccupancyGrid, Odometry
 from pydantic import BaseModel
 from rclpy.action import ActionClient
@@ -34,7 +36,7 @@ from rclpy.executors import MultiThreadedExecutor
 from rclpy.node import Node
 from rclpy.qos import DurabilityPolicy, QoSProfile, QoSReliabilityPolicy
 from sensor_msgs.msg import BatteryState, Image, JointState
-from std_msgs.msg import UInt16
+from std_msgs.msg import String, UInt16
 from std_srvs.srv import SetBool
 
 from .voice import Voice
@@ -114,6 +116,7 @@ class GatewayNode(Node):
         self.costmap = None
         self.costmap_meta = None
         self.jpeg = None
+        self.vision = None
         self.last_jpeg = 0.0
         self.joint_positions = {}
         self.joint_stamp = 0.0
@@ -162,6 +165,7 @@ class GatewayNode(Node):
                              reliability=QoSReliabilityPolicy.RELIABLE)
         self.create_subscription(OccupancyGrid, "map", self._map, map_qos,
                                  callback_group=self.group)
+        self.create_subscription(String, "vision/objects", self._vision, 1)
         self.create_subscription(Image, "camera/color/image_raw", self._image, 1,
                                  callback_group=self.group)
         self.create_subscription(JointState, "joint_states", self._joint_state, 10,
@@ -254,6 +258,10 @@ class GatewayNode(Node):
         with self.lock:
             self.map_grid = np.asarray(msg.data, dtype=np.int16).reshape(
                 msg.info.height, msg.info.width)
+
+    def _vision(self, msg: String) -> None:
+        with self.lock:
+            self.vision = json.loads(msg.data)
 
     def _image(self, msg: Image) -> None:
         now = time.monotonic()
@@ -674,6 +682,34 @@ class GatewayNode(Node):
             if jpeg is None:
                 raise HTTPException(503, "camera image unavailable")
             return Response(jpeg, media_type="image/jpeg")
+
+        @app.get("/wander/candidate", dependencies=[Depends(auth)])
+        def wander_candidate(max_distance: float = 1.5):
+            if not 0.5 <= max_distance <= 3.0:
+                raise HTTPException(422, "max_distance must be 0.5..3.0 m")
+            with self.lock:
+                grid, meta = self.costmap, self.costmap_meta
+                pose = None if self.pose is None else list(self.pose)
+            if grid is None or pose is None:
+                raise HTTPException(503, "costmap or pose unavailable")
+            # Same 0..100 -> internal 0..255 conversion as tools/run_nav_soak.py.
+            internal = np.clip(np.rint(grid.astype(float) * 2.55), 0, 255).astype(np.uint8)
+            choices = reachable_goal_candidates(
+                internal, meta[0], (meta[1], meta[2]), tuple(pose[:2]), count=12,
+                min_distance=0.4, max_distance=max_distance, min_separation=0.2,
+                seed=random.randrange(1 << 30), allow_trapped_start=True)
+            if not choices:
+                raise HTTPException(409, "no reachable free point in range")
+            x, y, yaw = random.choice(choices)
+            return {"x": x, "y": y, "yaw": yaw, "from": pose}
+
+        @app.get("/vision/objects", dependencies=[Depends(auth)])
+        def vision_objects():
+            with self.lock:
+                frame = self.vision
+            if frame is None or time.time() - frame["stamp"] > 2.0:
+                raise HTTPException(503, "vision unavailable or stale")
+            return frame
 
         @app.get("/map.png", dependencies=[Depends(auth)])
         def map_png():

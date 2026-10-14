@@ -229,3 +229,13 @@ def test_agent_corrects_contradictory_hold_with_positive_clear_evidence(
     assert assessment["model_recommendation"] == "hold"
     assert assessment["recommendation"] == "sensor_preflight"
     assert "consistency_veto" not in assessment
+
+
+def test_seen_objects_reads_vision_endpoint_as_text(monkeypatch):
+    skills = GatewaySkills(token="test")
+    monkeypatch.setattr(skills, "_get", lambda path, binary=False: {
+        "infer_ms": 12, "objects": [
+            {"class": "person", "conf": 0.9, "id": 3, "range_m": 1.2, "bearing_deg": 20},
+            {"class": "cup", "conf": 0.4, "id": None, "bearing_deg": 0}]})
+    assert skills.seen_objects()["objects"] == ["person #3 (0.9) 1.2 m, 20 deg left",
+                                                "cup (0.4) ahead"]
