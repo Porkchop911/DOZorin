@@ -1,4 +1,4 @@
-"""YOLO11n (TensorRT) + ByteTrack on the colour camera; publishes tracked objects as JSON."""
+"""YOLO11s (TensorRT) + ByteTrack on the colour camera; publishes tracked objects as JSON."""
 from __future__ import annotations
 
 import json
@@ -15,7 +15,7 @@ from rclpy.qos import QoSProfile, QoSReliabilityPolicy
 from sensor_msgs.msg import CameraInfo, Image
 from std_msgs.msg import String
 
-ENGINE = os.environ.get("HWR_YOLO_ENGINE", "/home/ubuntu/third_party/yolo11n.engine")
+ENGINE = os.environ.get("HWR_YOLO_ENGINE", "/home/ubuntu/third_party/yolo11s.engine")
 
 
 class VisionNode(Node):

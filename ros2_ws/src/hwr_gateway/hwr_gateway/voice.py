@@ -1,10 +1,9 @@
-"""Speaker output: sherpa-onnx VITS on the Jetson CPU, espeak-ng German for the motto."""
+"""Speaker output: sherpa-onnx VITS on the Jetson CPU (motto pronunciations added to its lexicon)."""
 from __future__ import annotations
 
 import io
 import os
 import queue
-import re
 import subprocess
 import threading
 import wave
@@ -14,20 +13,6 @@ MODEL_DIR = os.environ.get("HWR_TTS_DIR", "/home/ubuntu/third_party/sherpa-onnx/
 DEVICE = os.environ.get("HWR_AUDIO_DEVICE", "pulse")
 _UID = os.getuid() if hasattr(os, "getuid") else 1000
 os.environ.setdefault("PULSE_SERVER", f"unix:/run/user/{_UID}/pulse/native")
-MOTTO = re.compile(r"allzeit\s+bereit!?", re.IGNORECASE)
-
-
-def split_motto(text: str) -> list[tuple[str, str]]:
-    """Split text into ("de"|"en", chunk) parts; the English model drops German words."""
-    parts, pos = [], 0
-    for match in MOTTO.finditer(text):
-        if text[pos:match.start()].strip():
-            parts.append(("en", text[pos:match.start()].strip()))
-        parts.append(("de", "Allzeit bereit!"))
-        pos = match.end()
-    if text[pos:].strip():
-        parts.append(("en", text[pos:].strip()))
-    return parts
 
 
 class Voice:
@@ -71,20 +56,7 @@ class Voice:
     def _run(self) -> None:
         while True:
             text = self.pending.get()
-            for lang, chunk in split_motto(text):
-                try:
-                    if lang == "de":
-                        wav = subprocess.run(["espeak-ng", "-v", "de", "--stdout", chunk],
-                                             capture_output=True, timeout=10).stdout
-                        self._play_wav(wav)
-                    else:
-                        self._speak_en(chunk)
-                except Exception as exc:  # a failed utterance must not kill the speaker thread
-                    print(f"voice: {exc}", flush=True)
-
-
-if __name__ == "__main__":
-    assert split_motto("Allzeit bereit! Hello comrade.") == [("de", "Allzeit bereit!"), ("en", "Hello comrade.")]
-    assert split_motto("Ready. allzeit bereit") == [("en", "Ready."), ("de", "Allzeit bereit!")]
-    assert split_motto("Just English.") == [("en", "Just English.")]
-    print("ok")
+            try:
+                self._speak_en(text)
+            except Exception as exc:  # a failed utterance must not kill the speaker thread
+                print(f"voice: {exc}", flush=True)
