@@ -32,3 +32,12 @@
 - Rollback: `hermes -p robot` profile is separate from the default; factory stack restorable with `deploy/handback.sh`.
 
 **Order.** 12.1 → 12.2 → 12.4 → 12.5 → 12.3 → 12.6 (voice and eyes first so the roam has something to say and see; ears last because it needs the Hermes API server).
+
+## Session log — 2026-10-14
+
+- [x] 12.1 voice: `/say` + `say`, single English VITS voice; motto pronounced via two lexicon lines added on the robot (`allzeit`, `bereit`; original kept as `lexicon.txt.orig`, old espeak wake reply as `~/allzeit_espeak.wav`). Must play via PulseAudio (`-D pulse`).
+- [x] 12.2 eyes: YOLO11s TensorRT FP16 (`~/third_party/yolo11s.engine`), ByteTrack, 38 ms/frame. Reliable on books; misses the office chair from floor height; called draped fabric "bed".
+- [x] 12.4 persona: Soudruhu SOUL.md in the `robot` Hermes profile; motto only via the wake reply.
+- [~] 12.3 ears: `tools/ears.py` → Hermes API (`hermes -p robot gateway`, :8643 via relay PC:12341). "turn right" by voice worked end to end. Weak: Jetson fan noise drowns soft speech (noise floor peak ~800 at 100 % gain; speech peaked ~3100). Next: noise suppression + noise-floor-relative threshold.
+- [ ] 12.5 free roam — **acceptance FAILED** (30 min, 10 ticks): 2/7 planned legs succeeded, 0 contacts, 2 remarks aloud, correct new memory (drum kit). Root cause: localizer rejects scan matches as "inconsistent with odometry" (269×) during any planned translation, even in open floor → loc 0.95→0.25 → nav aborts. Next: measure odometry (bounded in-place turn + 0.3 m leg: wheel vs gyro vs scan-matched), fix, then add a `relocalize` tool (`/global_relocalize` took 0.37→0.96). Explore is unavailable in navigation mode (503).
+- [ ] 12.6 boot: still manual — takeover, mode.sh navigation, rosbridge, ears, PC relays (:12340→8080, :12341→8643), `hermes -p robot gateway`.
