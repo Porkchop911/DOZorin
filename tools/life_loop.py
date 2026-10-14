@@ -8,6 +8,7 @@ from __future__ import annotations
 import argparse
 import re
 import subprocess
+import sys
 import time
 from datetime import datetime
 from pathlib import Path
@@ -50,6 +51,7 @@ def main() -> None:
     parser.add_argument("--ticks", type=int, default=0, help="0 = run until Ctrl+C")
     parser.add_argument("--tick-timeout-min", type=float, default=12.0)
     args = parser.parse_args()
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")  # Windows console is cp1252
     n = 0
     while args.ticks == 0 or n < args.ticks:
         n += 1
@@ -59,7 +61,8 @@ def main() -> None:
         except subprocess.TimeoutExpired:
             output = "tick timed out"
         last = [line for line in output.splitlines()
-                if line.strip() and "Unknown toolsets" not in line][-1:] or ["(no output)"]
+                if line.strip() and "Unknown toolsets" not in line
+                and not line.startswith(("session_id:", "↻"))][-1:] or ["(no output)"]
         line = f"{datetime.now():%F %T} tick {n}: {last[0][:300]}"
         print(line, flush=True)
         with open(STATE / "life_loop.log", "a", encoding="utf-8") as log:

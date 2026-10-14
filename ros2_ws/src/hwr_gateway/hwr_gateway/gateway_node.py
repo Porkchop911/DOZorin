@@ -27,6 +27,7 @@ from hwr_msgs.srv import AimCamera, ArmPose, ArmReach, Gripper
 from hwr_core.navigation import (directional_escape_profile,
                                  evaluate_object_reach,
                                  normalize_place_definition,
+                                 rank_goal_candidates_by_clearance,
                                  reachable_goal_candidates)
 from nav_msgs.msg import OccupancyGrid, Odometry
 from pydantic import BaseModel
@@ -36,7 +37,7 @@ from rclpy.executors import MultiThreadedExecutor
 from rclpy.node import Node
 from rclpy.qos import DurabilityPolicy, QoSProfile, QoSReliabilityPolicy
 from sensor_msgs.msg import BatteryState, Image, JointState
-from std_msgs.msg import String, UInt16
+from std_msgs.msg import Bool, String, UInt16
 from std_srvs.srv import SetBool
 
 from .voice import Voice
@@ -117,6 +118,7 @@ class GatewayNode(Node):
         self.costmap_meta = None
         self.jpeg = None
         self.vision = None
+        self.estop_latched = None
         self.last_jpeg = 0.0
         self.joint_positions = {}
         self.joint_stamp = 0.0
@@ -166,6 +168,9 @@ class GatewayNode(Node):
         self.create_subscription(OccupancyGrid, "map", self._map, map_qos,
                                  callback_group=self.group)
         self.create_subscription(String, "vision/objects", self._vision, 1)
+        self.create_subscription(Bool, "estop_state", self._estop_state, QoSProfile(
+            depth=1, reliability=QoSReliabilityPolicy.RELIABLE,
+            durability=DurabilityPolicy.TRANSIENT_LOCAL))
         self.create_subscription(Image, "camera/color/image_raw", self._image, 1,
                                  callback_group=self.group)
         self.create_subscription(JointState, "joint_states", self._joint_state, 10,
@@ -258,6 +263,10 @@ class GatewayNode(Node):
         with self.lock:
             self.map_grid = np.asarray(msg.data, dtype=np.int16).reshape(
                 msg.info.height, msg.info.width)
+
+    def _estop_state(self, msg: Bool) -> None:
+        with self.lock:
+            self.estop_latched = bool(msg.data)
 
     def _vision(self, msg: String) -> None:
         with self.lock:
@@ -505,6 +514,8 @@ class GatewayNode(Node):
                     and abs(body.wz) <= 0.5 and 0.02 <= body.duration <= 0.5):
                 raise HTTPException(422, "drive outside bounded no-reverse envelope")
             with self.lock:
+                if self.estop_latched:
+                    raise HTTPException(409, "estop latched; reset before drive")
                 self.drive_command = (body.vx, body.vy, body.wz)
                 self.drive_until = time.monotonic() + body.duration
             self._audit("drive", "accepted", _model_dict(body))
@@ -700,7 +711,10 @@ class GatewayNode(Node):
                 seed=random.randrange(1 << 30), allow_trapped_start=True)
             if not choices:
                 raise HTTPException(409, "no reachable free point in range")
-            x, y, yaw = random.choice(choices)
+            # Live obstacles close narrow routes mid-leg in clutter; favour open targets.
+            ranked = rank_goal_candidates_by_clearance(
+                internal, meta[0], (meta[1], meta[2]), choices)
+            x, y, yaw = random.choice(ranked[:3])
             return {"x": x, "y": y, "yaw": yaw, "from": pose}
 
         @app.get("/vision/objects", dependencies=[Depends(auth)])
