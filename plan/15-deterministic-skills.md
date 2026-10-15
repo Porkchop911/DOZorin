@@ -87,6 +87,23 @@ spin), and with the person stepping out of view (expect `target lost` after 3 s)
 Deploy: rebuild `hwr_core` + `hwr_gateway` on the Jetson, restart gateway and `ears.py`, restart
 `hermes -p robot gateway` (new tools + SOUL.md).
 
+## Live results 2026-10-15 (room_20261013)
+
+| Test | Result |
+|---|---|
+| turn +90 / -90 / +180 / -180 / 360 | odom 86.5 / -88.0 / 179.4 / -177.0 / 356.2; map 88.3 / -87.8 / 177.5 / -175.6 / ~353; 3.6-13.7 s |
+| move forward 0.40 | odom 0.371, map 0.42, 3.9 s |
+| move right 0.30 | odom 0.284, map 0.39 (strafe odometry under-reads ~25 %) |
+| move left next to wall | stopped correctly (hard cost 99 at 0.31 m, left clearance 0.20 m) |
+| approach chair to 1.2 m | locked track, aligned ~20°, drove 0.94 m, stopped "blocked" at chair base ~0.4 m (depth read 1.68 m through the open frame) |
+| Hermes "Turn around" | 3 LLM calls, 18.7 s, 177.6° (was 15 calls, 73 s) |
+| life tick via roam_step | 4 LLM calls, 46 s turn, new "person" described once + memory + say; but 301 s wall — ~255 s is Hermes start/resume of the long life session |
+| voice reflexes | pending (needs a human speaker) |
+
+Fixes from the run: move/approach block only at the hard level (cost >= 79, same as `hard_clearance_m`)
+— 65 refused clear lidar paths from inside a wall's inflation band; blocked outcomes now say where and
+what cost. Open: strafe odometry scale (move overshoots strafes by the map), life-tick Hermes startup.
+
 ## Acceptance (re-run the same state.db analysis)
 
 - voice "turn around": ≤ 2 LLM calls, ≤ 10 s; physically ~180° (user checks).

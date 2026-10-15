@@ -531,11 +531,27 @@ class GatewayNode(Node):
                 raise HTTPException(503, "odometry stale")
             return list(self.odom_pose)
 
-    def _path_is_free(self, x: float, y: float, heading: float, length: float) -> bool:
+    def _first_blocked(self, x: float, y: float, heading: float, length: float):
+        """(distance along path, cost 0..100 or None if off-map) of the first non-free cell, else None."""
         steps = max(1, math.ceil(length / 0.05))
-        return all(self._goal_is_free(x + math.cos(heading) * length * i / steps,
-                                      y + math.sin(heading) * length * i / steps)
-                   for i in range(1, steps + 1))
+        with self.lock:
+            if self.costmap is None or self.costmap_meta is None:
+                return (0.0, None)
+            grid, (resolution, ox, oy) = self.costmap, self.costmap_meta
+        for i in range(1, steps + 1):
+            d = length * i / steps
+            cx = math.floor((x + math.cos(heading) * d - ox) / resolution)
+            cy = math.floor((y + math.sin(heading) * d - oy) / resolution)
+            if not (0 <= cy < grid.shape[0] and 0 <= cx < grid.shape[1]):
+                return (round(d, 2), None)
+            # 79 = the "hard" level hard_clearance_m uses; 65 also blocks the soft inflation band
+            # a robot parked near a wall sits in, which refused clear lidar paths live.
+            if grid[cy, cx] >= 79:
+                return (round(d, 2), int(grid[cy, cx]))
+        return None
+
+    def _path_is_free(self, x: float, y: float, heading: float, length: float) -> bool:
+        return self._first_blocked(x, y, heading, length) is None
 
     def _motion_loop(self, step, timeout: float) -> str:
         """Command step(odom_pose) -> (vx, vy, wz) every 50 ms until it returns None.
@@ -657,9 +673,9 @@ class GatewayNode(Node):
                 raise HTTPException(409, "translation requires verified forward camera pose; call arm_pose('forward') first")
             if pose is None or not fresh:
                 raise HTTPException(409, "map pose not fresh; relocalize first")
-            if not self._path_is_free(pose[0], pose[1], pose[2] + body_heading,
-                                      body.meters + clearance):
-                raise HTTPException(409, "path blocked in costmap")
+            if hit := self._first_blocked(pose[0], pose[1], pose[2] + body_heading,
+                                          body.meters + clearance):
+                raise HTTPException(409, f"path blocked in costmap at {hit[0]} m (cost {hit[1]})")
             start = self._motion_start()
             travelled = [0.0]
 
@@ -671,10 +687,10 @@ class GatewayNode(Node):
                 with self.lock:
                     now_pose = None if self.pose is None else list(self.pose)
                 # shortcut: blocking check is the costmap ahead of the map pose, not raw scan; add a scan gate if it misses fast obstacles.
-                if now_pose is not None and not self._path_is_free(
+                if now_pose is not None and (hit := self._first_blocked(
                         now_pose[0], now_pose[1], now_pose[2] + body_heading,
-                        min(remaining, 0.3) + clearance):
-                    return "blocked"
+                        min(remaining, 0.3) + clearance)):
+                    return f"blocked at {hit[0]} m ahead (cost {hit[1]})"
                 speed = approach_speed(remaining, max_v, min_v, param("move_gain"))
                 # shortcut: no heading hold; add a wz correction if strafes drift in yaw.
                 return (speed * math.cos(body_heading), speed * math.sin(body_heading), 0.0)
@@ -733,9 +749,10 @@ class GatewayNode(Node):
                 if command is None:
                     return None
                 vx, wz = command
-                if vx > 0.0 and pose is not None and not self._path_is_free(
-                        pose[0], pose[1], pose[2], min(range_m - body.stop_at_m, 0.3) + clearance):
-                    return "blocked"
+                if vx > 0.0 and pose is not None and (hit := self._first_blocked(
+                        pose[0], pose[1], pose[2], min(range_m - body.stop_at_m, 0.3) + clearance)):
+                    # Depth range can see through open objects (chair frames); the costmap is the arbiter.
+                    return f"blocked at {hit[0]} m ahead (cost {hit[1]}) before reaching stop_at_m"
                 return (vx, 0.0, wz)
 
             outcome = self._motion_loop(step, body.timeout_s)
