@@ -8,7 +8,7 @@ import subprocess
 import threading
 import wave
 
-MODEL_DIR = os.environ.get("HWR_TTS_DIR", "/home/ubuntu/third_party/sherpa-onnx/vits-piper-en_US-ryan-medium")
+MODEL_DIR = os.environ.get("HWR_TTS_DIR", "/home/ubuntu/third_party/sherpa-onnx/vits-piper-en_GB-alan-medium")
 # PulseAudio owns the USB card on the Jetson; raw plughw access fails with "device busy".
 DEVICE = os.environ.get("HWR_AUDIO_DEVICE", "pulse")
 _UID = os.getuid() if hasattr(os, "getuid") else 1000
