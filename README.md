@@ -4,6 +4,19 @@ Ground-up rework of the control software for the **Hiwonder ROSOrin Mecanum Pro*
 
 The factory stack stays intact and remains the boot default; this stack **takes over and hands back** the hardware cleanly (see `plan/01-phase0-devloop.md`).
 
+## What I built
+
+An LLM agent that drives a real robot through a safety-bounded tool interface, on top of a robot control stack written from scratch (~19k lines of Python, 290 hardware-free tests).
+
+- **Agent control of physical hardware.** 20 tools (`goto`, `explore`, `describe_view`, `arm_reach`, `gripper`, `seen_objects`, `say`, `stop`, …) defined once in [`tools.json`](ros2_ws/src/hwr_agent/config/tools.json) and served both as an OpenAI-style tool-calling loop ([`mission.py`](ros2_ws/src/hwr_agent/hwr_agent/mission.py)) and an MCP server ([`mcp_server.py`](ros2_ws/src/hwr_agent/hwr_agent/mcp_server.py)). Every tool goes through an authenticated gateway ([`hwr_gateway`](ros2_ws/src/hwr_gateway/)) that enforces the motion envelope and returns refusals to the model as results, not errors.
+- **Safety in the physical world.** E-stop latch, command watchdog, speed limits, structurally forward-only motion, depth-camera bumper for obstacles the lidar misses, and pre-motion clearance checks ([`hwr_core/safety`](hwr_core/hwr_core/safety/)). Live runs default to dry-run and re-latch the e-stop on every exit path ([`tools/run_nav_soak.py`](tools/run_nav_soak.py)).
+- **Clean-room hardware protocol.** Serial protocol to the STM32 motor/servo controller re-implemented from a written spec; byte-identical against 12 recorded vendor traces ([`hwr_core/rrc`](hwr_core/hwr_core/rrc/), [`plan/90-clean-room-reference.md`](plan/90-clean-room-reference.md)).
+- **Autonomy stack.** Mecanum kinematics, IMU + wheel + scan-matching odometry, occupancy-grid SLAM, particle-filter localization, A* planning and frontier exploration ([`hwr_core`](hwr_core/hwr_core/), [`ros2_ws/src`](ros2_ws/src/)), plus a 2-D simulator with the real lidar's 180°-rotated, 219°-usable mount for offline testing ([`tools/sim2d.py`](tools/sim2d.py)).
+- **Perception.** YOLO11 on TensorRT (38 ms/frame on the Jetson) with tracking, and a local vision-language model for describing scenes and checking goals.
+- **Evidence-gated engineering.** Each phase has written acceptance criteria; it only counts as done once a live run has produced the evidence ([`plan/`](plan/), [`evidence/`](evidence/)). Failures are logged with their root causes too, e.g. a 2× gyro scale error found from a free-roam failure ([`plan/14-personality-autonomy.md`](plan/14-personality-autonomy.md)). Design decisions are recorded as ADRs in [`plan/92-decisions.md`](plan/92-decisions.md).
+
+Built with Claude Code and Codex as coding agents. The factory software this replaces is documented separately and not part of this branch.
+
 ## Current state
 
 Implementation is active and progress is evidence-gated:
