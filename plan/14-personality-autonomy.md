@@ -41,3 +41,14 @@
 - [~] 12.3 ears: `tools/ears.py` → Hermes API (`hermes -p robot gateway`, :8643 via relay PC:12341). "turn right" by voice worked end to end. Weak: Jetson fan noise drowns soft speech (noise floor peak ~800 at 100 % gain; speech peaked ~3100). Next: noise suppression + noise-floor-relative threshold.
 - [ ] 12.5 free roam — **acceptance FAILED** (30 min, 10 ticks): 2/7 planned legs succeeded, 0 contacts, 2 remarks aloud, correct new memory (drum kit). Root cause: localizer rejects scan matches as "inconsistent with odometry" (269×) during any planned translation, even in open floor → loc 0.95→0.25 → nav aborts. Next: measure odometry (bounded in-place turn + 0.3 m leg: wheel vs gyro vs scan-matched), fix, then add a `relocalize` tool (`/global_relocalize` took 0.37→0.96). Explore is unavailable in navigation mode (503).
 - [ ] 12.6 boot: still manual — takeover, mode.sh navigation, rosbridge, ears, PC relays (:12340→8080, :12341→8643), `hermes -p robot gateway`.
+
+## Session log — 2026-10-15 (free roam)
+
+- Root cause of 10-14 failure: `gyro_z_scale: 2.0` doubled yaw rate (gyro 156.5° vs rest-to-rest scan match 78.8°, command 86°). Set 1.0 → gyro/wheels/fused/map agree within 3°; 0 localizer rejections since. Localizer gate tolerance now scales with distance.
+- Added `relocalize` (gateway + tool). Camera gate refusal names `arm_pose('forward')`; after a stack restart the arm must be put in `forward` before any goto.
+- Free-roam runs (10 ticks × 3 min each), planned legs reached/attempted:
+  - run 1: 0/15 — all refused "camera not forward" (arm not in forward pose).
+  - run 2: 1/20 — 10 s translation cap included turning (9 timeouts), rotate-in-place counted as stall.
+  - run 3: 1/13 — 9 "unconfirmed by fused translation odometry" with arrival ~2 cm per map; check allowed only 2.5 cm absolute. 0 remarks aloud.
+  - run 4 (10 % allowance, wander retry, remark prompt): stopped after 1 tick for shutdown — 2/3 legs reached, 1 "blocked after live-costmap replans", 1 remark aloud, 0 rejections. Too short to judge; rerun the full 30 min next session.
+- Open: boot integration (12.6) still manual; startup needs estop reset + arm forward + relocalize.
