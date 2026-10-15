@@ -5,7 +5,7 @@
 **Decided by the user (2026-10-13).**
 - Persona: **Soudruhu**, a comrade. Answers the wake word with "Allzeit bereit!". Jovial, strong sense of justice, vehemently antifascist in an Eastern-bloc way, Boxer-like (Animal Farm) unwavering dedication to his people, relaxed about surveillance.
 - Idle behaviour: **free roam** within the safety envelope.
-- Voice: **neural TTS on the Jetson** (sherpa-onnx `vits-ljs`, already installed), out of USB audio card 0.
+- Voice: **neural TTS on the Jetson** (sherpa-onnx Piper `en_US-ryan-medium`, male; was `vits-ljs` until 2026-10-15), out of USB audio card 0.
 - Listening: **wake word always on** while the stack runs (overrides the earlier "never start the mic unprompted" rule for this mode).
 - Hermes has a shell on the Jetson (approvals off, hardline blocklist kept), web access, raw ROS via ros-mcp, and resets its own estop.
 

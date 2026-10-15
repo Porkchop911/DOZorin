@@ -1,4 +1,4 @@
-"""Speaker output: sherpa-onnx VITS on the Jetson CPU (motto pronunciations added to its lexicon)."""
+"""Speaker output: sherpa-onnx Piper VITS (male voice) on the Jetson CPU."""
 from __future__ import annotations
 
 import io
@@ -8,7 +8,7 @@ import subprocess
 import threading
 import wave
 
-MODEL_DIR = os.environ.get("HWR_TTS_DIR", "/home/ubuntu/third_party/sherpa-onnx/vits-ljs")
+MODEL_DIR = os.environ.get("HWR_TTS_DIR", "/home/ubuntu/third_party/sherpa-onnx/vits-piper-en_US-ryan-medium")
 # PulseAudio owns the USB card on the Jetson; raw plughw access fails with "device busy".
 DEVICE = os.environ.get("HWR_AUDIO_DEVICE", "pulse")
 _UID = os.getuid() if hasattr(os, "getuid") else 1000
@@ -30,9 +30,10 @@ class Voice:
 
     def _load(self):
         import sherpa_onnx
+        name = os.path.basename(MODEL_DIR).removeprefix("vits-piper-")
         vits = sherpa_onnx.OfflineTtsVitsModelConfig(
-            model=f"{MODEL_DIR}/vits-ljs.onnx", lexicon=f"{MODEL_DIR}/lexicon.txt",
-            tokens=f"{MODEL_DIR}/tokens.txt")
+            model=f"{MODEL_DIR}/{name}.onnx", tokens=f"{MODEL_DIR}/tokens.txt",
+            data_dir=f"{MODEL_DIR}/espeak-ng-data")
         return sherpa_onnx.OfflineTts(sherpa_onnx.OfflineTtsConfig(
             model=sherpa_onnx.OfflineTtsModelConfig(vits=vits, num_threads=4)))
 
