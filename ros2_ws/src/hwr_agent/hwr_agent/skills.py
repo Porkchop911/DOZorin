@@ -313,8 +313,14 @@ class GatewaySkills:
     def wander(self, max_distance: float = 1.5):
         if self.dry_run:
             return {"dry_run": True, "would": f"go to a random reachable point within {max_distance} m"}
-        target = self._get(f"/wander/candidate?max_distance={float(max_distance)}")
-        return {"target": target, **self.goto(target["x"], target["y"], target["yaw"])}
+        # The candidate check is coarser than the planner; an unplannable pick
+        # costs no motion, so try a fresh one (max 3).
+        for _ in range(3):
+            target = self._get(f"/wander/candidate?max_distance={float(max_distance)}")
+            outcome = self.goto(target["x"], target["y"], target["yaw"])
+            if outcome["result"].get("message") != "no collision-free path":
+                break
+        return {"target": target, **outcome}
 
     def seen_objects(self):
         if self.dry_run:

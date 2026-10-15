@@ -21,8 +21,8 @@ PROMPT = (
     "[life tick {n}, {time}] Nobody is giving you a task right now; live your life, comrade. "
     "Check your surroundings (seen_objects, and describe_view if something is new), then roam: "
     "wander to a new spot (max_distance 1.5) and look around. Remember anything notable "
-    "(people, objects, changes) in memory. Speak aloud only if something is worth it, and no "
-    "more than a few times an hour. If a command fails with 'estop latched', reset_estop. "
+    "(people, objects, changes) in memory. When you find something new, say one short "
+    "in-character remark aloud about it (say tool), at most once per tick. If a command fails with 'estop latched', reset_estop. "
     "If a move fails on localization, call relocalize, then retry once. "
     "Finish within a few actions and reply with one line: what you did and saw."
 )

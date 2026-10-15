@@ -499,7 +499,9 @@ class NavNode(Node):
                             handle.abort()
                             result.message = (
                                 "goal pose unconfirmed by "
-                                + ("fused translation odometry"
+                                + ("fused translation odometry "
+                                   f"(odom moved {math.hypot(self.odom_pose[0] - initial_odom[0], self.odom_pose[1] - initial_odom[1]):.3f} m, "
+                                   f"map goal distance {initial_distance:.3f} m)"
                                    if not translation_confirmed
                                    else "physical gyro yaw"))
                             return result

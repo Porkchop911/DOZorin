@@ -268,13 +268,14 @@ def test_physical_translation_is_leashed_independently_of_map_pose():
 def test_goal_success_requires_independent_odometry_translation():
     start = (1.0, 2.0, 0.4)
     assert not odometry_motion_confirmed(
-        0.05, 0.0, start, (1.024, 2.0, 0.4))
+        0.05, 0.0, start, (1.019, 2.0, 0.4))
     assert odometry_motion_confirmed(
-        0.05, 0.0, start, (1.026, 2.0, 0.4))
+        0.05, 0.0, start, (1.021, 2.0, 0.4))
+    # 10 % of distance allowance: 0.50 m map leg needs >= 0.425 m of odometry.
     assert not odometry_motion_confirmed(
-        0.50, 0.0, start, (1.474, 2.0, 0.4))
+        0.50, 0.0, start, (1.424, 2.0, 0.4))
     assert odometry_motion_confirmed(
-        0.50, 0.0, start, (1.476, 2.0, 0.4))
+        0.50, 0.0, start, (1.426, 2.0, 0.4))
     # The earlier false-success sample advanced only 1.7 cm of a 5 cm goal.
     assert not odometry_motion_confirmed(
         0.05, 0.0, start, (1.017, 2.0, 0.4))

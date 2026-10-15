@@ -122,13 +122,16 @@ def odometry_motion_confirmed(
         odom_current: tuple[float, float, float], *,
         distance_tolerance: float = 0.02,
         yaw_tolerance: float = math.radians(5.0),
-        distance_noise_allowance: float = 0.005) -> bool:
+        distance_noise_allowance: float = 0.005,
+        distance_scale_allowance: float = 0.10) -> bool:
     """Require physical odometry evidence before declaring a goal reached.
 
     Map localization can move with prediction or particle convergence even when
     the chassis is stalled.  Fused scan/IMU odometry is an independent minimum
     confirmation: it need not exactly equal map progress, but it must account
     for the requested displacement outside the controller's tolerance band.
+    Map and fused odometry disagree by a few percent of distance on a clean
+    leg (0.283 vs 0.292 m, 2026-10-15), so the allowance scales with distance.
     """
     values = (initial_distance, initial_yaw_error, *odom_start, *odom_current,
               distance_tolerance, yaw_tolerance, distance_noise_allowance)
@@ -143,7 +146,8 @@ def odometry_motion_confirmed(
     if initial_distance > distance_tolerance:
         required = max(
             0.01,
-            initial_distance - distance_tolerance - distance_noise_allowance)
+            initial_distance * (1.0 - distance_scale_allowance)
+            - distance_tolerance - distance_noise_allowance)
         if moved < required:
             return False
     yaw_needed = abs(_wrap(initial_yaw_error))
