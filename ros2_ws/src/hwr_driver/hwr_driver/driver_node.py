@@ -40,7 +40,7 @@ class DriverNode(Node):
         self.declare_parameter("imu_rate", 50.0)
         self.declare_parameter("joint_state_rate", 5.0)
         self.declare_parameter("imu_frame", "imu_link")
-        self.declare_parameter("gyro_z_scale", 2.0)
+        self.declare_parameter("gyro_z_scale", 1.0)
         self.declare_parameter("watchdog_timeout", 0.4)
         self.declare_parameter("max_wheel_rps", MAX_WHEEL_RPS)
 

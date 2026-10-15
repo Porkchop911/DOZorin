@@ -50,3 +50,9 @@
 2026-07-30 11:44:30 takeover OK
 2026-07-31 10:57:08 takeover STALE previous=58bd5e37-5dcb-4c4d-bc31-39445a3e60da_2026-07-30_11:44:30
 2026-07-31 10:57:08 takeover OK
+2026-10-13 18:02:42 takeover STALE previous=04cd1931-48f2-418d-abaa-d0b1264ae1d8_2026-07-31_10:57:08
+2026-10-13 18:02:42 takeover OK
+2026-10-14 13:05:23 takeover STALE previous=31dc142a-f8b7-4777-aad6-ce4b0c8129ea_2026-10-13_18:02:42
+2026-10-14 13:05:23 takeover OK
+2026-10-15 10:11:59 takeover STALE previous=29ad92ac-e063-49cc-8ba2-17e1117d10e5_2026-10-14_13:05:23
+2026-10-15 10:12:00 takeover OK

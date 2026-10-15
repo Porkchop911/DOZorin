@@ -5,6 +5,6 @@ hwr_driver:
     joint_state_rate: 5.0
     imu_frame: imu_link
     # Live lidar correlation (2026-07-28): 80.75 deg physical / 40.31 deg raw.
-    gyro_z_scale: 2.0
+    gyro_z_scale: 1.0
     watchdog_timeout: 0.4
     max_wheel_rps: 4.0

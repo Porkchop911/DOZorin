@@ -14,8 +14,15 @@ def _wrap(values):
 def localization_motion_consistent(
         previous_pose, pose, previous_odom, odom, *,
         max_xy_residual: float = 0.05,
-        max_yaw_residual: float = math.radians(12.0)) -> bool:
-    """Check that a map-pose update agrees with accumulated odometry motion."""
+        max_yaw_residual: float = math.radians(12.0),
+        xy_residual_per_meter: float = 0.15,
+        yaw_residual_per_radian: float = 0.15) -> bool:
+    """Check that a map-pose update agrees with accumulated odometry motion.
+
+    Tolerance grows with odometry travelled since the last accepted pose:
+    a fixed bound locks out every update once wheel drift over a long leg
+    exceeds it (2026-10-14 free roam: 269 rejections, loc 0.95 -> 0.25).
+    """
     if previous_pose is None or previous_odom is None or odom is None:
         return True
     values = (*previous_pose, *pose, *previous_odom, *odom,
@@ -37,7 +44,9 @@ def localization_motion_consistent(
                               math.cos(odom[2] - previous_odom[2]))
     yaw_residual = abs(math.atan2(math.sin(actual_yaw - expected_yaw),
                                   math.cos(actual_yaw - expected_yaw)))
-    return xy_residual <= max_xy_residual and yaw_residual <= max_yaw_residual
+    xy_limit = max_xy_residual + xy_residual_per_meter * math.hypot(odom_dx, odom_dy)
+    yaw_limit = max_yaw_residual + yaw_residual_per_radian * abs(expected_yaw)
+    return xy_residual <= xy_limit and yaw_residual <= yaw_limit
 
 
 def aggregate_scan_panorama(history, current_pose,

@@ -39,6 +39,11 @@ codecs to byte-identical frames.
   driver applies configurable `gyro_z_scale: 2.0` before publishing `/imu`, so
   base odometry, filtered IMU, localization, and panorama aggregation share the
   calibrated rate.
+  **Reverted to 1.0 (2026-10-15):** with 2.0 the gyro read 2.0× a full-window
+  rest-to-rest scan match (156.5° vs 78.8°, command 86°) and 2× the commanded
+  rate (0.59 vs 0.30 rad/s); at 1.0 gyro, wheels, fused odom and map agree
+  within 3° (+81.9/+82.4/+81.0/+82.6). Firmware rate scaling evidently changed
+  since July — re-check with a rest-to-rest scan pair after any firmware/boot change.
 
 ## Hard-learned firmware behavior
 

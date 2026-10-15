@@ -62,6 +62,15 @@ def test_localization_motion_consistency_rejects_stationary_mode_jump():
         (0.0, 0.0, 0.2), (0.0, 0.0, 0.2))
 
 
+def test_localization_motion_consistency_tolerates_drift_over_long_leg():
+    # 1.5 m odom leg with 10 % wheel under-report: 15 cm residual must pass,
+    # while the same residual with no motion is still a mode jump.
+    assert localization_motion_consistent(
+        (0.0, 0.0, 0.0), (1.65, 0.0, 0.0), (0.0, 0.0, 0.0), (1.5, 0.0, 0.0))
+    assert not localization_motion_consistent(
+        (0.0, 0.0, 0.0), (0.15, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))
+
+
 def test_scan_panorama_aligns_rotated_views_in_current_base_frame():
     landmark = np.array([[1.0, 0.0]])
     # At yaw 0 the landmark is forward. At yaw +90 degrees it is to the right
