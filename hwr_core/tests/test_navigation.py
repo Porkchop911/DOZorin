@@ -1,4 +1,5 @@
 import math
+import pytest
 
 import numpy as np
 
@@ -230,6 +231,11 @@ def test_short_translation_has_a_hard_runtime_bound():
     assert translation_deadline_seconds(0.10) == 6.0
     assert translation_deadline_seconds(0.25) == 9.0
     assert translation_deadline_seconds(10.0) == 10.0
+    # Turning to face the path and then the goal yaw is budgeted separately:
+    # a 150 deg turn at 0.3 rad/s alone takes ~9 s.
+    assert translation_deadline_seconds(1.0, rotation=math.pi,
+                                        yaw_rate=0.3) == pytest.approx(
+        10.0 + 1.5 * math.pi / 0.3)
 
 
 def test_committed_translation_target_retains_bearing_but_never_exceeds_cap():

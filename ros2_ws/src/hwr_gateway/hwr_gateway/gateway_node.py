@@ -38,7 +38,7 @@ from rclpy.node import Node
 from rclpy.qos import DurabilityPolicy, QoSProfile, QoSReliabilityPolicy
 from sensor_msgs.msg import BatteryState, Image, JointState
 from std_msgs.msg import Bool, String, UInt16
-from std_srvs.srv import SetBool
+from std_srvs.srv import SetBool, Trigger
 
 from .voice import Voice
 
@@ -153,6 +153,8 @@ class GatewayNode(Node):
         self.arm_reach = self.create_client(ArmReach, "arm/reach", callback_group=self.group)
         self.arm_aim = self.create_client(AimCamera, "arm/aim", callback_group=self.group)
         self.gripper = self.create_client(Gripper, "gripper", callback_group=self.group)
+        self.relocalize = self.create_client(Trigger, "global_relocalize",
+                                             callback_group=self.group)
         self.create_subscription(BatteryState, "battery", self._battery, 10,
                                  callback_group=self.group)
         self.create_subscription(PoseWithCovarianceStamped, "pose", self._pose, 10,
@@ -544,6 +546,14 @@ class GatewayNode(Node):
                         {"message": response.message})
             return {"success": response.success, "message": response.message}
 
+        @app.post("/localization/relocalize", dependencies=[Depends(auth)])
+        def relocalize():
+            # Global search over the whole map; no motion, so no estop check.
+            response = self._call(self.relocalize, Trigger.Request(), timeout=20.0)
+            self._audit("relocalize", "accepted" if response.success else "rejected",
+                        {"message": response.message})
+            return {"success": response.success, "message": response.message}
+
         @app.post("/beep", dependencies=[Depends(auth)])
         def beep(body: BeepRequest):
             if not 20 <= body.frequency <= 20000:
@@ -613,7 +623,7 @@ class GatewayNode(Node):
                                             y - current_pose[1]) <= 0.06)
             if not rotation_only and not camera_forward:
                 self._audit("goto", "rejected", {"reason": "camera not forward"})
-                raise HTTPException(409, "translation requires verified forward camera pose")
+                raise HTTPException(409, "translation requires verified forward camera pose; call arm_pose('forward') first")
             if not rotation_only and not self._goal_is_free(x, y):
                 raise HTTPException(409, "goal rejected by map geofence")
             if not self.nav.wait_for_server(timeout_sec=0.2):
@@ -632,7 +642,7 @@ class GatewayNode(Node):
                     self._audit("explore", "rejected",
                                 {"reason": "camera not forward"})
                     raise HTTPException(
-                        409, "exploration requires verified forward camera pose")
+                        409, "exploration requires verified forward camera pose; call arm_pose('forward') first")
             request = SetBool.Request()
             request.data = enabled
             response = self._call(self.explore, request)
@@ -714,7 +724,9 @@ class GatewayNode(Node):
             # Live obstacles close narrow routes mid-leg in clutter; favour open targets.
             ranked = rank_goal_candidates_by_clearance(
                 internal, meta[0], (meta[1], meta[2]), choices)
-            x, y, yaw = random.choice(ranked[:3])
+            x, y, _ = random.choice(ranked[:3])
+            # Arrive facing the direction of travel: no extra final turn.
+            yaw = math.atan2(y - pose[1], x - pose[0])
             return {"x": x, "y": y, "yaw": yaw, "from": pose}
 
         @app.get("/vision/objects", dependencies=[Depends(auth)])

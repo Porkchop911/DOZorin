@@ -365,9 +365,14 @@ class NavNode(Node):
                 handle.abort()
                 result.message = "rotation footprint blocked or lidar stale"
                 return result
+            bearing = math.atan2(goal[1] - self.pose[1], goal[0] - self.pose[0])
+            rotation = (abs(_wrap(bearing - self.pose[2]))
+                        + abs(_wrap(goal[2] - bearing)))
             deadline = time.monotonic() + (
                 120.0 if rotation_only else
-                translation_deadline_seconds(initial_distance))
+                translation_deadline_seconds(
+                    initial_distance, rotation=rotation,
+                    yaw_rate=self.controller.max_wz))
             progress = GoalProgress(initial_distance,
                                     _wrap(goal[2] - self.pose[2]),
                                     time.monotonic())
@@ -473,6 +478,10 @@ class NavNode(Node):
                     else:
                         vx, vy, wz, done = self.controller.command(
                             self.pose, path, goal[2])
+                        if not done and vx == vy == 0.0 and wz != 0.0:
+                            # Rotating to face the path is progress; the
+                            # deadline still bounds endless turning.
+                            progress.last_progress = time.monotonic()
                     if done:
                         translation_confirmed = odometry_motion_confirmed(
                             initial_distance, 0.0, initial_odom,
@@ -489,8 +498,10 @@ class NavNode(Node):
                             self._stop()
                             handle.abort()
                             result.message = (
-                                "goal pose unconfirmed by fused translation "
-                                "odometry and physical gyro yaw")
+                                "goal pose unconfirmed by "
+                                + ("fused translation odometry"
+                                   if not translation_confirmed
+                                   else "physical gyro yaw"))
                             return result
                         handle.succeed()
                         result.success, result.message = True, "goal reached"

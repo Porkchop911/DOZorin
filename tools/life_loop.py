@@ -23,6 +23,7 @@ PROMPT = (
     "wander to a new spot (max_distance 1.5) and look around. Remember anything notable "
     "(people, objects, changes) in memory. Speak aloud only if something is worth it, and no "
     "more than a few times an hour. If a command fails with 'estop latched', reset_estop. "
+    "If a move fails on localization, call relocalize, then retry once. "
     "Finish within a few actions and reply with one line: what you did and saw."
 )
 

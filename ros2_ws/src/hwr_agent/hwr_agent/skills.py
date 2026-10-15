@@ -340,6 +340,9 @@ class GatewaySkills:
         # User decision 2026-10-13: the agent may clear the estop itself (counts against the budget).
         return self._act("reset estop", "/estop/reset")
 
+    def relocalize(self):
+        return self._act("global relocalize", "/localization/relocalize")
+
     def where_am_i(self):
         if self.dry_run:
             return {"dry_run": True, "would": "read pose and localization"}
@@ -350,7 +353,7 @@ class GatewaySkills:
     def call(self, name: str, arguments: dict):
         allowed = {"goto_place", "goto", "explore", "look", "describe_view",
                    "assess_scene", "patrol", "arm_pose", "pick_test",
-                   "where_am_i", "stop", "reset_estop",
+                   "where_am_i", "relocalize", "stop", "reset_estop",
                    "drive", "arm_aim", "arm_reach", "gripper",
                    "say", "seen_objects", "wander"}
         if name not in allowed:

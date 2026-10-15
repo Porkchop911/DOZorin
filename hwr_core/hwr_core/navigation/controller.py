@@ -21,15 +21,24 @@ def sensor_sample_fresh(now: float, stamp: float,
 def translation_deadline_seconds(distance: float, *,
                                  minimum_speed: float = 0.05,
                                  fixed_overhead: float = 4.0,
-                                 maximum: float = 10.0) -> float:
-    """Bound a translation goal even when localization appears to make progress."""
+                                 maximum: float = 10.0,
+                                 rotation: float = 0.0,
+                                 yaw_rate: float = 0.30) -> float:
+    """Bound a translation goal even when localization appears to make progress.
+
+    `rotation` (rad) is the in-place turning the controller must do (face the
+    path, then the goal yaw); it gets its own budget outside the translation cap.
+    """
     values = (float(distance), float(minimum_speed), float(fixed_overhead),
               float(maximum))
     if (not all(math.isfinite(value) for value in values)
             or distance < 0.0 or minimum_speed <= 0.0
             or fixed_overhead < 0.0 or maximum <= 0.0):
         raise ValueError("invalid translation deadline parameters")
-    return min(maximum, fixed_overhead + distance / minimum_speed)
+    if not math.isfinite(float(rotation)) or rotation < 0.0 or yaw_rate <= 0.0:
+        raise ValueError("invalid rotation budget parameters")
+    return (min(maximum, fixed_overhead + distance / minimum_speed)
+            + 1.5 * rotation / yaw_rate)
 
 
 def limit_translation_target(
