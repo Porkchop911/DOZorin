@@ -99,6 +99,7 @@ Deploy: rebuild `hwr_core` + `hwr_gateway` on the Jetson, restart gateway and `e
 | Hermes "Turn around" | 3 LLM calls, 18.7 s, 177.6° (was 15 calls, 73 s) |
 | life tick via roam_step | 4 LLM calls, 46 s turn, new "person" described once + memory + say; but 301 s wall — ~255 s is Hermes start/resume of the long life session |
 | voice reflexes | pending (needs a human speaker) |
+| map_room via Hermes ("map the room, room_20261015") | one tool call, 156 s wall: switch → explore 85 s → save → navigation → relocalize (score 0.94). Coverage weak: 3 frontiers, all rejected by the VLM preflight (clutter ×2, glass door); robot moved ~0.1 m; map ≈ 10 m², same as room_20261013. Hermes misreported the reason as "no frontiers left". |
 
 Fixes from the run: move/approach block only at the hard level (cost >= 79, same as `hard_clearance_m`)
 — 65 refused clear lidar paths from inside a wall's inflation band; blocked outcomes now say where and
