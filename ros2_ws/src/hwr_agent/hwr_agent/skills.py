@@ -294,6 +294,34 @@ class GatewaySkills:
                                   headers={"Authorization": f"Bearer {self.token}"}))
         return {"drove_seconds": seconds, "command": body}
 
+    def _motion(self, description: str, path: str, payload: dict, seconds: float):
+        if self.actions >= self.max_actions:
+            raise RuntimeError("mission action budget exhausted")
+        self.actions += 1
+        if self.dry_run:
+            return {"dry_run": True, "would": description}
+        # The gateway runs the loop and answers when it ends; allow its own timeout plus slack.
+        response = requests.post(self.url + path, json=payload, timeout=seconds + 10.0,
+                                 headers={"Authorization": f"Bearer {self.token}"})
+        self._check(response)
+        return response.json()
+
+    def turn(self, degrees: float):
+        degrees = float(degrees)
+        if not 0.0 < abs(degrees) <= 360.0:
+            raise ValueError("turn degrees must be in -360..360 and nonzero")
+        return self._motion(f"turn {degrees} deg", "/motion/turn", {"degrees": degrees},
+                            3.0 * math.radians(abs(degrees)) / 0.15 + 3.0)
+
+    def move(self, meters: float, direction: str = "forward"):
+        meters = float(meters)
+        if direction not in ("forward", "left", "right"):
+            raise ValueError("move direction must be forward, left or right (the base cannot reverse)")
+        if not 0.0 < meters <= 2.0:
+            raise ValueError("move meters must be in 0..2")
+        return self._motion(f"move {meters} m {direction}", "/motion/move",
+                            {"meters": meters, "direction": direction}, 3.0 * meters / 0.05 + 3.0)
+
     def arm_aim(self, bearing: float, elevation: float = 0.0):
         return self._act(f"aim camera bearing={bearing} elevation={elevation}", "/arm/aim",
                          {"bearing": float(bearing), "elevation": float(elevation),
@@ -361,7 +389,7 @@ class GatewaySkills:
                    "assess_scene", "patrol", "arm_pose", "pick_test",
                    "where_am_i", "relocalize", "stop", "reset_estop",
                    "drive", "arm_aim", "arm_reach", "gripper",
-                   "say", "seen_objects", "wander"}
+                   "say", "seen_objects", "wander", "turn", "move"}
         if name not in allowed:
             raise ValueError(f"unknown skill {name!r}")
         return getattr(self, name)(**arguments)

@@ -239,3 +239,12 @@ def test_seen_objects_reads_vision_endpoint_as_text(monkeypatch):
             {"class": "cup", "conf": 0.4, "id": None, "bearing_deg": 0}]})
     assert skills.seen_objects()["objects"] == ["person #3 (0.9) 1.2 m, 20 deg left",
                                                 "cup (0.4) ahead"]
+
+
+def test_turn_and_move_are_bounded_and_refuse_reverse():
+    skills = GatewaySkills(dry_run=True)
+    assert skills.turn(180)["dry_run"] and skills.move(0.5, "left")["dry_run"]
+    for bad in (lambda: skills.turn(0), lambda: skills.turn(400),
+                lambda: skills.move(3.0), lambda: skills.move(0.5, "back")):
+        with pytest.raises(ValueError):
+            bad()

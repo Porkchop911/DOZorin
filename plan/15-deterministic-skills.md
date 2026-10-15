@@ -24,10 +24,10 @@ needs a pose/vision check per step stays in the LLM.
 
 ## Steps
 
-- [ ] **13.1 `turn(degrees)`** — gateway `/motion/turn`: rotate in place until map yaw changed by
+- [~] **13.1 `turn(degrees)`** (code + offline tests 2026-10-15; live tuning pending) — gateway `/motion/turn`: rotate in place until map yaw changed by
   `degrees` (±5°), wz ≤ 0.6 rad/s, timeout 3× nominal, stop on estop. Returns start/end pose and
   error. Closed loop on yaw also sidesteps the open "2× turn rate" question.
-- [ ] **13.2 `move(meters, direction)`** — gateway `/motion/move`: forward/back/left/right by
+- [~] **13.2 `move(meters, direction)`** (code + offline tests 2026-10-15; live tuning pending; no `back` — base is no-reverse) — gateway `/motion/move`: forward/back/left/right by
   distance on pose, refuses if scan clearance < distance + margin. Returns pose and achieved distance.
 - [ ] **13.3 `wander` self-heals** — on low localization score or plan failure: relocalize once, retry
   (removes relocalize→wander chains). Result includes pose and `seen_objects` at arrival.
@@ -37,8 +37,10 @@ needs a pose/vision check per step stays in the LLM.
 - [ ] **13.5 `approach(target, stop_at_m)`** — visual servo on `/vision/objects` (class or track id,
   "person" for "come to me"): turn to bearing, translate until range ≤ `stop_at_m`, re-acquire on
   loss, timeout. No describe_view per step.
-- [ ] **13.6 arm_pose must not latch estop** — find why arm moves latch it (9 resets in logs); fix
-  root cause, not the agent's reset habit.
+- [ ] **13.6 find what latches the estop** — logs show arm_pose/drive/arm_aim were *refused because
+  the estop was already latched* (9×), not latched by them. Trip callers: gateway `/stop`, explore
+  `_trip_stop` (every explore end), sensor supervisor (stale lidar/camera), driver invalid command.
+  Needs robot logs (driver "estop tripped" times vs gateway audit / supervisor log / explore journal).
 - [ ] **13.7 voice reflexes** — `ears.py` maps stop / turn left|right|around / forward / back /
   come here to 13.1/13.2/13.5 endpoints directly (canned spoken ack), then posts
   `[done by reflex] …` to Hermes asynchronously so memory stays consistent. Anything else → Hermes.
@@ -48,6 +50,14 @@ needs a pose/vision check per step stays in the LLM.
   pick turns have an owner.
 
 Order: 13.6 → 13.1 → 13.2 → 13.7 → 13.3 → 13.4 → 13.5 → 13.8.
+
+## Live tuning (13.1/13.2)
+
+Params on `/hwr_gateway`, settable with `ros2 param set`: `turn_max_wz` 0.5, `turn_min_wz` 0.15,
+`turn_gain` 1.5, `turn_tolerance_deg` 4, `move_max_v` 0.15, `move_min_v` 0.05, `move_gain` 1.0,
+`move_tolerance_m` 0.03, `move_clearance_m` 0.15. Yaw/distance come from `/odom`; `/stop` aborts a
+running motion on the next 50 ms tick. Checks: `turn 90/180/-90/360` vs tape mark, `move 0.5` each
+direction vs tape; if turns undershoot, raise `turn_min_wz` (friction) before touching gain.
 
 ## Acceptance (re-run the same state.db analysis)
 

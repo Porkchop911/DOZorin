@@ -24,6 +24,7 @@ from geometry_msgs.msg import PoseWithCovarianceStamped, Twist
 from hwr_msgs.action import NavigateToPose
 from hwr_msgs.msg import LocalizationHealth
 from hwr_msgs.srv import AimCamera, ArmPose, ArmReach, Gripper
+from hwr_core.control.closed_loop import TurnTracker, approach_speed, progress_along
 from hwr_core.navigation import (directional_escape_profile,
                                  evaluate_object_reach,
                                  normalize_place_definition,
@@ -89,6 +90,19 @@ class BeepRequest(BaseModel):
     frequency: int = 1500
 
 
+class TurnRequest(BaseModel):
+    degrees: float
+
+
+class MoveRequest(BaseModel):
+    meters: float
+    direction: str = "forward"
+
+
+# Body-frame heading per move direction; no "back": the base clamps vx >= 0 (no-reverse envelope).
+MOVE_DIRECTIONS = {"forward": 0.0, "left": math.pi / 2, "right": -math.pi / 2}
+
+
 def _model_dict(model) -> dict:
     return model.model_dump() if hasattr(model, "model_dump") else model.dict()
 
@@ -100,6 +114,18 @@ class GatewayNode(Node):
         self.declare_parameter("port", 8090)
         self.declare_parameter("camera_pose_tolerance_rad", 0.10)
         self.declare_parameter("joint_state_timeout", 1.0)
+        # Closed-loop /motion/* tuning (ros2 param set /hwr_gateway ... at runtime).
+        self.declare_parameter("turn_max_wz", 0.5)
+        self.declare_parameter("turn_min_wz", 0.15)
+        self.declare_parameter("turn_gain", 1.5)
+        self.declare_parameter("turn_tolerance_deg", 4.0)
+        self.declare_parameter("move_max_v", 0.15)
+        self.declare_parameter("move_min_v", 0.05)
+        self.declare_parameter("move_gain", 1.0)
+        self.declare_parameter("move_tolerance_m", 0.03)
+        self.declare_parameter("move_clearance_m", 0.15)
+        self.motion_lock = threading.Lock()
+        self.motion_epoch = 0
         self.group = ReentrantCallbackGroup()
         self.lock = threading.RLock()
         self.voice = Voice()
@@ -490,6 +516,66 @@ class GatewayNode(Node):
             self.goal_handle = None
         self._audit("goto_result", state, completed)
 
+    def _motion_start(self) -> list:
+        with self.lock:
+            if self.estop_latched:
+                raise HTTPException(409, "estop latched; reset before drive")
+            if self.odom_pose is None or time.monotonic() - self.odom_stamp > 0.5:
+                raise HTTPException(503, "odometry stale")
+            return list(self.odom_pose)
+
+    def _path_is_free(self, x: float, y: float, heading: float, length: float) -> bool:
+        steps = max(1, math.ceil(length / 0.05))
+        return all(self._goal_is_free(x + math.cos(heading) * length * i / steps,
+                                      y + math.sin(heading) * length * i / steps)
+                   for i in range(1, steps + 1))
+
+    def _motion_loop(self, step, timeout: float) -> str:
+        """Command step(odom_pose) -> (vx, vy, wz) every 50 ms until it returns None.
+
+        Aborts on /stop, estop, stale odometry or timeout; always ends with a zero command.
+        A string from step is an abort reason."""
+        if not self.motion_lock.acquire(blocking=False):
+            raise HTTPException(409, "another motion is running")
+        outcome = "done"
+        try:
+            with self.lock:
+                epoch = self.motion_epoch
+            deadline = time.monotonic() + timeout
+            while True:
+                time.sleep(0.05)
+                now = time.monotonic()
+                with self.lock:
+                    if self.motion_epoch != epoch:
+                        outcome = "stopped"
+                    elif self.estop_latched:
+                        outcome = "estop"
+                    elif self.odom_pose is None or now - self.odom_stamp > 0.5:
+                        outcome = "odometry stale"
+                    odom = None if self.odom_pose is None else list(self.odom_pose)
+                if outcome != "done":
+                    break
+                command = step(odom)
+                if command is None:
+                    break
+                if isinstance(command, str):
+                    outcome = command
+                    break
+                if now > deadline:
+                    outcome = "timeout"
+                    break
+                with self.lock:
+                    if self.motion_epoch != epoch:
+                        outcome = "stopped"
+                        break
+                    self.drive_command = tuple(float(v) for v in command)
+                    self.drive_until = now + 0.3
+        finally:
+            with self.lock:
+                self.drive_command, self.drive_until = (0.0, 0.0, 0.0), 0.0
+            self.motion_lock.release()
+        return outcome
+
     def _make_app(self) -> FastAPI:
         app = FastAPI(title="HWR Gateway", version="0.1.0")
         security = HTTPBearer(auto_error=False)
@@ -523,9 +609,79 @@ class GatewayNode(Node):
             self._audit("drive", "accepted", _model_dict(body))
             return {"accepted": True, "expires_in": body.duration}
 
+        @app.post("/motion/turn", dependencies=[Depends(auth)])
+        def motion_turn(body: TurnRequest):
+            if not math.isfinite(body.degrees) or not 0.0 < abs(body.degrees) <= 360.0:
+                raise HTTPException(422, "degrees must be in -360..360 and nonzero")
+            param = lambda name: float(self.get_parameter(name).value)  # noqa: E731
+            max_wz, min_wz = param("turn_max_wz"), param("turn_min_wz")
+            start = self._motion_start()
+            tracker = TurnTracker(math.radians(body.degrees), start[2],
+                                  math.radians(param("turn_tolerance_deg")))
+
+            def step(odom):
+                remaining = tracker.update(odom[2])
+                if tracker.done:
+                    return None
+                return (0.0, 0.0, approach_speed(remaining, max_wz, min_wz, param("turn_gain")))
+
+            outcome = self._motion_loop(step, 3.0 * abs(tracker.target) / max_wz + 3.0)
+            result = {"outcome": outcome, "requested_deg": body.degrees,
+                      "turned_deg": round(math.degrees(tracker.turned), 1),
+                      "pose": self.pose}
+            self._audit("motion_turn", outcome, result)
+            return result
+
+        @app.post("/motion/move", dependencies=[Depends(auth)])
+        def motion_move(body: MoveRequest):
+            if body.direction not in MOVE_DIRECTIONS:
+                raise HTTPException(422, f"direction must be one of {sorted(MOVE_DIRECTIONS)}")
+            if not math.isfinite(body.meters) or not 0.0 < body.meters <= 2.0:
+                raise HTTPException(422, "meters must be in 0..2")
+            param = lambda name: float(self.get_parameter(name).value)  # noqa: E731
+            max_v, min_v = param("move_max_v"), param("move_min_v")
+            clearance = param("move_clearance_m")
+            body_heading = MOVE_DIRECTIONS[body.direction]
+            with self.lock:
+                camera_forward = self._camera_forward_locked(time.monotonic())
+                pose = None if self.pose is None else list(self.pose)
+                fresh = self._localization_state_locked(time.monotonic())["fresh"]
+            if not camera_forward:
+                raise HTTPException(409, "translation requires verified forward camera pose; call arm_pose('forward') first")
+            if pose is None or not fresh:
+                raise HTTPException(409, "map pose not fresh; relocalize first")
+            if not self._path_is_free(pose[0], pose[1], pose[2] + body_heading,
+                                      body.meters + clearance):
+                raise HTTPException(409, "path blocked in costmap")
+            start = self._motion_start()
+            travelled = [0.0]
+
+            def step(odom):
+                travelled[0] = progress_along(start, odom[:2], body_heading)
+                remaining = body.meters - travelled[0]
+                if remaining <= param("move_tolerance_m"):
+                    return None
+                with self.lock:
+                    now_pose = None if self.pose is None else list(self.pose)
+                # shortcut: blocking check is the costmap ahead of the map pose, not raw scan; add a scan gate if it misses fast obstacles.
+                if now_pose is not None and not self._path_is_free(
+                        now_pose[0], now_pose[1], now_pose[2] + body_heading,
+                        min(remaining, 0.3) + clearance):
+                    return "blocked"
+                speed = approach_speed(remaining, max_v, min_v, param("move_gain"))
+                # shortcut: no heading hold; add a wz correction if strafes drift in yaw.
+                return (speed * math.cos(body_heading), speed * math.sin(body_heading), 0.0)
+
+            outcome = self._motion_loop(step, 3.0 * body.meters / max_v + 3.0)
+            result = {"outcome": outcome, "requested_m": body.meters, "direction": body.direction,
+                      "travelled_m": round(travelled[0], 3), "pose": self.pose}
+            self._audit("motion_move", outcome, result)
+            return result
+
         @app.post("/stop", dependencies=[Depends(auth)])
         def stop():
             with self.lock:
+                self.motion_epoch += 1  # aborts a running /motion/* loop on its next tick
                 self.drive_command, self.drive_until = (0.0, 0.0, 0.0), 0.0
                 handle = self.goal_handle
             self.drive_pub.publish(Twist())
