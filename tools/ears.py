@@ -24,7 +24,7 @@ os.environ.setdefault("PULSE_SERVER", f"unix:/run/user/{os.getuid()}/pulse/nativ
 # Calibrated renderings of Czech "Soudruhu" by the English model (July calibrate_wake.py).
 # "comrade" removed: Soudruhu says it himself and would wake himself up.
 WAKE_TOKENS = ("noble", "glad", "darkly", "global", "dawn", "mothel", "drew")
-NONSPEECH = re.compile(r"[\(\[][^)\]]*[\)\]]")  # Whisper tags like "(buzzing)", "[static]"
+NONSPEECH = re.compile(r"[\(\[][^)\]]*[\)\]]|\*[^*]*\*")  # Whisper tags: "(buzzing)", "[static]", "*sad music*"
 JUNK = {"you", "thank you", "thanks", "the", "bye", "so", "um", "uh", "hmm", "news networks",
         "force", "static", "okay", "ok"}
 
