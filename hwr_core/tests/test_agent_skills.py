@@ -248,3 +248,47 @@ def test_turn_and_move_are_bounded_and_refuse_reverse():
                 lambda: skills.move(3.0), lambda: skills.move(0.5, "back")):
         with pytest.raises(ValueError):
             bad()
+
+
+def test_roam_step_describes_only_new_objects(tmp_path, monkeypatch):
+    monkeypatch.setenv("HWR_ROAM_STATE", str(tmp_path / "seen.json"))
+    skills = GatewaySkills(token="test")
+    frames = iter([["chair"], ["chair", "person"], ["chair"], ["chair", "person"]])
+    monkeypatch.setattr(skills, "_get", lambda path, binary=False: {
+        "objects": [{"class": c} for c in next(frames)]})
+    monkeypatch.setattr(skills, "wander", lambda d: {"result": {"state": "succeeded"}, "recovered": []})
+    monkeypatch.setattr(skills, "where_am_i", lambda: {"pose": [0, 0, 0]})
+    asked = []
+    monkeypatch.setattr(skills, "describe_view", lambda q: asked.append(q) or {"description": "x"})
+    first = skills.roam_step()
+    assert first["new_objects"] == ["chair", "person"] and len(asked) == 1
+    second = GatewaySkills(token="test")  # fresh process, same state file
+    monkeypatch.setattr(second, "_get", skills._get)
+    monkeypatch.setattr(second, "wander", skills.wander)
+    monkeypatch.setattr(second, "where_am_i", skills.where_am_i)
+    monkeypatch.setattr(second, "describe_view", skills.describe_view)
+    assert second.roam_step()["new_objects"] == [] and len(asked) == 1
+
+
+def test_wander_points_arm_forward_and_relocalizes_without_the_llm(monkeypatch):
+    skills = GatewaySkills(token="test")
+    calls = []
+    monkeypatch.setattr(skills, "where_am_i", lambda: {"localization": {"healthy": True}})
+    monkeypatch.setattr(skills, "_get", lambda path, binary=False: {"x": 1, "y": 0, "yaw": 0})
+    monkeypatch.setattr("time.sleep", lambda s: None)
+    results = iter([RuntimeError("gateway HTTP 409: translation requires verified forward camera pose"),
+                    {"state": "failed", "message": "localization health lost during translation"},
+                    {"state": "succeeded"}])
+
+    def goto(x, y, yaw):
+        r = next(results)
+        if isinstance(r, Exception):
+            raise r
+        return {"result": r}
+    monkeypatch.setattr(skills, "goto", goto)
+    monkeypatch.setattr(skills, "arm_pose", lambda n: calls.append("arm " + n))
+    monkeypatch.setattr(skills, "relocalize", lambda: calls.append("reloc"))
+    out = skills.wander()
+    assert out["result"]["state"] == "succeeded"
+    assert calls == ["arm forward", "reloc"]
+    assert out["recovered"] == ["arm forward", "relocalized after failure"]

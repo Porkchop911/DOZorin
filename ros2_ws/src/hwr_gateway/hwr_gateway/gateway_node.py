@@ -24,7 +24,8 @@ from geometry_msgs.msg import PoseWithCovarianceStamped, Twist
 from hwr_msgs.action import NavigateToPose
 from hwr_msgs.msg import LocalizationHealth
 from hwr_msgs.srv import AimCamera, ArmPose, ArmReach, Gripper
-from hwr_core.control.closed_loop import TurnTracker, approach_speed, progress_along
+from hwr_core.control.closed_loop import (TurnTracker, approach_command, approach_speed,
+                                          pick_target, progress_along, wrap)
 from hwr_core.navigation import (directional_escape_profile,
                                  evaluate_object_reach,
                                  normalize_place_definition,
@@ -92,6 +93,12 @@ class BeepRequest(BaseModel):
 
 class TurnRequest(BaseModel):
     degrees: float
+
+
+class ApproachRequest(BaseModel):
+    target: str = "person"
+    stop_at_m: float = 0.8
+    timeout_s: float = 30.0
 
 
 class MoveRequest(BaseModel):
@@ -676,6 +683,67 @@ class GatewayNode(Node):
             result = {"outcome": outcome, "requested_m": body.meters, "direction": body.direction,
                       "travelled_m": round(travelled[0], 3), "pose": self.pose}
             self._audit("motion_move", outcome, result)
+            return result
+
+        @app.post("/motion/approach", dependencies=[Depends(auth)])
+        def motion_approach(body: ApproachRequest):
+            if not 0.3 <= body.stop_at_m <= 3.0 or not 1.0 <= body.timeout_s <= 120.0:
+                raise HTTPException(422, "stop_at_m must be 0.3..3, timeout_s 1..120")
+            param = lambda name: float(self.get_parameter(name).value)  # noqa: E731
+            clearance = param("move_clearance_m")
+            with self.lock:
+                camera_forward = self._camera_forward_locked(time.monotonic())
+            if not camera_forward:
+                raise HTTPException(409, "approach needs the camera forward (bearings are camera-relative); call arm_pose('forward') first")
+            self._motion_start()
+            state = {"track": None, "last_seen": time.monotonic(), "searched": 0.0,
+                     "last_yaw": None, "no_range_since": None, "seen": None}
+
+            def step(odom):
+                now = time.monotonic()
+                with self.lock:
+                    frame = self.vision
+                    pose = None if self.pose is None else list(self.pose)
+                if frame is None or time.time() - frame["stamp"] > 2.0:
+                    return "vision stale"
+                item = pick_target(frame["objects"], body.target, state["track"])
+                if item is None:
+                    if state["seen"] is not None and now - state["last_seen"] > 3.0:
+                        return "target lost"
+                    if state["seen"] is None:
+                        # Not seen yet: search by turning in place, one full circle at most.
+                        if state["last_yaw"] is not None:
+                            state["searched"] += abs(wrap(odom[2] - state["last_yaw"]))
+                        state["last_yaw"] = odom[2]
+                        if state["searched"] >= 2 * math.pi:
+                            return "target not found"
+                        return (0.0, 0.0, param("turn_max_wz") * 0.8)
+                    return (0.0, 0.0, 0.0)  # briefly lost: hold still and wait for re-detection
+                state["track"], state["last_seen"], state["seen"] = item.get("id"), now, item
+                range_m = item.get("range_m")
+                if range_m is None:
+                    state["no_range_since"] = state["no_range_since"] or now
+                    if now - state["no_range_since"] > 3.0:
+                        return "no depth on target"
+                else:
+                    state["no_range_since"] = None
+                command = approach_command(item["bearing_deg"], range_m, body.stop_at_m,
+                                           param("turn_max_wz"), param("turn_min_wz"),
+                                           param("move_max_v"), param("move_min_v"))
+                if command is None:
+                    return None
+                vx, wz = command
+                if vx > 0.0 and pose is not None and not self._path_is_free(
+                        pose[0], pose[1], pose[2], min(range_m - body.stop_at_m, 0.3) + clearance):
+                    return "blocked"
+                return (vx, 0.0, wz)
+
+            outcome = self._motion_loop(step, body.timeout_s)
+            seen = state["seen"] or {}
+            result = {"outcome": outcome, "target": body.target, "track_id": seen.get("id"),
+                      "last_range_m": seen.get("range_m"), "last_bearing_deg": seen.get("bearing_deg"),
+                      "pose": self.pose}
+            self._audit("motion_approach", outcome, result)
             return result
 
         @app.post("/stop", dependencies=[Depends(auth)])

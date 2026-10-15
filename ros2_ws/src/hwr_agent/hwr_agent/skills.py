@@ -36,6 +36,9 @@ class GatewaySkills:
         self.max_actions = int(max_actions)
         self.timeout = float(timeout)
         self.actions = 0
+        # life_loop starts a fresh MCP process per tick, so roam_step's "already seen" lives on disk.
+        self._roam_file = Path(os.environ.get("HWR_ROAM_STATE",
+                                              Path.home() / ".hwr_roam_seen.json"))
 
     def _act(self, description: str, path: str, payload=None):
         if self.actions >= self.max_actions:
@@ -341,14 +344,76 @@ class GatewaySkills:
     def wander(self, max_distance: float = 1.5):
         if self.dry_run:
             return {"dry_run": True, "would": f"go to a random reachable point within {max_distance} m"}
-        # The candidate check is coarser than the planner; an unplannable pick
-        # costs no motion, so try a fresh one (max 3).
+        recovered = []
+        if not self.where_am_i()["localization"].get("healthy"):
+            recovered.append("relocalized before start")
+            self.relocalize()
+        # Deterministic recovery so the LLM never has to: camera not forward -> arm forward,
+        # unplannable pick -> fresh pick, localization-related failure -> relocalize once.
         for _ in range(3):
             target = self._get(f"/wander/candidate?max_distance={float(max_distance)}")
-            outcome = self.goto(target["x"], target["y"], target["yaw"])
-            if outcome["result"].get("message") != "no collision-free path":
-                break
-        return {"target": target, **outcome}
+            try:
+                outcome = self.goto(target["x"], target["y"], target["yaw"])
+            except RuntimeError as exc:
+                if "forward camera pose" not in str(exc) or "arm forward" in recovered:
+                    raise
+                recovered.append("arm forward")
+                self.arm_pose("forward")
+                time.sleep(1.6)
+                continue
+            message = str(outcome["result"].get("message", ""))
+            if message == "no collision-free path":
+                continue
+            if (outcome["result"].get("state") != "succeeded" and "locali" in message
+                    and "relocalized after failure" not in recovered):
+                recovered.append("relocalized after failure")
+                self.relocalize()
+                continue
+            break
+        return {"target": target, "recovered": recovered, **outcome}
+
+    def approach(self, target: str = "person", stop_at_m: float = 0.8, timeout_s: float = 30.0):
+        stop_at_m, timeout_s = float(stop_at_m), float(timeout_s)
+        if not 0.3 <= stop_at_m <= 3.0 or not 1.0 <= timeout_s <= 120.0:
+            raise ValueError("stop_at_m must be 0.3..3, timeout_s 1..120")
+        return self._motion(f"approach {target} to {stop_at_m} m", "/motion/approach",
+                            {"target": str(target), "stop_at_m": stop_at_m,
+                             "timeout_s": timeout_s}, timeout_s)
+
+    def roam_step(self, max_distance: float = 1.5):
+        """One idle-life tick: sense, wander, sense; the VLM runs only when something new shows up."""
+        if self.dry_run:
+            return {"dry_run": True, "would": "seen_objects, wander, seen_objects, describe if new"}
+        before = self._classes()
+        try:
+            moved = self.wander(max_distance)
+            move = {"state": moved["result"].get("state"), "message": moved["result"].get("message"),
+                    "recovered": moved["recovered"]}
+        except RuntimeError as exc:
+            move = {"state": "refused", "message": str(exc)}
+        after = self._classes()
+        seen = before | after
+        try:
+            last_seen = json.loads(self._roam_file.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            last_seen = {}
+        now = time.time()
+        # "New" = not seen in the last 30 min, so a returning person is news again.
+        new = sorted(c for c in seen if now - last_seen.get(c, 0.0) > 1800.0)
+        last_seen.update({c: now for c in seen})
+        self._roam_file.write_text(json.dumps(last_seen), encoding="utf-8")
+        result = {"move": move, "pose": self.where_am_i()["pose"],
+                  "objects": sorted(seen), "new_objects": new}
+        if new:
+            result["view"] = self.describe_view(
+                f"In one or two sentences: what are the {', '.join(new)} here and what is around them?")["description"]
+        return result
+
+    def _classes(self) -> set:
+        try:
+            return {item["class"] for item in self._get("/vision/objects")["objects"]}
+        except RuntimeError:  # vision stale: roam on, just without object news
+            return set()
 
     def seen_objects(self):
         if self.dry_run:
@@ -389,7 +454,8 @@ class GatewaySkills:
                    "assess_scene", "patrol", "arm_pose", "pick_test",
                    "where_am_i", "relocalize", "stop", "reset_estop",
                    "drive", "arm_aim", "arm_reach", "gripper",
-                   "say", "seen_objects", "wander", "turn", "move"}
+                   "say", "seen_objects", "wander", "turn", "move",
+                   "approach", "roam_step"}
         if name not in allowed:
             raise ValueError(f"unknown skill {name!r}")
         return getattr(self, name)(**arguments)

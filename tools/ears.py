@@ -2,9 +2,11 @@
 """Soudruhu's ears (runs on the Jetson): wake word "Soudruhu" -> "Allzeit bereit!" -> Whisper -> Hermes.
 
 Port of the July ~/assistant.py. Streaming sherpa spots the wake word; Whisper base.en transcribes
-the command; the text is posted into the Hermes robot session, which answers through `say`.
+the command. Fixed motion commands ("turn left", "come here", "stop") run as reflexes straight on the
+gateway (plan 15, layer L2'); everything else is posted into the Hermes robot session, which answers
+through `say`.
 Usage: ears.py --session <hermes session id> [--dry]
-Env (from ~/hwr/config/hwr.env): HWR_HERMES_URL, HWR_HERMES_KEY.
+Env (from ~/hwr/config/hwr.env): HWR_HERMES_URL, HWR_HERMES_KEY, HWR_GATEWAY_TOKEN (or ~/.config/hwr/token).
 """
 import argparse
 import os
@@ -48,6 +50,52 @@ def speaker_busy() -> bool:
     return any("usb" in line.lower() and "RUNNING" in line for line in out.splitlines())
 
 
+NUMBERS = {"fifteen": 15, "twenty": 20, "thirty": 30, "forty five": 45, "forty-five": 45,
+           "fifty": 50, "sixty": 60, "ninety": 90, "a hundred and eighty": 180,
+           "one hundred and eighty": 180, "one eighty": 180, "one": 1, "two": 2, "half a": 0.5, "a": 1}
+NUM = r"(\d+(?:\.\d+)?|" + "|".join(sorted(map(re.escape, NUMBERS), key=len, reverse=True)) + ")"
+WAKE_PREFIX = re.compile(r"^(so+ ?who|sud\w*|sod\w*|sou\w*|zud\w*|comrade)\b[ ,]*")
+
+
+def _num(text: str) -> float:
+    return float(text) if text[0].isdigit() else float(NUMBERS[text])
+
+
+def reflex(heard: str):
+    """Fixed voice grammar -> (gateway path, payload, spoken ack); None = not a reflex, ask Hermes.
+
+    The whole utterance must match, so "turn left and tell me what you see" still goes to Hermes."""
+    text = re.sub(r"[^a-z0-9.\- ]", " ", heard.lower())
+    text = WAKE_PREFIX.sub("", re.sub(r"\s+", " ", text).strip(" .")).strip()
+    text = re.sub(r"^(please|okay|ok|now) |( please| now)$", "", text).strip(" .")
+    if re.fullmatch(r"(stop|halt|freeze|stay)( (now|there|moving|it))?", text):
+        return "/stop", None, "Stopping."
+    if re.fullmatch(r"(reset|all clear|clear the (e-?stop|emergency stop))", text):
+        return "/estop/reset", None, "All clear."
+    if re.fullmatch(r"turn (around|back)", text):
+        return "/motion/turn", {"degrees": 180.0}, "Turning around."
+    if re.fullmatch(r"(spin( around)?|do a spin|turn a full circle)", text):
+        return "/motion/turn", {"degrees": 360.0}, "Spinning."
+    m = re.fullmatch(rf"turn (?:to the )?(left|right)(?: (?:by )?{NUM} degrees?)?", text)
+    if m:
+        degrees = _num(m.group(2)) if m.group(2) else 90.0
+        return ("/motion/turn", {"degrees": degrees if m.group(1) == "left" else -degrees},
+                f"Turning {m.group(1)}.")
+    m = re.fullmatch(rf"(?:go|move|drive|step|walk) (forward|ahead|left|right)"
+                     rf"(?: {NUM} (meters?|metres?|centimeters?|centimetres?|cm|m))?", text)
+    if m:
+        meters = 0.5
+        if m.group(2):
+            meters = _num(m.group(2)) / (100.0 if m.group(3).startswith(("cent", "cm")) else 1.0)
+        direction = "forward" if m.group(1) == "ahead" else m.group(1)
+        return "/motion/move", {"meters": meters, "direction": direction}, f"Moving {direction}."
+    if re.fullmatch(r"come (here|to me|over here|closer)", text):
+        return "/motion/approach", {"target": "person", "stop_at_m": 0.8}, "Coming, comrade."
+    if re.fullmatch(r"(go|move|drive) back(wards?)?|back up|reverse", text):
+        return None, None, "I cannot drive backwards. Tell me to turn around."
+    return None
+
+
 def hermes_message(heard: str) -> str:
     return (f"[Heard through your microphone] {heard}\n"
             "Answer out loud with say (one or two sentences, in character), then do what was asked.")
@@ -62,6 +110,11 @@ class Ears:
         self.key = os.environ["HWR_HERMES_KEY"]
         self.busy = False
         self.pending = None   # one message heard while Hermes was busy; newest wins
+        self.reflexes = []    # reflexes done since Hermes' last turn, prepended to its next message
+        self.gateway = os.environ.get("HWR_GATEWAY_URL", "http://127.0.0.1:8090").rstrip("/")
+        token_file = os.path.join(HOME, ".config/hwr/token")
+        self.gateway_token = os.environ.get("HWR_GATEWAY_TOKEN") or (
+            open(token_file).read().strip() if os.path.exists(token_file) else "")
         self.rec = sherpa_onnx.OnlineRecognizer.from_transducer(
             tokens=f"{M}/tokens.txt", encoder=f"{M}/encoder-epoch-99-avg-1.int8.onnx",
             decoder=f"{M}/decoder-epoch-99-avg-1.int8.onnx",
@@ -81,6 +134,36 @@ class Ears:
         self.whisper.decode_stream(st)
         return st.result.text.strip()
 
+    def handle(self, heard: str) -> None:
+        match = reflex(heard)
+        if match is None:
+            self.send(heard)
+            return
+        path, payload, ack = match
+        print(f"[reflex] {heard!r} -> {path} {payload}", flush=True)
+        if self.dry:
+            return
+
+        def work():
+            headers = {"Authorization": f"Bearer {self.gateway_token}"}
+            try:
+                self.requests.post(f"{self.gateway}/say", json={"text": ack}, headers=headers, timeout=5)
+                if path is None:
+                    outcome = "explained, no motion"
+                else:
+                    response = self.requests.post(f"{self.gateway}{path}", json=payload,
+                                                  headers=headers, timeout=150)
+                    outcome = (response.json().get("outcome", "done") if response.ok
+                               else f"refused: {response.text[:120]}")
+                    if outcome != "done":
+                        self.requests.post(f"{self.gateway}/say", headers=headers, timeout=5,
+                                           json={"text": f"I could not: {outcome[:80]}"})
+            except Exception as exc:  # a failed reflex must not kill the listener
+                outcome = f"error: {exc}"
+            print(f"[reflex done] {outcome}", flush=True)
+            self.reflexes.append(f"heard {heard!r} -> {path or 'spoken reply'} {payload or ''}: {outcome}")
+        threading.Thread(target=work, daemon=True).start()
+
     def send(self, heard: str) -> None:
         if self.busy:
             self.pending = heard
@@ -93,10 +176,13 @@ class Ears:
                 if self.dry:
                     print(f"[dry] would send: {heard}", flush=True)
                     return
+                done, self.reflexes = self.reflexes, []
+                notes = ("[Done by your reflexes since your last turn; already handled, no action needed: "
+                         + "; ".join(done) + "]\n") if done else ""
                 response = self.requests.post(
                     f"{self.url}/api/sessions/{self.session}/chat",
                     headers={"Authorization": f"Bearer {self.key}"},
-                    json={"message": hermes_message(heard)}, timeout=600)
+                    json={"message": notes + hermes_message(heard)}, timeout=600)
                 reply = response.json().get("message", {}).get("content", "") if response.ok else response.text
                 print(f"[hermes {response.status_code}] {reply[:200]}", flush=True)
             except Exception as exc:  # a dropped request must not kill the listener
@@ -139,7 +225,7 @@ class Ears:
                         clean = spoken_text(command).lower()
                         if clean and clean not in JUNK and len(clean) > 2:
                             print(f"[heard] {command}", flush=True)
-                            self.send(command)
+                            self.handle(command)
                         else:
                             print(f"[unclear, ignored: {command!r}, peak={cmd_max}]", flush=True)
                 else:
@@ -153,7 +239,7 @@ class Ears:
                         command = spoken_text(self.transcribe(utterance))
                         print(f"[WAKE+heard] ({text!r}) {command}", flush=True)
                         if len(command.split()) > 1:
-                            self.send(command)
+                            self.handle(command)
                     elif text and is_wake(text) and not speaker_busy():
                         print(f"[WAKE] ({text!r}) -> Allzeit bereit!", flush=True)
                         subprocess.Popen(["aplay", "-q", "-D", "pulse", RESP],
@@ -169,6 +255,16 @@ if __name__ == "__main__":
     assert is_wake("sudru") and is_wake("so who") and not is_wake("comrade")
     assert not is_wake("this is a long sentence about nothing")
     assert "[Heard through your microphone] go left" in hermes_message("go left")
+    assert reflex("So who, turn right.") == ("/motion/turn", {"degrees": -90.0}, "Turning right.")
+    assert reflex("Turn left 45 degrees")[1] == {"degrees": 45.0}
+    assert reflex("turn to the left by ninety degrees")[1] == {"degrees": 90.0}
+    assert reflex("turn around please")[1] == {"degrees": 180.0}
+    assert reflex("Move forward 30 centimeters.")[1] == {"meters": 0.3, "direction": "forward"}
+    assert reflex("go ahead")[1] == {"meters": 0.5, "direction": "forward"}
+    assert reflex("move left half a meter")[1] == {"meters": 0.5, "direction": "left"}
+    assert reflex("Come here!")[0] == "/motion/approach"
+    assert reflex("Stop.")[0] == "/stop" and reflex("go back")[0] is None
+    assert reflex("turn left and tell me what you see") is None and reflex("what do you see") is None
     assert spoken_text("(buzzing)") == "" and spoken_text("So who, turn right. [static]") == "So who, turn right"
     parser = argparse.ArgumentParser()
     parser.add_argument("--session", required=True)
