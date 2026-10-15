@@ -61,6 +61,9 @@ Routing rules:
   the estop was already latched* (9×), not latched by them. Trip callers: gateway `/stop`, explore
   `_trip_stop` (every explore end), sensor supervisor (stale lidar/camera), driver invalid command.
   Needs robot logs (driver "estop tripped" times vs gateway audit / supervisor log / explore journal).
+  2026-10-15 deploy: two sources confirmed — the driver latches at every stack start (by design),
+  and the sensor supervisor latched every 15 s while the factory camera driver held the Aurora
+  (takeover not redone after reboot). Every reboot needs `takeover.sh` before `mode.sh start`.
 - [~] **13.7 voice reflexes** (ears.py grammar + self-check 2026-10-15; `back` → spoken refusal; notes prepended to next Hermes message, no extra Strata call) — `ears.py` maps stop / turn left|right|around / forward / back /
   come here to 13.1/13.2/13.5 endpoints directly (canned spoken ack), then posts
   `[done by reflex] …` to Hermes asynchronously so memory stays consistent. Anything else → Hermes.
