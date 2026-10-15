@@ -292,3 +292,16 @@ def test_wander_points_arm_forward_and_relocalizes_without_the_llm(monkeypatch):
     assert out["result"]["state"] == "succeeded"
     assert calls == ["arm forward", "reloc"]
     assert out["recovered"] == ["arm forward", "relocalized after failure"]
+
+
+def test_map_tools_validate_names_before_touching_the_robot():
+    skills = GatewaySkills(dry_run=True)
+    assert skills.map_room("living_room", 5)["dry_run"]
+    assert skills.use_map("room_20261013")["dry_run"]
+    for bad in ("../etc", "Room", "a b", "x;rm -rf", ""):
+        with pytest.raises(ValueError):
+            skills.map_room(bad)
+        with pytest.raises(ValueError):
+            skills.use_map(bad)
+    with pytest.raises(ValueError):
+        skills.map_room("ok", 60)

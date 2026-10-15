@@ -6,6 +6,7 @@ ROOT=$HOME/hwr
 STATE=$ROOT/state
 PID_FILE=$STATE/mode_session.pid
 MODE_FILE=$STATE/mode_session.name
+MAP_FILE=$STATE/mode_session.map
 LOG_FILE=$STATE/mode_session.log
 
 mkdir -p $STATE
@@ -36,7 +37,7 @@ stop_mode() {
     print "mode did not stop after 10 s; terminating remaining group processes"
     kill -KILL -- -$session_pid 2>/dev/null || true
   fi
-  rm -f $PID_FILE $MODE_FILE
+  rm -f $PID_FILE $MODE_FILE $MAP_FILE
 }
 
 start_mode() {
@@ -84,6 +85,7 @@ start_mode() {
   session_pid=$!
   print $session_pid >$PID_FILE
   print $requested >$MODE_FILE
+  print -r -- "$map_yaml" >$MAP_FILE
   sleep 2
   if ! kill -0 -- -$session_pid 2>/dev/null; then
     print -u2 "HWR $requested mode exited during startup; inspect $LOG_FILE"

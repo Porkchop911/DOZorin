@@ -372,6 +372,80 @@ class GatewaySkills:
             break
         return {"target": target, "recovered": recovered, **outcome}
 
+    def list_maps(self):
+        if self.dry_run:
+            return {"dry_run": True, "would": "list saved maps and the active one"}
+        return self._get("/maps")
+
+    @staticmethod
+    def _map_name(name: str) -> str:
+        if not re.fullmatch(r"[a-z0-9_]{1,40}", str(name)):
+            raise ValueError("map name must be 1-40 chars of a-z, 0-9, _ (e.g. living_room)")
+        return str(name)
+
+    def _switch(self, mode: str, name: str, timeout: float = 150.0) -> dict:
+        """Restart the stack in mode on map name, wait until it answers, clear its startup estop."""
+        self._act(f"switch to {mode} on map {name}", "/mode", {"mode": mode, "map": name})
+        time.sleep(5.0)  # let the old gateway die before polling
+        deadline = time.monotonic() + timeout
+        while True:
+            try:
+                state = self._get("/maps")
+                if state.get("mode") == mode and state.get("map") == name:
+                    self._get("/status")
+                    break
+            except (RuntimeError, requests.RequestException):
+                pass
+            if time.monotonic() > deadline:
+                raise RuntimeError(f"stack did not come back in {mode} mode within {timeout:.0f} s")
+            time.sleep(3.0)
+        # The driver latches the estop at every stack start (by design); this switch caused it.
+        self.reset_estop()
+        return state
+
+    def use_map(self, name: str):
+        name = self._map_name(name)
+        if self.dry_run:
+            return {"dry_run": True, "would": f"restart in navigation on {name} and relocalize"}
+        self._switch("navigation", name)
+        time.sleep(3.0)
+        return {"map": name, "relocalize": self.relocalize(), **self.where_am_i()}
+
+    def map_room(self, name: str, minutes: float = 10.0):
+        """Map a new area end to end: exploration mode, explore until done or timeout, save, navigate on it."""
+        name, minutes = self._map_name(name), float(minutes)
+        if not 1.0 <= minutes <= 30.0:
+            raise ValueError("mapping minutes must be 1..30")
+        if self.dry_run:
+            return {"dry_run": True, "would": f"map {name} for up to {minutes} min, save, switch to it"}
+        existing = name in self._get("/maps")["maps"]
+        self._switch("exploration", name)
+        self.arm_pose("forward")
+        time.sleep(2.0)
+        started = time.monotonic()
+        self._act("start exploration", "/explore/start")
+        status = {}
+        while time.monotonic() - started < minutes * 60.0:
+            time.sleep(10.0)
+            status = self._get("/explore/status")
+            if status.get("finished"):
+                break
+        else:
+            self._act("stop exploration (time limit)", "/explore/stop")
+            time.sleep(2.0)
+            status = self._get("/explore/status")
+        # explore only saves on natural completion; always save explicitly.
+        saved = self._act("save map", "/map/save")
+        result = {"map": name, "extended_existing": existing,
+                  "explored_minutes": round((time.monotonic() - started) / 60.0, 1),
+                  "explore_end": (status.get("finished") or {}).get("reason", "unknown"),
+                  "saved": saved}
+        if not saved.get("success"):
+            result["navigation"] = "not switched: map save failed"
+            return result
+        result["navigation"] = self.use_map(name)
+        return result
+
     def approach(self, target: str = "person", stop_at_m: float = 0.8, timeout_s: float = 30.0):
         stop_at_m, timeout_s = float(stop_at_m), float(timeout_s)
         if not 0.3 <= stop_at_m <= 3.0 or not 1.0 <= timeout_s <= 120.0:
@@ -455,7 +529,7 @@ class GatewaySkills:
                    "where_am_i", "relocalize", "stop", "reset_estop",
                    "drive", "arm_aim", "arm_reach", "gripper",
                    "say", "seen_objects", "wander", "turn", "move",
-                   "approach", "roam_step"}
+                   "approach", "roam_step", "map_room", "use_map", "list_maps"}
         if name not in allowed:
             raise ValueError(f"unknown skill {name!r}")
         return getattr(self, name)(**arguments)

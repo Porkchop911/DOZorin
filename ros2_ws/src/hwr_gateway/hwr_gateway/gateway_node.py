@@ -7,6 +7,8 @@ import json
 import math
 import os
 import random
+import re
+import subprocess
 import threading
 import time
 from pathlib import Path
@@ -93,6 +95,15 @@ class BeepRequest(BaseModel):
 
 class TurnRequest(BaseModel):
     degrees: float
+
+
+class ModeRequest(BaseModel):
+    mode: str
+    map: str
+
+
+MAP_NAME = re.compile(r"[a-z0-9_]{1,40}")
+HWR_ROOT = Path.home() / "hwr"
 
 
 class ApproachRequest(BaseModel):
@@ -186,6 +197,7 @@ class GatewayNode(Node):
         self.arm_reach = self.create_client(ArmReach, "arm/reach", callback_group=self.group)
         self.arm_aim = self.create_client(AimCamera, "arm/aim", callback_group=self.group)
         self.gripper = self.create_client(Gripper, "gripper", callback_group=self.group)
+        self.map_save = self.create_client(Trigger, "map_save", callback_group=self.group)
         self.relocalize = self.create_client(Trigger, "global_relocalize",
                                              callback_group=self.group)
         self.create_subscription(BatteryState, "battery", self._battery, 10,
@@ -762,6 +774,67 @@ class GatewayNode(Node):
                       "pose": self.pose}
             self._audit("motion_approach", outcome, result)
             return result
+
+        def current_mode() -> dict:
+            state = HWR_ROOT / "state"
+            read = lambda name: (state / name).read_text().strip() if (state / name).exists() else None  # noqa: E731
+            map_path = read("mode_session.map")
+            return {"mode": read("mode_session.name"),
+                    "map": Path(map_path).stem if map_path else None}
+
+        @app.get("/maps", dependencies=[Depends(auth)])
+        def maps():
+            names = sorted(p.stem for p in (HWR_ROOT / "maps").glob("*.yaml")
+                           if not p.name.endswith(".state.yaml"))
+            return {"maps": names, **current_mode()}
+
+        @app.post("/mode", dependencies=[Depends(auth)])
+        def switch_mode(body: ModeRequest):
+            # Trust boundary: the name reaches a shell script, so only [a-z0-9_] and no shell.
+            if body.mode not in ("exploration", "navigation"):
+                raise HTTPException(422, "mode must be exploration or navigation")
+            if not MAP_NAME.fullmatch(body.map):
+                raise HTTPException(422, "map name must be 1-40 chars of a-z, 0-9, _")
+            path = HWR_ROOT / "maps" / body.map
+            if body.mode == "navigation":
+                path = path.with_suffix(".yaml")
+                if not path.exists():
+                    raise HTTPException(404, f"no saved map {body.map!r}")
+            log = (HWR_ROOT / "state" / "mode_switch.log").open("a")
+            # Own session: mode.sh restart kills this gateway's process group, the switcher must survive it.
+            subprocess.Popen(["zsh", "-c", 'sleep 1; exec "$0" restart "$1" "$2"',
+                              str(HWR_ROOT / "deploy/mode.sh"), body.mode, str(path)],
+                             stdout=log, stderr=log, stdin=subprocess.DEVNULL,
+                             start_new_session=True)
+            self._audit("mode_switch", "accepted", {"mode": body.mode, "map": body.map})
+            return {"switching": True, "mode": body.mode, "map": body.map,
+                    "note": "stack restarts; gateway is back in ~30-60 s with the estop latched (startup)"}
+
+        @app.post("/map/save", dependencies=[Depends(auth)])
+        def map_save():
+            response = self._call(self.map_save, Trigger.Request(), timeout=15.0)
+            self._audit("map_save", "accepted" if response.success else "rejected",
+                        {"message": response.message})
+            return {"success": response.success, "message": response.message}
+
+        @app.get("/explore/status", dependencies=[Depends(auth)])
+        def explore_status():
+            journal = HWR_ROOT / "state" / "exploration.jsonl"
+            last_start = last_finish = None
+            if journal.exists():
+                with journal.open("rb") as stream:
+                    stream.seek(max(0, journal.stat().st_size - 200_000))
+                    for line in stream.read().decode("utf-8", "replace").splitlines():
+                        try:
+                            event = json.loads(line)
+                        except ValueError:
+                            continue
+                        if event.get("event") == "session_started":
+                            last_start, last_finish = event, None
+                        elif event.get("event") == "session_finished":
+                            last_finish = event
+            return {"running": last_start is not None and last_finish is None,
+                    "started": last_start, "finished": last_finish}
 
         @app.post("/stop", dependencies=[Depends(auth)])
         def stop():
