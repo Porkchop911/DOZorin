@@ -1177,10 +1177,12 @@ class GatewayNode(Node):
                 raise HTTPException(422, "give on=<color> or x,y")
             # Live B2 #3 placed at -85/-80 deg and stood; #4 at -60/-55 and fell: place steep only.
             # S2 #1: picked at -55, placed at -75 -> cube came down 20 deg tilted and slid off.
-            # With the pick pitch known, place at exactly that pitch (cube level).
+            # With the pick pitch known, place within 15 deg of it: exact was unreachable (S2 #2),
+            # 10-15 deg off still stood (series 1 #3), 20 deg slid off.
             steepest, flattest = -math.pi / 2, -math.radians(70)
             if body.pitch_deg is not None:
-                steepest = flattest = math.radians(body.pitch_deg)
+                steepest = max(-math.pi / 2, math.radians(body.pitch_deg - 15))
+                flattest = min(-math.radians(55), math.radians(body.pitch_deg + 15))
             if body.on:
                 plan, spot = refined_plan(body.on, spot, z, size * body.level,
                                           flattest=flattest, steepest=steepest)
