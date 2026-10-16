@@ -12,9 +12,9 @@ poses:
 gripper:
   open: 200
   close: 500
-  # Holding a 3 cm kit cube; readback short of `close` by more than grasp_margin = something in the jaws.
-  grip: 500
-grasp_margin: 30
+  # Holding a 3 cm kit cube; readback short of `grip` by more than grasp_margin = something in the jaws.
+  grip: 600  # live 2026-10-16: empty reads ~598, a held kit cube stalls at ~486
+grasp_margin: 40
 # Kit cube edge (m) and OpenCV LAB ranges AFTER floor normalisation (image median a/b -> 128),
 # tuned live 2026-10-16 under two lamps (evidence/phase14/find3-5.jpg); glare is b >= 83, shadows a 129-144.
 cube_size: 0.03
