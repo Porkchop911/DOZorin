@@ -474,12 +474,13 @@ class GatewaySkills:
         payload = {"on": on, "level": int(level), "x": x, "y": y, "color": color,
                    "pitch_deg": pitch_deg}
         result = self._motion(f"place on {on or (x, y)}", "/arm/place", payload, 20.0)
-        if result.get("outcome") == "out of reach" and self._into_reach(result["spot"]):
+        if result.get("outcome") == "out of reach" and self._into_reach(result["spot"], held=color):
             result = self._motion(f"place on {on or (x, y)}", "/arm/place", payload, 20.0)
             result["repositioned"] = True
         return result
 
-    def _into_reach(self, spot: dict, reach_x: float = 0.25, keep_x: float = 0.19) -> bool:
+    def _into_reach(self, spot: dict, reach_x: float = 0.25, keep_x: float = 0.19,
+                    held: str | None = None) -> bool:
         """Turn to face a base-frame spot and creep (<= 0.15 m) until it sits ~reach_x ahead.
 
         The creep bypasses the costmap (it inflates the cubes themselves), so it is capped by every
@@ -494,7 +495,8 @@ class GatewaySkills:
         if abs(bearing) >= 8.0:
             self.turn(bearing)  # in place; needs no forward camera
             spot = {"x": distance, "y": 0.0}
-        cubes = self.find_cubes().get("cubes", [])
+        # The held cube shows at the image bottom (S2 #4 refused the creep because of it).
+        cubes = [c for c in self.find_cubes().get("cubes", []) if c.get("color") != held]
         nearest = min([c["x"] for c in cubes if abs(c["y"]) < 0.20] + [spot["x"]])
         creep = min(spot["x"] - reach_x, nearest - keep_x, 0.15)
         if creep < 0.02:

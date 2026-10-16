@@ -348,3 +348,13 @@ def test_into_reach_creep_never_closes_on_another_cube():
     drives.clear()
     skills.find_cubes = lambda: {"cubes": [{"x": 0.36, "y": 0.0}, {"x": 0.20, "y": 0.05}]}
     assert not skills._into_reach({"x": 0.36, "y": 0.0}) and drives == []
+
+
+def test_into_reach_ignores_the_held_cube():
+    skills = GatewaySkills(token="t")
+    drives = []
+    skills.find_cubes = lambda: {"cubes": [{"color": "green", "x": 0.15, "y": 0.0},
+                                           {"color": "red", "x": 0.30, "y": 0.0}]}
+    skills.drive = lambda vx=0.0, vy=0.0, wz=0.0, seconds=1.0: drives.append(vx * seconds)
+    assert skills._into_reach({"x": 0.30, "y": 0.0}, held="green")
+    assert drives == [pytest.approx(0.05)]
