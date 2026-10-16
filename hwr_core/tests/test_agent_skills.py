@@ -320,10 +320,11 @@ def test_stack_cubes_sequences_pick_place_and_repositions_once():
 
     skills._motion = motion
     skills._act = lambda description, path, payload=None: calls.append((path, payload))
+    skills.drive = lambda vx=0.0, vy=0.0, wz=0.0, seconds=1.0: calls.append(("/drive", seconds))
     result = skills.stack_cubes(["red", "green", "blue"])
     assert result["outcome"] == "stacked"
     paths = [path for path, _ in calls]
-    assert paths == ["/arm/pick", "/arm/pose", "/motion/turn", "/motion/move", "/arm/pick",
+    assert paths == ["/arm/pick", "/motion/turn", "/drive", "/arm/pick",
                      "/arm/place", "/arm/pick", "/arm/place", "/arm/pose"]
     places = [payload for path, payload in calls if path == "/arm/place"]
     assert [(p["on"], p["level"]) for p in places] == [("red", 1), ("green", 2)]

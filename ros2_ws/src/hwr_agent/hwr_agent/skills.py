@@ -478,18 +478,19 @@ class GatewaySkills:
         return result
 
     def _into_reach(self, spot: dict, reach_x: float = 0.20) -> bool:
-        """Turn to face a base-frame spot and creep forward until it sits ~reach_x ahead (no reverse)."""
+        """Turn to face a base-frame spot and creep (<= 0.15 m) until it sits ~reach_x ahead (no reverse)."""
         if self.dry_run:
             return False
         bearing = math.degrees(math.atan2(spot["y"], spot["x"]))
         distance = math.hypot(spot["x"], spot["y"])
         if abs(bearing) < 8.0 and distance <= reach_x + 0.04:
             return False  # already in front and close: moving won't help
-        self.arm_pose("forward")
         if abs(bearing) >= 8.0:
-            self.turn(bearing)
+            self.turn(bearing)  # in place; needs no forward camera
         if distance - reach_x > 0.03:
-            self.move(min(distance - reach_x, 1.0))
+            # The costmap inflates the cubes themselves, so move() refuses this last bit;
+            # a short bounded creep it is (live 2026-10-16). Turning/creeping keeps the arm down.
+            self.drive(vx=0.1, seconds=min(distance - reach_x, 0.15) / 0.1)
         return True
 
     def follow(self, target: str = "person", seconds: float = 60.0, distance_m: float = 0.8):
