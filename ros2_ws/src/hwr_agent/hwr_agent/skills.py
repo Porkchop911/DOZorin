@@ -479,7 +479,7 @@ class GatewaySkills:
             result["repositioned"] = True
         return result
 
-    def _into_reach(self, spot: dict, reach_x: float = 0.25, keep_x: float = 0.19,
+    def _into_reach(self, spot: dict, reach_x: float = 0.22, keep_x: float = 0.19,
                     held: str | None = None) -> bool:
         """Turn to face a base-frame spot and creep (<= 0.15 m) until it sits ~reach_x ahead.
 
@@ -490,14 +490,16 @@ class GatewaySkills:
             return False
         bearing = math.degrees(math.atan2(spot["y"], spot["x"]))
         distance = math.hypot(spot["x"], spot["y"])
-        if abs(bearing) < 8.0 and distance <= reach_x + 0.04:
+        # Steep-only grasps end ~0.25 m; +0.04 slack here once called 0.275 "close" (S3 #1).
+        if abs(bearing) < 8.0 and distance <= reach_x + 0.02:
             return False  # already in front and close: moving won't help
         if abs(bearing) >= 8.0:
             self.turn(bearing)  # in place; needs no forward camera
             spot = {"x": distance, "y": 0.0}
         # The held cube shows at the image bottom (S2 #4 refused the creep because of it).
         cubes = [c for c in self.find_cubes().get("cubes", []) if held is None or c.get("color") != held]
-        nearest = min([c["x"] for c in cubes if abs(c["y"]) < 0.20] + [spot["x"]])
+        # Corridor = robot half-width ~0.1 m + half a cube.
+        nearest = min([c["x"] for c in cubes if abs(c["y"]) < 0.13] + [spot["x"]])
         creep = min(spot["x"] - reach_x, nearest - keep_x, 0.15)
         if creep < 0.02:
             return False  # can't get closer without hitting another cube: report out of reach
@@ -556,6 +558,7 @@ class GatewaySkills:
         base = order[0] if order else min(wanted, key=lambda c: math.hypot(
             self._to_base(pose, world[c])["x"] - 0.22, self._to_base(pose, world[c])["y"]))
         stack, stack_xy = [base], world.pop(base)
+        last = None
         for _ in range(max_rounds):
             todo = [c for c in wanted if c not in stack]
             if not todo:
@@ -569,8 +572,12 @@ class GatewaySkills:
                 picked = self.pick(color)
             log.append({"pick": color, **picked})
             if picked.get("outcome") != "holding":
+                if last == (color, picked.get("outcome")):
+                    break  # same failure twice: no progress, report instead of looping
+                last = (color, picked.get("outcome"))
                 look()
                 continue
+            last = None
             here = self._to_base(self._pose(), stack_xy)
             self._into_reach(here, reach_x=0.22, held=color)
             placed = self.place(on=stack[-1], level=len(stack), color=color,

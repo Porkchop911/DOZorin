@@ -356,9 +356,10 @@ def test_stack_cubes_retries_after_a_miss_and_a_fall():
 
 def test_stack_cubes_gives_up_after_max_rounds():
     skills = GatewaySkills(token="t")
-    FakeArm(skills, CUBES, [{"outcome": "missed"}] * 3, [])
+    fake = FakeArm(skills, CUBES, [{"outcome": "missed"}] * 3, [])
     result = skills.stack_cubes(["red", "blue"], max_rounds=3)
     assert result["outcome"] == "stack of 1"
+    assert [p for p, _ in fake.calls].count("/arm/pick") == 2  # same failure twice -> stop
     with pytest.raises(ValueError):
         skills.stack_cubes(["red", "red"])
 
@@ -382,4 +383,4 @@ def test_into_reach_ignores_the_held_cube():
                                            {"color": "red", "x": 0.30, "y": 0.0}]}
     skills.drive = lambda vx=0.0, vy=0.0, wz=0.0, seconds=1.0: drives.append(vx * seconds)
     assert skills._into_reach({"x": 0.30, "y": 0.0}, held="green")
-    assert drives == [pytest.approx(0.05)]
+    assert drives == [pytest.approx(0.08)]  # to reach_x 0.22; the held green at 0.15 is ignored
