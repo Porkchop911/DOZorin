@@ -469,8 +469,10 @@ class GatewaySkills:
         return result
 
     def place(self, on: str | None = None, level: int = 1,
-              x: float | None = None, y: float | None = None, color: str | None = None):
-        payload = {"on": on, "level": int(level), "x": x, "y": y, "color": color}
+              x: float | None = None, y: float | None = None, color: str | None = None,
+              pitch_deg: float | None = None):
+        payload = {"on": on, "level": int(level), "x": x, "y": y, "color": color,
+                   "pitch_deg": pitch_deg}
         result = self._motion(f"place on {on or (x, y)}", "/arm/place", payload, 20.0)
         if result.get("outcome") == "out of reach" and self._into_reach(result["spot"]):
             result = self._motion(f"place on {on or (x, y)}", "/arm/place", payload, 20.0)
@@ -522,7 +524,8 @@ class GatewaySkills:
             log.append({"pick": color, **picked})
             if picked.get("outcome") != "holding":
                 return {"outcome": f"failed to pick {color}", "log": log}
-            placed = self.place(on=order[level - 1], level=level, color=color)
+            placed = self.place(on=order[level - 1], level=level, color=color,
+                                pitch_deg=picked.get("pitch_deg"))
             log.append({"place_on": order[level - 1], **placed})
             if placed.get("outcome") != "placed":
                 self.gripper("open")

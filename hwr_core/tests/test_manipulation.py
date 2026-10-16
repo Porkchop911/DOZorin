@@ -49,3 +49,9 @@ def test_flattest_pitch_limit_refuses_shallow_plans():
     arm = ArmKinematics()
     assert plan_grasp(arm, 0.26, -0.10, 0.04, 0.0) is not None  # shallow is reachable...
     assert plan_grasp(arm, 0.26, -0.10, 0.04, 0.0, flattest=-math.radians(70)) is None  # ...not steep
+
+
+def test_fixed_pitch_plan_uses_exactly_that_pitch():
+    plan = plan_grasp(ArmKinematics(), 0.20, 0.0, 0.04, 0.0,
+                      steepest=math.radians(-60), flattest=math.radians(-60))
+    assert plan is not None and plan[2] == pytest.approx(math.radians(-60))

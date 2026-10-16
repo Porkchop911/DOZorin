@@ -121,6 +121,7 @@ class PickRequest(BaseModel):
 
 class PlaceRequest(BaseModel):
     color: str | None = None   # colour being placed (for the after-release check)
+    pitch_deg: float | None = None  # pick pitch: placing at the same pitch sets the cube down level
     on: str | None = None      # colour of the cube (stack top) to place on
     level: int = 1             # stack height under the held cube (1 = on one cube)
     x: float | None = None     # or a floor point in base_link
@@ -1039,11 +1040,11 @@ class GatewayNode(Node):
         clearance = float(arm_config.get("place_clearance", 0.005))
 
         def refined_plan(color: str, spot: dict, z: float, top_z: float,
-                         flattest: float = -math.radians(30)):
+                         flattest: float = -math.radians(30), steepest: float = -math.pi / 2):
             """Hover 8 cm over the look_down estimate, re-locate the cube from almost overhead
             (mostly its top face: true edges for yaw, small parallax), then plan the descent."""
             plan = plan_grasp(self.kin, spot["x"], spot["y"], z, spot["yaw"], hover=0.08,
-                              roll_sign=roll_sign, flattest=flattest)
+                              roll_sign=roll_sign, flattest=flattest, steepest=steepest)
             if plan is None:
                 return None, spot
             reach(plan[0], 1200, 1.6)
@@ -1057,7 +1058,7 @@ class GatewayNode(Node):
                                                                    s["y"] - spot["y"])),
                         "refined": True}
             return plan_grasp(self.kin, spot["x"], spot["y"], z, spot["yaw"],
-                              roll_sign=roll_sign, flattest=flattest), spot
+                              roll_sign=roll_sign, flattest=flattest, steepest=steepest), spot
 
         def seen_near(color: str, spot: dict, plane_z: float, within: float = 0.03) -> bool:
             blobs, k = fresh_cubes(time.time())
@@ -1175,11 +1176,17 @@ class GatewayNode(Node):
             else:
                 raise HTTPException(422, "give on=<color> or x,y")
             # Live B2 #3 placed at -85/-80 deg and stood; #4 at -60/-55 and fell: place steep only.
+            # S2 #1: picked at -55, placed at -75 -> cube came down 20 deg tilted and slid off.
+            # With the pick pitch known, place at exactly that pitch (cube level).
+            steepest, flattest = -math.pi / 2, -math.radians(70)
+            if body.pitch_deg is not None:
+                steepest = flattest = math.radians(body.pitch_deg)
             if body.on:
                 plan, spot = refined_plan(body.on, spot, z, size * body.level,
-                                          flattest=-math.radians(70))
+                                          flattest=flattest, steepest=steepest)
             else:
-                plan = plan_grasp(self.kin, spot["x"], spot["y"], z, 0.0, roll_sign=roll_sign)
+                plan = plan_grasp(self.kin, spot["x"], spot["y"], z, 0.0, roll_sign=roll_sign,
+                                  flattest=flattest, steepest=steepest)
             if plan is None:
                 result = {"outcome": "out of reach", "spot": spot}
             else:
