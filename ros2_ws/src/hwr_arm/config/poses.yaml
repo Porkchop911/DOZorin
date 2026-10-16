@@ -15,9 +15,10 @@ gripper:
   # Holding a 3 cm kit cube; readback short of `close` by more than grasp_margin = something in the jaws.
   grip: 500
 grasp_margin: 30
-# Kit cube edge (m) and OpenCV LAB ranges, seeded from the vendor Stereo lab_config on this robot (2026-10-16).
+# Kit cube edge (m) and OpenCV LAB ranges, tuned live 2026-10-16 on the wooden floor (evidence/phase14/find4.jpg):
+# floor b >= 132 and shadows a 130-135 / b 132-145 sit outside every range; L >= 20-30 drops black chassis/jaws.
 cube_size: 0.03
 cubes:
-  red: {min: [0, 152, 108], max: [255, 255, 255]}
-  green: {min: [51, 0, 125], max: [255, 111, 255]}
-  blue: {min: [0, 0, 0], max: [255, 142, 120]}
+  red: {min: [30, 160, 140], max: [255, 255, 255]}
+  green: {min: [20, 0, 100], max: [255, 122, 130]}
+  blue: {min: [30, 120, 40], max: [255, 165, 112]}
