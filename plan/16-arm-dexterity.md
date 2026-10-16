@@ -58,7 +58,7 @@ Intermediate gates: pick 8/10, place-on-cube 8/10 (user counts).
 - [ ] **14.7 Live calibration** (user present): (a) forward/floor/look_down camera directions vs
   FK; (b) reach to 3 tape marks ≤ 1 cm (gravity trims per joint if not); (c) LAB ranges for the
   3 cubes in room light; (d) gripper `grip` level + readback threshold.
-- [~] **14.8 Benchmarks B1, B2** (B2 series 1: 1/5, not accepted; B1 not run) with rates and photos in `evidence/phase14/`.
+- [~] **14.8 Benchmarks B1, B2** (B2: series 1 1/5, series 2 0/5, series 3 1/2 open; B1 not run) with rates and photos in `evidence/phase14/`.
 
 ## Safety
 
@@ -90,6 +90,11 @@ at zero velocity and a named arm pose.
 | S2 #4 | FAIL - place out of reach; creep refused because the HELD cube looked like an obstacle. Fix: creep ignores the held colour. (Also: sensor supervisor latched estop on a lidar dropout mid-session; recovered, reset) |
 | S2 #5 | FAIL - creep worked; pick -55, place -70: green hit red's edge and tumbled (user). Fix: picks <= -70 (else creep), place within +/-10 deg of pick |
 | **B2 series 2** | **0/5** - total 1/10 |
+| User 2026-10-16 | any stacking order; robot may reposition blocks and its body itself |
+| S3 #1 | FAIL - green at 0.275 judged "close" (+0.04 slack from pre-steep days), no creep, same pick retried 8x. Fix: creep to 0.22 (+0.02), corridor +/-0.13 m, stop on repeated failure |
+| S3 #2 | **PASS** (user-verified) - auto order green/red/blue, 44 s, both places verified by the after-release check |
+| Self-reset (unstack) | `pick(level=n)` added; blue floor spot unreachable at its pick pitch -> place turned the body and gave up holding blue; ad-hoc script then picked red (gripper open) and dropped blue out of view. TODO: floor placement without the pitch window; unstack as a skill that stops on a failed place |
+| Session end | battery low (user). B2 overall: 1/5, 0/5, S3 1/2 -> **not accepted**. B1 follow not run. Arm parked forward, gripper open |
 | Setup rule (user) | cubes >= 8 cm apart. Jaws close left-right at roll 0 (user) - input for a later neighbour-clearance roll choice |
 | incident | into-reach creep (drive, costmap bypassed because it inflates the cubes) **drove into the nearer cubes**. Fix: creep capped so every cube in view stays >= 0.19 m ahead, else refuse. Bumper ~0.125 m. |
 
