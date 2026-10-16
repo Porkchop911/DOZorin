@@ -43,3 +43,9 @@ def test_place_on_one_cube_uses_a_pitch_both_points_reach():
     # Live 2026-10-16: grasp reachable at -90 but hover only at -85 -> was "out of reach".
     plan = plan_grasp(ArmKinematics(), 0.2091, -0.0368, 0.05, -0.2)
     assert plan is not None and plan[2] > -math.pi / 2
+
+
+def test_flattest_pitch_limit_refuses_shallow_plans():
+    arm = ArmKinematics()
+    assert plan_grasp(arm, 0.26, -0.10, 0.04, 0.0) is not None  # shallow is reachable...
+    assert plan_grasp(arm, 0.26, -0.10, 0.04, 0.0, flattest=-math.radians(70)) is None  # ...not steep

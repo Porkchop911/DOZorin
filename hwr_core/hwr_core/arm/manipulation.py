@@ -31,13 +31,16 @@ def locate_cube(item: dict, k, joints: JointSolution, arm: ArmKinematics,
 
 
 def plan_grasp(arm: ArmKinematics, x: float, y: float, z: float, yaw: float,
-               hover: float = 0.05, roll_sign: float = 1.0):
+               hover: float = 0.05, roll_sign: float = 1.0,
+               flattest: float = -math.radians(30)):
     """(hover pulses, grasp pulses, pitch) with the jaws square to the cube, or None."""
     pan = math.atan2(y, x - arm.pan_x)
     roll = roll_sign * wrap_quarter(yaw - pan)
     # Steepest pitch that works for both points: the straight vertical descent needs one pitch.
     for step in range(13):
         pitch = -math.pi / 2 + math.radians(5 * step)
+        if pitch > flattest + 1e-9:
+            break
         grasp, above = arm.ik(x, y, z, pitch, roll), arm.ik(x, y, z + hover, pitch, roll)
         if grasp is not None and above is not None:
             return joints_to_pulses(above), joints_to_pulses(grasp), pitch

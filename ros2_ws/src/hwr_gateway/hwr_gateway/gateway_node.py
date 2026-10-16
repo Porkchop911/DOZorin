@@ -120,6 +120,7 @@ class PickRequest(BaseModel):
 
 
 class PlaceRequest(BaseModel):
+    color: str | None = None   # colour being placed (for the after-release check)
     on: str | None = None      # colour of the cube (stack top) to place on
     level: int = 1             # stack height under the held cube (1 = on one cube)
     x: float | None = None     # or a floor point in base_link
@@ -1037,11 +1038,12 @@ class GatewayNode(Node):
         roll_sign = float(arm_config.get("roll_sign", 1.0))
         clearance = float(arm_config.get("place_clearance", 0.005))
 
-        def refined_plan(color: str, spot: dict, z: float, top_z: float):
+        def refined_plan(color: str, spot: dict, z: float, top_z: float,
+                         flattest: float = -math.radians(30)):
             """Hover 8 cm over the look_down estimate, re-locate the cube from almost overhead
             (mostly its top face: true edges for yaw, small parallax), then plan the descent."""
             plan = plan_grasp(self.kin, spot["x"], spot["y"], z, spot["yaw"], hover=0.08,
-                              roll_sign=roll_sign)
+                              roll_sign=roll_sign, flattest=flattest)
             if plan is None:
                 return None, spot
             reach(plan[0], 1200, 1.6)
@@ -1055,7 +1057,17 @@ class GatewayNode(Node):
                                                                    s["y"] - spot["y"])),
                         "refined": True}
             return plan_grasp(self.kin, spot["x"], spot["y"], z, spot["yaw"],
-                              roll_sign=roll_sign), spot
+                              roll_sign=roll_sign, flattest=flattest), spot
+
+        def seen_near(color: str, spot: dict, plane_z: float, within: float = 0.03) -> bool:
+            blobs, k = fresh_cubes(time.time())
+            joints = pulses_to_joints(arm_pulses())
+            for blob in blobs:
+                if blob["class"] == f"{color}_cube":
+                    s = locate_cube(blob, k, joints, self.kin, plane_z)
+                    if s and math.hypot(s["x"] - spot["x"], s["y"] - spot["y"]) < within:
+                        return True
+            return False
 
         def arm_do(client, request, settle: float):
             response = self._call(client, request)
@@ -1160,8 +1172,10 @@ class GatewayNode(Node):
                 spot, z = {"x": body.x, "y": body.y, "yaw": 0.0}, size / 2 + clearance
             else:
                 raise HTTPException(422, "give on=<color> or x,y")
+            # Live B2 #3 placed at -85/-80 deg and stood; #4 at -60/-55 and fell: place steep only.
             if body.on:
-                plan, spot = refined_plan(body.on, spot, z, size * body.level)
+                plan, spot = refined_plan(body.on, spot, z, size * body.level,
+                                          flattest=-math.radians(70))
             else:
                 plan = plan_grasp(self.kin, spot["x"], spot["y"], z, 0.0, roll_sign=roll_sign)
             if plan is None:
@@ -1172,7 +1186,12 @@ class GatewayNode(Node):
                 reach(release, 800, 1.0)
                 grip("open")
                 reach(hover, 800, 1.0)
-                result = {"outcome": "placed", "spot": spot, "z": round(z, 3),
+                outcome = "placed"
+                if body.color:  # verify from look_down (at hover the cube is cut off at the image edge)
+                    pose("look_down", 2.0)
+                    top = size * (body.level + 1) if body.on else size
+                    outcome = "placed" if seen_near(body.color, spot, top) else "not on target"
+                result = {"outcome": outcome, "spot": spot, "z": round(z, 3),
                           "pitch_deg": round(math.degrees(pitch))}
             self._audit("arm_place", result["outcome"], result)
             return result
