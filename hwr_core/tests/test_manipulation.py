@@ -37,3 +37,9 @@ def test_follow_turns_toward_target_and_drives_only_when_aligned():
     b, e, vx, wz = follow_step((330, 150), K, 0.0, 0.0, 2.0, 1.0)
     assert e > 0 and vx > 0
     assert follow_step((320, 200), K, 0.0, 0.0, 0.8, 1.0)[2] == 0.0  # close enough: no reverse
+
+
+def test_place_on_one_cube_uses_a_pitch_both_points_reach():
+    # Live 2026-10-16: grasp reachable at -90 but hover only at -85 -> was "out of reach".
+    plan = plan_grasp(ArmKinematics(), 0.2091, -0.0368, 0.05, -0.2)
+    assert plan is not None and plan[2] > -math.pi / 2

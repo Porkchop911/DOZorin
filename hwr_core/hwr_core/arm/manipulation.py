@@ -30,13 +30,13 @@ def plan_grasp(arm: ArmKinematics, x: float, y: float, z: float, yaw: float,
     """(hover pulses, grasp pulses, pitch) with the jaws square to the cube, or None."""
     pan = math.atan2(y, x - arm.pan_x)
     roll = roll_sign * wrap_quarter(yaw - pan)
-    grasp, pitch = arm.ik_any_pitch(x, y, z, roll)
-    if grasp is None:
-        return None
-    above = arm.ik(x, y, z + hover, pitch, roll)
-    if above is None:
-        return None
-    return joints_to_pulses(above), joints_to_pulses(grasp), pitch
+    # Steepest pitch that works for both points: the straight vertical descent needs one pitch.
+    for step in range(13):
+        pitch = -math.pi / 2 + math.radians(5 * step)
+        grasp, above = arm.ik(x, y, z, pitch, roll), arm.ik(x, y, z + hover, pitch, roll)
+        if grasp is not None and above is not None:
+            return joints_to_pulses(above), joints_to_pulses(grasp), pitch
+    return None
 
 
 def follow_step(center, k, bearing: float, elevation: float, range_m: float | None,
