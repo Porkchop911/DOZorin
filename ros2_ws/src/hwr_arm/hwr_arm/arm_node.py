@@ -13,7 +13,7 @@ from rclpy.qos import (QoSDurabilityPolicy, QoSProfile,
                        QoSReliabilityPolicy)
 from std_msgs.msg import Bool
 
-from hwr_core.arm import ArmKinematics, CameraAim
+from hwr_core.arm import ArmKinematics, CameraAim, joints_to_pulses
 
 
 class ArmNode(Node):
@@ -71,17 +71,15 @@ class ArmNode(Node):
 
     def _reach(self, request, response):
         solution = self.kinematics.ik(request.x, request.y, request.z,
-                                      request.tool_pitch)
+                                      request.tool_pitch, request.roll)
         if solution is None:
             response.success, response.message = False, "target unreachable or in keep-out"
             return response
-        positions = {
-            1: self.kinematics.radians_to_pulse(solution.pan),
-            2: self.kinematics.radians_to_pulse(solution.shoulder),
-            3: self.kinematics.radians_to_pulse(solution.elbow),
-            4: self.kinematics.radians_to_pulse(solution.wrist),
-            5: 500,
-        }
+        try:
+            positions = joints_to_pulses(solution)
+        except ValueError as exc:
+            response.success, response.message = False, str(exc)
+            return response
         return self._send(positions, request.duration_ms, response)
 
     def _aim(self, request, response):
@@ -95,7 +93,7 @@ class ArmNode(Node):
     def _gripper(self, request, response):
         if request.command not in self.gripper:
             response.success = False
-            response.message = "gripper command must be 'open' or 'close'"
+            response.message = f"gripper command must be one of {sorted(self.gripper)}"
             return response
         return self._send({10: self.gripper[request.command]},
                           request.duration_ms or 800, response)

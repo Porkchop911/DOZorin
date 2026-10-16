@@ -454,6 +454,74 @@ class GatewaySkills:
                             {"target": str(target), "stop_at_m": stop_at_m,
                              "timeout_s": timeout_s}, timeout_s)
 
+    CUBE_COLORS = ("red", "green", "blue")
+
+    def find_cubes(self):
+        return self._motion("look down for cubes", "/arm/find_cubes", {}, 10.0)
+
+    def pick(self, color: str):
+        if color not in self.CUBE_COLORS:
+            raise ValueError(f"color must be one of {self.CUBE_COLORS}")
+        result = self._motion(f"pick the {color} cube", "/arm/pick", {"color": color}, 20.0)
+        if result.get("outcome") == "out of reach" and self._into_reach(result["cube"]):
+            result = self._motion(f"pick the {color} cube", "/arm/pick", {"color": color}, 20.0)
+            result["repositioned"] = True
+        return result
+
+    def place(self, on: str | None = None, level: int = 1,
+              x: float | None = None, y: float | None = None):
+        payload = {"on": on, "level": int(level), "x": x, "y": y}
+        result = self._motion(f"place on {on or (x, y)}", "/arm/place", payload, 20.0)
+        if result.get("outcome") == "out of reach" and self._into_reach(result["spot"]):
+            result = self._motion(f"place on {on or (x, y)}", "/arm/place", payload, 20.0)
+            result["repositioned"] = True
+        return result
+
+    def _into_reach(self, spot: dict, reach_x: float = 0.20) -> bool:
+        """Turn to face a base-frame spot and creep forward until it sits ~reach_x ahead (no reverse)."""
+        if self.dry_run:
+            return False
+        bearing = math.degrees(math.atan2(spot["y"], spot["x"]))
+        distance = math.hypot(spot["x"], spot["y"])
+        if abs(bearing) < 8.0 and distance <= reach_x + 0.04:
+            return False  # already in front and close: moving won't help
+        self.arm_pose("forward")
+        if abs(bearing) >= 8.0:
+            self.turn(bearing)
+        if distance - reach_x > 0.03:
+            self.move(min(distance - reach_x, 1.0))
+        return True
+
+    def follow(self, target: str = "person", seconds: float = 60.0, distance_m: float = 0.8):
+        seconds, distance_m = float(seconds), float(distance_m)
+        if not 3.0 <= seconds <= 300.0 or not 0.3 <= distance_m <= 3.0:
+            raise ValueError("seconds 3..300, distance_m 0.3..3")
+        return self._motion(f"follow {target} for {seconds} s", "/arm/follow",
+                            {"target": str(target), "seconds": seconds,
+                             "distance_m": distance_m}, seconds + 15.0)
+
+    def stack_cubes(self, order: list[str] | None = None):
+        """Stack cubes bottom-to-top in `order`; each step re-detects, so moved cubes are fine."""
+        order = list(order or self.CUBE_COLORS)
+        if not 2 <= len(order) <= 3 or len(set(order)) != len(order) or \
+                not set(order) <= set(self.CUBE_COLORS):
+            raise ValueError(f"order must be 2-3 distinct colours from {self.CUBE_COLORS}")
+        if self.dry_run:
+            return {"dry_run": True, "would": f"stack {order}"}
+        log = []
+        for level, color in enumerate(order[1:], start=1):
+            picked = self.pick(color)
+            log.append({"pick": color, **picked})
+            if picked.get("outcome") != "holding":
+                return {"outcome": f"failed to pick {color}", "log": log}
+            placed = self.place(on=order[level - 1], level=level)
+            log.append({"place_on": order[level - 1], **placed})
+            if placed.get("outcome") != "placed":
+                self.gripper("open")
+                return {"outcome": f"failed to place {color}", "log": log}
+        self.arm_pose("forward")
+        return {"outcome": "stacked", "order": order, "log": log}
+
     def roam_step(self, max_distance: float = 1.5):
         """One idle-life tick: sense, wander, sense; the VLM runs only when something new shows up."""
         if self.dry_run:
@@ -529,7 +597,8 @@ class GatewaySkills:
                    "where_am_i", "relocalize", "stop", "reset_estop",
                    "drive", "arm_aim", "arm_reach", "gripper",
                    "say", "seen_objects", "wander", "turn", "move",
-                   "approach", "roam_step", "map_room", "use_map", "list_maps"}
+                   "approach", "roam_step", "map_room", "use_map", "list_maps",
+                   "find_cubes", "pick", "place", "follow", "stack_cubes"}
         if name not in allowed:
             raise ValueError(f"unknown skill {name!r}")
         return getattr(self, name)(**arguments)

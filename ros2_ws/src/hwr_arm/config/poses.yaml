@@ -7,6 +7,17 @@ poses:
   ceiling: {1: 500, 2: 701, 3: 120, 4: 500, 5: 500}
   carry: {1: 500, 2: 701, 3: 120, 4: 300, 5: 500}
   tucked: {1: 500, 2: 701, 3: 120, 4: 300, 5: 500}
+  # FK: camera ~61 deg below horizontal, image centre on the floor ~0.30 m ahead (plan/16, tune in 14.7).
+  look_down: {1: 500, 2: 701, 3: 120, 4: 50, 5: 500}
 gripper:
   open: 200
   close: 500
+  # Holding a 3 cm kit cube; readback short of `close` by more than grasp_margin = something in the jaws.
+  grip: 500
+grasp_margin: 30
+# Kit cube edge (m) and OpenCV LAB ranges, seeded from the vendor Stereo lab_config on this robot (2026-10-16).
+cube_size: 0.03
+cubes:
+  red: {min: [0, 152, 108], max: [255, 255, 255]}
+  green: {min: [51, 0, 125], max: [255, 111, 255]}
+  blue: {min: [0, 0, 0], max: [255, 142, 120]}

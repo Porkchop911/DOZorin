@@ -27,6 +27,8 @@ from hwr_core.rrc import Board, codecs
 from hwr_core.safety import EStop, Watchdog, validate_wheel_rps
 
 ARM_JOINTS = {1: "joint1", 2: "joint2", 3: "joint3", 4: "joint4", 5: "joint5"}
+# Read back with the arm; a held cube stalls the close short of its target (grasp check).
+READBACK_JOINTS = {**ARM_JOINTS, 10: "gripper"}
 PULSE_CENTER = 500
 RAD_PER_PULSE = math.radians(240.0 / 1000.0)
 MAX_WHEEL_RPS = 4.0
@@ -76,10 +78,10 @@ class DriverNode(Node):
         # A partial servo response must not disconnect the articulated camera
         # subtree in robot_state_publisher.  Seed every joint and retain the
         # last successful readback for individual timeouts.
-        self._joint_positions = {name: 0.0 for name in ARM_JOINTS.values()}
+        self._joint_positions = {name: 0.0 for name in READBACK_JOINTS.values()}
         self._joint_message = JointState(
-            name=list(ARM_JOINTS.values()),
-            position=[0.0] * len(ARM_JOINTS))
+            name=list(READBACK_JOINTS.values()),
+            position=[0.0] * len(READBACK_JOINTS))
         self._joint_shape_logged = False
         self.board.subscribe_imu(lambda s, t: setattr(self, "_latest_imu", (s, t)))
         self.board.subscribe_battery(self._on_battery)
@@ -201,7 +203,7 @@ class DriverNode(Node):
         self.pub_imu.publish(msg)
 
     def _publish_joint_states(self) -> None:
-        for sid, name in ARM_JOINTS.items():
+        for sid, name in READBACK_JOINTS.items():
             pulse = self.board.servo_position(sid, timeout=0.2)
             if pulse is not None:
                 self._joint_positions[name] = (pulse - PULSE_CENTER) * RAD_PER_PULSE

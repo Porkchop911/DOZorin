@@ -305,3 +305,33 @@ def test_map_tools_validate_names_before_touching_the_robot():
             skills.use_map(bad)
     with pytest.raises(ValueError):
         skills.map_room("ok", 60)
+
+
+def test_stack_cubes_sequences_pick_place_and_repositions_once():
+    skills = GatewaySkills(token="t")
+    calls = []
+    replies = {"/arm/pick": [{"outcome": "out of reach", "cube": {"x": 0.4, "y": 0.1, "yaw": 0}},
+                             {"outcome": "holding"}, {"outcome": "holding"}],
+               "/arm/place": [{"outcome": "placed"}, {"outcome": "placed"}]}
+
+    def motion(description, path, payload, seconds):
+        calls.append((path, payload))
+        return dict(replies[path].pop(0)) if path in replies else {"outcome": "done"}
+
+    skills._motion = motion
+    skills._act = lambda description, path, payload=None: calls.append((path, payload))
+    result = skills.stack_cubes(["red", "green", "blue"])
+    assert result["outcome"] == "stacked"
+    paths = [path for path, _ in calls]
+    assert paths == ["/arm/pick", "/arm/pose", "/motion/turn", "/motion/move", "/arm/pick",
+                     "/arm/place", "/arm/pick", "/arm/place", "/arm/pose"]
+    places = [payload for path, payload in calls if path == "/arm/place"]
+    assert [(p["on"], p["level"]) for p in places] == [("red", 1), ("green", 2)]
+
+
+def test_stack_cubes_stops_on_a_missed_pick():
+    skills = GatewaySkills(token="t")
+    skills._motion = lambda *a: {"outcome": "missed"}
+    assert skills.stack_cubes(["red", "blue"])["outcome"] == "failed to pick blue"
+    with pytest.raises(ValueError):
+        skills.stack_cubes(["red", "red"])

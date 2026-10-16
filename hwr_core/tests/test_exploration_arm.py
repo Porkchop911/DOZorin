@@ -3,7 +3,8 @@ import math
 import numpy as np
 import pytest
 
-from hwr_core.arm import ArmKinematics, CameraAim, JointSolution
+from hwr_core.arm import (ArmKinematics, CameraAim, JointSolution, joints_to_pulses,
+                          pulses_to_joints)
 from hwr_core.exploration import (find_frontiers,
                                   restore_semantic_boundary_cooldowns)
 from hwr_core.navigation import astar
@@ -106,23 +107,58 @@ def test_frontier_can_descend_from_unknown_robot_center_to_known_free_space():
     assert all(np.isfinite(item.path_length_m) for item in frontiers)
 
 
+FORWARD = {1: 500, 2: 701, 3: 120, 4: 300, 5: 500}
+FLOOR = {1: 500, 2: 701, 3: 120, 4: 88, 5: 500}
+
+
 def test_arm_fk_ik_roundtrip():
     arm = ArmKinematics()
-    original = JointSolution(0.3, 0.5, -0.8, 0.3)
-    point = arm.fk(original)
-    solved = arm.ik(*point, tool_pitch=0.0)
+    original = JointSolution(0.3, -0.4, 1.2, 0.9, 0.2)
+    *point, pitch = arm.fk(original)
+    solved = arm.ik(*point, pitch=pitch, roll=0.2)
     assert solved is not None
-    assert arm.fk(solved) == pytest.approx(point, abs=1e-6)
+    assert arm.fk(solved) == pytest.approx((*point, pitch), abs=1e-6)
+    assert joints_to_pulses(pulses_to_joints(joints_to_pulses(solved))) == joints_to_pulses(solved)
 
 
 def test_arm_rejects_unreachable_target():
-    assert ArmKinematics().ik(1.0, 0.0, 0.2) is None
-    assert ArmKinematics().ik(0.02, 0.0, 0.10) is None
+    arm = ArmKinematics()
+    assert arm.ik(1.0, 0.0, 0.2) is None
+    assert arm.ik(0.2, 0.0, -0.01) is None
+    assert arm.ik(0.10, 0.0, 0.05) is None  # chassis keep-out
 
 
-def test_arm_pulse_conversion():
-    assert ArmKinematics.radians_to_pulse(0.0) == 500
-    assert ArmKinematics.radians_to_pulse(math.radians(24)) == 600
+def test_floor_pick_envelope():
+    arm = ArmKinematics()
+    solution, pitch = arm.ik_any_pitch(0.18, 0.0, 0.015)
+    assert solution is not None and pitch == pytest.approx(-math.pi / 2)
+    far, far_pitch = arm.ik_any_pitch(0.26, 0.0, 0.015)
+    assert far is not None and far_pitch > -math.pi / 2
+    assert arm.ik_any_pitch(0.40, 0.0, 0.015)[0] is None
+
+
+def test_camera_matches_observed_poses():
+    arm = ArmKinematics()
+    rotation, origin = arm.camera_pose(pulses_to_joints(FORWARD))
+    assert rotation[:, 2] == pytest.approx([1, 0, 0], abs=0.03)  # looks forward
+    assert rotation[:, 0] == pytest.approx([0, -1, 0], abs=0.03)  # image right = robot right
+    assert 0.3 < origin[2] < 0.4
+    down, _ = arm.camera_pose(pulses_to_joints(FLOOR))
+    assert math.degrees(math.asin(-down[2, 2])) == pytest.approx(52, abs=2)
+    left, _ = arm.camera_pose(pulses_to_joints({**FORWARD, 1: 750}))
+    assert left[1, 2] == pytest.approx(math.sin(math.radians(60)), abs=0.02)  # 750 = 60 deg left
+
+
+def test_pixel_to_plane_hits_floor_ahead():
+    arm = ArmKinematics()
+    k = (500.0, 500.0, 320.0, 200.0)
+    joints = pulses_to_joints(FLOOR)
+    x, y = arm.pixel_to_plane(320, 200, k, joints)
+    _, origin = arm.camera_pose(joints)
+    assert x == pytest.approx(origin[0] + origin[2] / math.tan(math.radians(52)), abs=0.02)
+    assert abs(y) < 0.01
+    assert arm.pixel_to_plane(500, 200, k, joints)[1] < 0  # right of centre = robot right
+    assert arm.pixel_to_plane(320, 100, k, pulses_to_joints(FORWARD)) is None  # above horizon
 
 
 def test_camera_aim_and_sweep_are_bounded():

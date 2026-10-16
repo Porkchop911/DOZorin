@@ -26,6 +26,8 @@ from geometry_msgs.msg import PoseWithCovarianceStamped, Twist
 from hwr_msgs.action import NavigateToPose
 from hwr_msgs.msg import LocalizationHealth
 from hwr_msgs.srv import AimCamera, ArmPose, ArmReach, Gripper
+from hwr_core.arm import ArmKinematics, CameraAim, pulses_to_joints
+from hwr_core.arm.manipulation import follow_step, locate_cube, plan_grasp
 from hwr_core.control.closed_loop import (TurnTracker, approach_command, approach_speed,
                                           pick_target, progress_along, wrap)
 from hwr_core.navigation import (directional_escape_profile,
@@ -71,6 +73,7 @@ class ReachRequest(BaseModel):
     y: float
     z: float
     tool_pitch: float = 0.0
+    roll: float = 0.0
     duration_ms: int = 1500
 
 
@@ -110,6 +113,23 @@ class ApproachRequest(BaseModel):
     target: str = "person"
     stop_at_m: float = 0.8
     timeout_s: float = 30.0
+
+
+class PickRequest(BaseModel):
+    color: str
+
+
+class PlaceRequest(BaseModel):
+    on: str | None = None      # colour of the cube (stack top) to place on
+    level: int = 1             # stack height under the held cube (1 = on one cube)
+    x: float | None = None     # or a floor point in base_link
+    y: float | None = None
+
+
+class FollowRequest(BaseModel):
+    target: str = "person"     # YOLO class or "<color>_cube"
+    seconds: float = 60.0
+    distance_m: float = 0.8
 
 
 class MoveRequest(BaseModel):
@@ -182,6 +202,8 @@ class GatewayNode(Node):
         arm_config = yaml.safe_load(arm_path.read_text(encoding="utf-8"))
         forward_pulses = arm_config["poses"]["forward"]
         radians_per_pulse = math.radians(240.0 / 1000.0)
+        self.arm_config = arm_config
+        self.kin = ArmKinematics()
         self.camera_forward_target = {
             f"joint{int(sid)}": (int(pulse) - 500) * radians_per_pulse
             for sid, pulse in forward_pulses.items() if int(sid) in range(1, 6)
@@ -980,7 +1002,7 @@ class GatewayNode(Node):
         @app.post("/arm/reach", dependencies=[Depends(auth)])
         def arm_reach(body: ReachRequest):
             request = ArmReach.Request(x=body.x, y=body.y, z=body.z,
-                                       tool_pitch=body.tool_pitch,
+                                       tool_pitch=body.tool_pitch, roll=body.roll,
                                        duration_ms=body.duration_ms)
             response = self._call(self.arm_reach, request)
             self._audit("arm_reach", "accepted" if response.success else "rejected",
@@ -1009,6 +1031,193 @@ class GatewayNode(Node):
             if not response.success:
                 raise HTTPException(409, response.message)
             return {"success": response.success, "message": response.message}
+
+        arm_config = self.arm_config
+        size = float(arm_config["cube_size"])
+        roll_sign = float(arm_config.get("roll_sign", 1.0))
+
+        def arm_do(client, request, settle: float):
+            response = self._call(client, request)
+            if not response.success:
+                raise HTTPException(409, response.message)
+            time.sleep(settle)
+
+        def reach(pulses: dict, duration_ms: int, settle: float):
+            joints = pulses_to_joints(pulses)
+            x, y, z, pitch = self.kin.fk(joints)
+            arm_do(self.arm_reach, ArmReach.Request(x=x, y=y, z=z, tool_pitch=pitch,
+                                                    roll=joints.roll, duration_ms=duration_ms),
+                   settle)
+
+        def pose(name: str, settle: float = 1.8):
+            arm_do(self.arm_pose, ArmPose.Request(name=name, duration_ms=1500), settle)
+
+        def grip(command: str):
+            arm_do(self.gripper, Gripper.Request(command=command, duration_ms=500), 0.8)
+
+        def arm_pulses() -> dict:
+            with self.lock:
+                if time.monotonic() - self.joint_stamp > 1.0:
+                    raise HTTPException(503, "arm joint readback stale")
+                return {(int(name[-1]) if name.startswith("joint") else 10):
+                        round(500 + value / math.radians(0.24))
+                        for name, value in self.joint_positions.items()}
+
+        def fresh_cubes(after: float) -> tuple:
+            """Cube blobs from the first vision frame newer than `after` (wall clock)."""
+            deadline = time.monotonic() + 3.0
+            while time.monotonic() < deadline:
+                with self.lock:
+                    frame = self.vision
+                if frame and frame["stamp"] > after and frame.get("k"):
+                    return ([o for o in frame["objects"] if o["class"].endswith("_cube")],
+                            frame["k"])
+                time.sleep(0.1)
+            raise HTTPException(503, "vision stale")
+
+        def find(color, plane_z: float) -> list:
+            """look_down, settle, then base-frame cubes (largest blob per colour first)."""
+            pose("look_down", 2.0)
+            blobs, k = fresh_cubes(time.time())
+            joints = pulses_to_joints(arm_pulses())
+            out = []
+            for blob in blobs:
+                name = blob["class"][:-5]
+                if color and name != color:
+                    continue
+                spot = locate_cube(blob, k, joints, self.kin, plane_z)
+                if spot:
+                    out.append({"color": name, **spot, "area": blob["area"]})
+            return out
+
+        @app.post("/arm/find_cubes", dependencies=[Depends(auth)])
+        def arm_find_cubes():
+            cubes = find(None, size / 2)
+            self._audit("arm_find_cubes", "done", {"cubes": cubes})
+            return {"cubes": cubes}
+
+        @app.post("/arm/pick", dependencies=[Depends(auth)])
+        def arm_pick(body: PickRequest):
+            if body.color not in arm_config["cubes"]:
+                raise HTTPException(422, f"color must be one of {sorted(arm_config['cubes'])}")
+            grip("open")
+            seen = find(body.color, size / 2)
+            if not seen:
+                result = {"outcome": "not seen", "color": body.color}
+            else:
+                cube = seen[0]
+                plan = plan_grasp(self.kin, cube["x"], cube["y"], size / 2, cube["yaw"],
+                                  roll_sign=roll_sign)
+                if plan is None:
+                    result = {"outcome": "out of reach", "cube": cube}
+                else:
+                    hover, grasp, pitch = plan
+                    reach(hover, 1200, 1.4)
+                    reach(grasp, 800, 1.0)
+                    grip("grip")
+                    reach(hover, 800, 1.0)
+                    closed = arm_pulses().get(10)
+                    target = int(arm_config["gripper"]["grip"])
+                    held = closed is not None and closed < target - int(arm_config["grasp_margin"])
+                    result = {"outcome": "holding" if held else "missed", "cube": cube,
+                              "pitch_deg": round(math.degrees(pitch)), "gripper_readback": closed}
+                    if not held:
+                        grip("open")
+            self._audit("arm_pick", result["outcome"], result)
+            return result
+
+        @app.post("/arm/place", dependencies=[Depends(auth)])
+        def arm_place(body: PlaceRequest):
+            if not 1 <= body.level <= 4:
+                raise HTTPException(422, "level must be 1..4")
+            if body.on:
+                seen = find(body.on, size * body.level - size / 2)
+                if not seen:
+                    result = {"outcome": "target not seen", "on": body.on}
+                    self._audit("arm_place", result["outcome"], result)
+                    return result
+                spot, z = seen[0], size * body.level + size / 2 + 0.005
+            elif body.x is not None and body.y is not None:
+                spot, z = {"x": body.x, "y": body.y, "yaw": 0.0}, size / 2 + 0.005
+            else:
+                raise HTTPException(422, "give on=<color> or x,y")
+            plan = plan_grasp(self.kin, spot["x"], spot["y"], z, spot["yaw"], roll_sign=roll_sign)
+            if plan is None:
+                result = {"outcome": "out of reach", "spot": spot}
+            else:
+                hover, release, pitch = plan
+                reach(hover, 1200, 1.4)
+                reach(release, 800, 1.0)
+                grip("open")
+                reach(hover, 800, 1.0)
+                result = {"outcome": "placed", "spot": spot, "z": round(z, 3),
+                          "pitch_deg": round(math.degrees(pitch))}
+            self._audit("arm_place", result["outcome"], result)
+            return result
+
+        @app.post("/arm/follow", dependencies=[Depends(auth)])
+        def arm_follow(body: FollowRequest):
+            if not 3.0 <= body.seconds <= 300.0 or not 0.3 <= body.distance_m <= 3.0:
+                raise HTTPException(422, "seconds 3..300, distance_m 0.3..3")
+            self._motion_start()
+            pose("forward", 1.8)
+            aim = CameraAim()
+            state = {"bearing": 0.0, "elevation": 0.0, "seen": None,
+                     "last_seen": time.monotonic(), "frames": 0, "centred": 0}
+            start = time.monotonic()
+            clearance = float(self.get_parameter("move_clearance_m").value)
+
+            def step(odom):
+                now = time.monotonic()
+                if now - start > body.seconds:
+                    return None
+                with self.lock:
+                    frame = self.vision
+                    map_pose = None if self.pose is None else list(self.pose)
+                if frame is None or time.time() - frame["stamp"] > 2.0 or not frame.get("k"):
+                    return "vision stale"
+                item = pick_target(frame["objects"], body.target,
+                                   (state["seen"] or {}).get("id"))
+                if item is None:
+                    if now - state["last_seen"] > 3.0:
+                        return "target lost" if state["seen"] else "target not found"
+                    return (0.0, 0.0, 0.0)
+                state["seen"], state["last_seen"] = item, now
+                box = item["box"]
+                centre = item.get("center") or [(box[0] + box[2]) / 2, (box[1] + box[3]) / 2]
+                k = frame["k"]
+                state["frames"] += 1
+                state["centred"] += abs(math.atan2(centre[0] - k[2], k[0])) < math.radians(10)
+                bearing, elevation, vx, wz = follow_step(centre, k, state["bearing"],
+                                                         state["elevation"],
+                                                         item.get("range_m"), body.distance_m)
+                bearing = max(-aim.max_bearing, min(aim.max_bearing, bearing))
+                elevation = max(aim.min_elevation, min(aim.max_elevation, elevation))
+                state["bearing"], state["elevation"] = bearing, elevation
+                try:
+                    response = self._call(self.arm_aim, AimCamera.Request(
+                        bearing=bearing, elevation=elevation, duration_ms=120), timeout=0.5)
+                except HTTPException as exc:
+                    return f"arm aim failed: {exc.detail}"
+                if not response.success:
+                    return f"arm refused: {response.message}"
+                if vx > 0.0 and map_pose is not None and self._first_blocked(
+                        map_pose[0], map_pose[1], map_pose[2], 0.3 + clearance):
+                    vx = 0.0  # costmap says no: keep turning and tracking, don't drive
+                return (vx, 0.0, wz)
+
+            outcome = self._motion_loop(step, body.seconds + 5.0)
+            try:
+                pose("forward", 0.0)
+            except HTTPException:
+                pass
+            seen = state["seen"] or {}
+            result = {"outcome": outcome, "target": body.target,
+                      "frames_tracked": state["frames"],
+                      "centred_pct": round(100 * state["centred"] / max(1, state["frames"])),
+                      "last_range_m": seen.get("range_m"), "pose": self.pose}
+            self._audit("arm_follow", outcome, result)
+            return result
 
         @app.get("/snapshot", dependencies=[Depends(auth)])
         def snapshot():

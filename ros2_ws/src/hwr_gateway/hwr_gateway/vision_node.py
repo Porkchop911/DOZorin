@@ -4,10 +4,14 @@ from __future__ import annotations
 import json
 import math
 import os
+from pathlib import Path
 import time
 
 import numpy as np
 import rclpy
+import yaml
+from ament_index_python.packages import get_package_share_directory
+from hwr_core.arm.cubes import find_color_blobs
 from hwr_core.navigation.vision_geometry import bearing, object_range
 from hwr_sensors.depth_to_ranges_node import _depth_metres
 from rclpy.node import Node
@@ -25,6 +29,10 @@ class VisionNode(Node):
         self.model = YOLO(ENGINE, task="detect")
         self.depth = None
         self.fx = self.cx = None
+        self.k = None
+        arm = yaml.safe_load((Path(get_package_share_directory("hwr_arm"))
+                              / "config/poses.yaml").read_text(encoding="utf-8"))
+        self.cube_ranges = arm["cubes"]
         self.last = 0.0
         qos = QoSProfile(depth=1, reliability=QoSReliabilityPolicy.BEST_EFFORT)
         self.pub = self.create_publisher(String, "vision/objects", 1)
@@ -35,6 +43,7 @@ class VisionNode(Node):
 
     def _info(self, msg: CameraInfo) -> None:
         self.fx, self.cx = msg.k[0], msg.k[2]
+        self.k = [msg.k[0], msg.k[4], msg.k[2], msg.k[5]]
 
     def _depth(self, msg: Image) -> None:
         try:
@@ -65,9 +74,16 @@ class VisionNode(Node):
             if self.depth is not None:
                 item["range_m"] = object_range(self.depth, (x1, y1, x2, y2), image.shape[:2])
             objects.append(item)
+        for item in find_color_blobs(image, self.cube_ranges):
+            x1, y1, x2, y2 = item["box"]
+            if self.fx:
+                item["bearing_deg"] = round(math.degrees(bearing(item["center"][0], self.fx, self.cx)))
+            if self.depth is not None:
+                item["range_m"] = object_range(self.depth, (x1, y1, x2, y2), image.shape[:2])
+            objects.append(item)
         self.pub.publish(String(data=json.dumps({
             "stamp": time.time(), "infer_ms": round((time.monotonic() - started) * 1000),
-            "objects": objects})))
+            "k": self.k, "objects": objects})))
 
 
 def main():
