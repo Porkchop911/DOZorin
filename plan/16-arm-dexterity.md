@@ -84,6 +84,10 @@ at zero velocity and a named arm pose.
 | B2 attempt 4 | FAIL - tool said "stacked", all 3 on the floor: places at -60/-55 deg (edge of reach) fell. Fix: place only at <= -70 deg + after-release check from look_down |
 | B2 attempt 5 | FAIL - green pick at -40 deg missed (overhead re-locate saw nothing at that angle). Fix: pick only at <= -55 deg, else reposition |
 | **B2 series 1** | **1/5 (#3)** - not accepted (needs >= 3/5). Every failure was a different bug, each fixed; rerun a fresh 5 |
+| S2 #1 | FAIL - placed "not on target" (check worked): picked -55, placed -75 -> cube 20 deg tilted, slid off (user). Fix: place within 15 deg of the pick pitch |
+| S2 #2 | FAIL - exact pick pitch (-90) unreachable for the place. Fix: +/-15 deg window |
+| S2 #3 | FAIL - green pick missed; green 4.5 cm from red (layout left by #2's drop), jaw hit red |
+| Setup rule (user) | cubes >= 8 cm apart. Jaws close left-right at roll 0 (user) - input for a later neighbour-clearance roll choice |
 | incident | into-reach creep (drive, costmap bypassed because it inflates the cubes) **drove into the nearer cubes**. Fix: creep capped so every cube in view stays >= 0.19 m ahead, else refuse. Bumper ~0.125 m. |
 
 Open (user, 2026-10-16): **reverse / backing up** — "we need to talk about this in the future".
