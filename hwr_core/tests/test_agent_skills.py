@@ -307,33 +307,58 @@ def test_map_tools_validate_names_before_touching_the_robot():
         skills.map_room("ok", 60)
 
 
-def test_stack_cubes_sequences_pick_place_and_repositions_once():
+class FakeArm:
+    """Scripted gateway: cubes on the floor in base frame at pose (0, 0, 0)."""
+
+    def __init__(self, skills, cubes, picks, places):
+        self.calls, self.cubes, self.picks, self.places = [], cubes, list(picks), list(places)
+        skills._motion = self.motion
+        skills.where_am_i = lambda: {"pose": [0.0, 0.0, 0.0], "localization": {}}
+        skills._act = lambda description, path, payload=None: self.calls.append((path, payload))
+        skills.drive = lambda vx=0.0, vy=0.0, wz=0.0, seconds=1.0: self.calls.append(("/drive", seconds))
+
+    def motion(self, description, path, payload, seconds):
+        self.calls.append((path, payload))
+        if path == "/arm/find_cubes":
+            return {"cubes": [dict(c) for c in self.cubes]}
+        if path == "/arm/pick":
+            return dict(self.picks.pop(0))
+        if path == "/arm/place":
+            return dict(self.places.pop(0))
+        return {"outcome": "done"}
+
+
+CUBES = [{"color": "red", "x": 0.30, "y": 0.0}, {"color": "green", "x": 0.22, "y": 0.10},
+         {"color": "blue", "x": 0.20, "y": -0.09}]
+
+
+def test_stack_cubes_any_order_picks_base_and_nearest_first():
     skills = GatewaySkills(token="t")
-    calls = []
-    replies = {"/arm/pick": [{"outcome": "out of reach", "cube": {"x": 0.4, "y": 0.1, "yaw": 0}},
-                             {"outcome": "holding"}, {"outcome": "holding"}],
-               "/arm/place": [{"outcome": "placed"}, {"outcome": "placed"}]}
-
-    def motion(description, path, payload, seconds):
-        calls.append((path, payload))
-        return dict(replies[path].pop(0)) if path in replies else {"outcome": "done"}
-
-    skills._motion = motion
-    skills._act = lambda description, path, payload=None: calls.append((path, payload))
-    skills.drive = lambda vx=0.0, vy=0.0, wz=0.0, seconds=1.0: calls.append(("/drive", seconds))
-    result = skills.stack_cubes(["red", "green", "blue"])
+    fake = FakeArm(skills, CUBES, [{"outcome": "holding", "pitch_deg": -80}] * 2,
+                   [{"outcome": "placed"}] * 2)
+    result = skills.stack_cubes()
     assert result["outcome"] == "stacked"
-    paths = [path for path, _ in calls]
-    assert paths == ["/arm/pick", "/motion/turn", "/arm/find_cubes", "/drive", "/arm/pick",
-                     "/arm/place", "/arm/pick", "/arm/place", "/arm/pose"]
-    places = [payload for path, payload in calls if path == "/arm/place"]
-    assert [(p["on"], p["level"]) for p in places] == [("red", 1), ("green", 2)]
+    assert result["stack"] == ["red", "blue", "green"]  # red nearest (0.22, 0); then nearest-first
+    places = [p for path, p in fake.calls if path == "/arm/place"]
+    assert [(p["on"], p["level"], p["pitch_deg"]) for p in places] == [("red", 1, -80),
+                                                                         ("blue", 2, -80)]
 
 
-def test_stack_cubes_stops_on_a_missed_pick():
+def test_stack_cubes_retries_after_a_miss_and_a_fall():
     skills = GatewaySkills(token="t")
-    skills._motion = lambda *a: {"outcome": "missed"}
-    assert skills.stack_cubes(["red", "blue"])["outcome"] == "failed to pick blue"
+    fake = FakeArm(skills, CUBES,
+                   [{"outcome": "missed"}] + [{"outcome": "holding", "pitch_deg": -80}] * 3,
+                   [{"outcome": "not on target"}, {"outcome": "placed"}, {"outcome": "placed"}])
+    result = skills.stack_cubes(["red", "green", "blue"])
+    assert result["outcome"] == "stacked" and result["stack"] == ["red", "green", "blue"]
+    assert [p for p, _ in fake.calls].count("/arm/pick") == 4
+
+
+def test_stack_cubes_gives_up_after_max_rounds():
+    skills = GatewaySkills(token="t")
+    FakeArm(skills, CUBES, [{"outcome": "missed"}] * 3, [])
+    result = skills.stack_cubes(["red", "blue"], max_rounds=3)
+    assert result["outcome"] == "stack of 1"
     with pytest.raises(ValueError):
         skills.stack_cubes(["red", "red"])
 

@@ -512,28 +512,79 @@ class GatewaySkills:
                             {"target": str(target), "seconds": seconds,
                              "distance_m": distance_m}, seconds + 15.0)
 
-    def stack_cubes(self, order: list[str] | None = None):
-        """Stack cubes bottom-to-top in `order`; each step re-detects, so moved cubes are fine."""
-        order = list(order or self.CUBE_COLORS)
-        if not 2 <= len(order) <= 3 or len(set(order)) != len(order) or \
-                not set(order) <= set(self.CUBE_COLORS):
-            raise ValueError(f"order must be 2-3 distinct colours from {self.CUBE_COLORS}")
+    def _pose(self):
+        return self.where_am_i()["pose"]  # map [x, y, yaw]
+
+    @staticmethod
+    def _to_world(pose, spot):
+        x, y, yaw = pose
+        return (x + math.cos(yaw) * spot["x"] - math.sin(yaw) * spot["y"],
+                y + math.sin(yaw) * spot["x"] + math.cos(yaw) * spot["y"])
+
+    @staticmethod
+    def _to_base(pose, point):
+        x, y, yaw = pose
+        dx, dy = point[0] - x, point[1] - y
+        return {"x": math.cos(yaw) * dx + math.sin(yaw) * dy,
+                "y": -math.sin(yaw) * dx + math.cos(yaw) * dy}
+
+    def stack_cubes(self, order: list[str] | None = None, max_rounds: int = 8):
+        """Stack the cubes into one tower. With `order` (bottom first) it follows it; without, it
+        picks the base itself (the cube nearest the arm's sweet spot) and stacks the nearest
+        remaining cube each round. The body turns/creeps as needed (stack tracked in map frame);
+        a missed pick is retried and a fallen place puts that cube back in the pool."""
+        if order is not None:
+            order = list(order)
+            if not 2 <= len(order) <= 3 or len(set(order)) != len(order) or                     not set(order) <= set(self.CUBE_COLORS):
+                raise ValueError(f"order must be 2-3 distinct colours from {self.CUBE_COLORS}")
         if self.dry_run:
-            return {"dry_run": True, "would": f"stack {order}"}
-        log = []
-        for level, color in enumerate(order[1:], start=1):
+            return {"dry_run": True, "would": f"stack {order or 'any order'}"}
+        log, world = [], {}
+
+        def look():
+            pose = self._pose()
+            for cube in self.find_cubes().get("cubes", []):
+                if cube["color"] not in stack:
+                    world[cube["color"]] = self._to_world(pose, cube)
+            return pose
+
+        stack = []
+        pose = look()
+        wanted = order or sorted(world)
+        if not set(wanted) <= set(world):
+            return {"outcome": f"cubes not seen: {sorted(set(wanted) - set(world))}", "log": log}
+        base = order[0] if order else min(wanted, key=lambda c: math.hypot(
+            self._to_base(pose, world[c])["x"] - 0.22, self._to_base(pose, world[c])["y"]))
+        stack, stack_xy = [base], world.pop(base)
+        for _ in range(max_rounds):
+            todo = [c for c in wanted if c not in stack]
+            if not todo:
+                break
+            pose = self._pose()
+            color = todo[0] if order else min(
+                todo, key=lambda c: math.hypot(*self._to_base(pose, world[c]).values()))
             picked = self.pick(color)
+            if picked.get("outcome") == "not seen" and color in world:
+                self._into_reach(self._to_base(pose, world[color]), reach_x=0.22)
+                picked = self.pick(color)
             log.append({"pick": color, **picked})
             if picked.get("outcome") != "holding":
-                return {"outcome": f"failed to pick {color}", "log": log}
-            placed = self.place(on=order[level - 1], level=level, color=color,
+                look()
+                continue
+            here = self._to_base(self._pose(), stack_xy)
+            self._into_reach(here, reach_x=0.22, held=color)
+            placed = self.place(on=stack[-1], level=len(stack), color=color,
                                 pitch_deg=picked.get("pitch_deg"))
-            log.append({"place_on": order[level - 1], **placed})
-            if placed.get("outcome") != "placed":
+            log.append({"place_on": stack[-1], **placed})
+            if placed.get("outcome") == "placed":
+                stack.append(color)
+            else:
                 self.gripper("open")
-                return {"outcome": f"failed to place {color}", "log": log}
+                look()  # the cube is on the floor somewhere: back in the pool
         self.arm_pose("forward")
-        return {"outcome": "stacked", "order": order, "log": log}
+        done = len(stack) == len(wanted)
+        return {"outcome": "stacked" if done else f"stack of {len(stack)}", "stack": stack,
+                "log": log}
 
     def roam_step(self, max_distance: float = 1.5):
         """One idle-life tick: sense, wander, sense; the VLM runs only when something new shows up."""
