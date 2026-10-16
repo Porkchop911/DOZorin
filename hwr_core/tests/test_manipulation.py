@@ -17,7 +17,7 @@ def test_wrap_quarter():
 def test_locate_then_grasp_lands_on_the_cube():
     arm = ArmKinematics()
     joints = pulses_to_joints(LOOK_DOWN)
-    item = {"center": [320, 260], "corners": [[300, 240], [340, 240], [340, 280], [300, 280]]}
+    item = {"center": [320, 260], "outline": [[300, 240], [340, 240], [340, 280], [300, 280]]}
     cube = locate_cube(item, K, joints, arm, 0.015)
     assert 0.13 < cube["x"] < 0.30 and abs(cube["y"]) < 0.01
     assert abs(cube["yaw"]) < math.radians(5)

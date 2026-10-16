@@ -1036,6 +1036,26 @@ class GatewayNode(Node):
         size = float(arm_config["cube_size"])
         roll_sign = float(arm_config.get("roll_sign", 1.0))
 
+        def refined_plan(color: str, spot: dict, z: float, top_z: float):
+            """Hover 8 cm over the look_down estimate, re-locate the cube from almost overhead
+            (mostly its top face: true edges for yaw, small parallax), then plan the descent."""
+            plan = plan_grasp(self.kin, spot["x"], spot["y"], z, spot["yaw"], hover=0.08,
+                              roll_sign=roll_sign)
+            if plan is None:
+                return None, spot
+            reach(plan[0], 1200, 1.6)
+            blobs, k = fresh_cubes(time.time())
+            joints = pulses_to_joints(arm_pulses())
+            near = [s for s in (locate_cube(b, k, joints, self.kin, top_z)
+                                for b in blobs if b["class"] == f"{color}_cube") if s]
+            near = [s for s in near if math.hypot(s["x"] - spot["x"], s["y"] - spot["y"]) < 0.05]
+            if near:
+                spot = {**spot, **min(near, key=lambda s: math.hypot(s["x"] - spot["x"],
+                                                                   s["y"] - spot["y"])),
+                        "refined": True}
+            return plan_grasp(self.kin, spot["x"], spot["y"], z, spot["yaw"],
+                              roll_sign=roll_sign), spot
+
         def arm_do(client, request, settle: float):
             response = self._call(client, request)
             if not response.success:
@@ -1105,9 +1125,7 @@ class GatewayNode(Node):
             if not seen:
                 result = {"outcome": "not seen", "color": body.color}
             else:
-                cube = seen[0]
-                plan = plan_grasp(self.kin, cube["x"], cube["y"], size / 2, cube["yaw"],
-                                  roll_sign=roll_sign)
+                plan, cube = refined_plan(body.color, seen[0], size / 2, size)
                 if plan is None:
                     result = {"outcome": "out of reach", "cube": cube}
                 else:
@@ -1141,7 +1159,10 @@ class GatewayNode(Node):
                 spot, z = {"x": body.x, "y": body.y, "yaw": 0.0}, size / 2 + 0.005
             else:
                 raise HTTPException(422, "give on=<color> or x,y")
-            plan = plan_grasp(self.kin, spot["x"], spot["y"], z, spot["yaw"], roll_sign=roll_sign)
+            if body.on:
+                plan, spot = refined_plan(body.on, spot, z, size * body.level)
+            else:
+                plan = plan_grasp(self.kin, spot["x"], spot["y"], z, 0.0, roll_sign=roll_sign)
             if plan is None:
                 result = {"outcome": "out of reach", "spot": spot}
             else:

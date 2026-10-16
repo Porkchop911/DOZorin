@@ -16,7 +16,7 @@ def test_finds_each_cube_once_on_grey_floor():
     assert sorted(b["class"] for b in blobs) == ["blue_cube", "green_cube", "red_cube"]
     red = next(b for b in blobs if b["class"] == "red_cube")
     assert red["center"] == [119.5, 119.5]
-    assert len(red["corners"]) == 4
+    assert len(red["outline"]) == 4
 
 
 def test_ignores_specks():

@@ -39,7 +39,9 @@ def find_color_blobs(bgr: np.ndarray, ranges: dict, min_area: float = 150.0,
                           "box": [x, y, x + w, y + h],
                           "center": [round(moments["m10"] / moments["m00"], 1),
                                      round(moments["m01"] / moments["m00"], 1)],
-                          "corners": cv2.boxPoints(cv2.minAreaRect(contour)).round(1).tolist(),
+                          # Outline polygon, not minAreaRect: an oblique cube is a hexagon whose
+                          # min-area box sits on the diagonal (live: green read -43 deg, was ~-5).
+                          "outline": cv2.approxPolyDP(contour, 3.0, True).reshape(-1, 2).tolist(),
                           "area": round(area)})
         found += sorted(blobs, key=lambda b: -b["area"])
     return found

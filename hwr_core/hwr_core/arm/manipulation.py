@@ -17,11 +17,16 @@ def locate_cube(item: dict, k, joints: JointSolution, arm: ArmKinematics,
     centre = arm.pixel_to_plane(*item["center"], k, joints, plane_z)
     if centre is None:
         return None
-    corners = [arm.pixel_to_plane(u, v, k, joints, plane_z) for u, v in item.get("corners", [])]
-    yaw = 0.0
-    if len(corners) == 4 and all(corners):
-        (x0, y0), (x1, y1) = corners[0], corners[1]
-        yaw = wrap_quarter(math.atan2(y1 - y0, x1 - x0))
+    # Dominant edge direction mod 90 deg: length-weighted circular mean of 4*theta over the
+    # outline projected onto the plane.
+    points = [arm.pixel_to_plane(u, v, k, joints, plane_z) for u, v in item.get("outline", [])]
+    points = [p for p in points if p is not None]
+    sx = sy = 0.0
+    for (x0, y0), (x1, y1) in zip(points, points[1:] + points[:1]):
+        length = math.hypot(x1 - x0, y1 - y0)
+        theta = math.atan2(y1 - y0, x1 - x0)
+        sx, sy = sx + length * math.cos(4 * theta), sy + length * math.sin(4 * theta)
+    yaw = wrap_quarter(math.atan2(sy, sx) / 4) if len(points) >= 3 else 0.0
     return {"x": round(centre[0], 4), "y": round(centre[1], 4), "yaw": round(yaw, 3)}
 
 
