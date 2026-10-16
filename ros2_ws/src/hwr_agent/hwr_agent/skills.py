@@ -459,12 +459,13 @@ class GatewaySkills:
     def find_cubes(self):
         return self._motion("look down for cubes", "/arm/find_cubes", {}, 10.0)
 
-    def pick(self, color: str):
+    def pick(self, color: str, level: int = 0):
         if color not in self.CUBE_COLORS:
             raise ValueError(f"color must be one of {self.CUBE_COLORS}")
-        result = self._motion(f"pick the {color} cube", "/arm/pick", {"color": color}, 20.0)
+        payload = {"color": color, "level": int(level)}
+        result = self._motion(f"pick the {color} cube", "/arm/pick", payload, 20.0)
         if result.get("outcome") == "out of reach" and self._into_reach(result["cube"]):
-            result = self._motion(f"pick the {color} cube", "/arm/pick", {"color": color}, 20.0)
+            result = self._motion(f"pick the {color} cube", "/arm/pick", payload, 20.0)
             result["repositioned"] = True
         return result
 

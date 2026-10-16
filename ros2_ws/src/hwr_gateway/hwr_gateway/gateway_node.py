@@ -117,6 +117,7 @@ class ApproachRequest(BaseModel):
 
 class PickRequest(BaseModel):
     color: str
+    level: int = 0             # cubes under it (0 = on the floor, 2 = top of a 3-stack)
 
 
 class PlaceRequest(BaseModel):
@@ -1135,13 +1136,16 @@ class GatewayNode(Node):
             if body.color not in arm_config["cubes"]:
                 raise HTTPException(422, f"color must be one of {sorted(arm_config['cubes'])}")
             grip("open")
-            seen = find(body.color, size / 2)
+            if not 0 <= body.level <= 3:
+                raise HTTPException(422, "level must be 0..3")
+            centre = size * body.level + size / 2
+            seen = find(body.color, centre)
             if not seen:
                 result = {"outcome": "not seen", "color": body.color}
             else:
                 # Live: -40 missed (B2 #5); -55 picks held but the tilted hold failed every
                 # later place (S2 #1, #5). Pick steep or reposition (creep) first.
-                plan, cube = refined_plan(body.color, seen[0], size / 2, size,
+                plan, cube = refined_plan(body.color, seen[0], centre, centre + size / 2,
                                           flattest=-math.radians(70))
                 if plan is None:
                     result = {"outcome": "out of reach", "cube": cube}
