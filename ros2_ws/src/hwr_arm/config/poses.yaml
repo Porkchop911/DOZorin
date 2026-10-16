@@ -15,10 +15,10 @@ gripper:
   # Holding a 3 cm kit cube; readback short of `close` by more than grasp_margin = something in the jaws.
   grip: 500
 grasp_margin: 30
-# Kit cube edge (m) and OpenCV LAB ranges, tuned live 2026-10-16 on the wooden floor (evidence/phase14/find4.jpg):
-# floor b >= 132 and shadows a 130-135 / b 132-145 sit outside every range; L >= 20-30 drops black chassis/jaws.
+# Kit cube edge (m) and OpenCV LAB ranges AFTER floor normalisation (image median a/b -> 128),
+# tuned live 2026-10-16 under two lamps (evidence/phase14/find3-5.jpg); glare is b >= 83, shadows a 129-144.
 cube_size: 0.03
 cubes:
-  red: {min: [30, 160, 140], max: [255, 255, 255]}
-  green: {min: [20, 0, 100], max: [255, 122, 130]}
-  blue: {min: [30, 120, 40], max: [255, 165, 112]}
+  red: {min: [30, 160, 95], max: [255, 255, 200]}
+  green: {min: [20, 0, 80], max: [255, 120, 110]}
+  blue: {min: [30, 125, 0], max: [255, 255, 75]}
