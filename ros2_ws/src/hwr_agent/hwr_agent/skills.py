@@ -477,8 +477,12 @@ class GatewaySkills:
             result["repositioned"] = True
         return result
 
-    def _into_reach(self, spot: dict, reach_x: float = 0.20) -> bool:
-        """Turn to face a base-frame spot and creep (<= 0.15 m) until it sits ~reach_x ahead (no reverse)."""
+    def _into_reach(self, spot: dict, reach_x: float = 0.25, keep_x: float = 0.19) -> bool:
+        """Turn to face a base-frame spot and creep (<= 0.15 m) until it sits ~reach_x ahead.
+
+        The creep bypasses the costmap (it inflates the cubes themselves), so it is capped by every
+        cube in view: none may end closer than keep_x (bumper ~0.125 m). Live 2026-10-16 the
+        uncapped creep drove into the nearer cubes."""
         if self.dry_run:
             return False
         bearing = math.degrees(math.atan2(spot["y"], spot["x"]))
@@ -487,10 +491,13 @@ class GatewaySkills:
             return False  # already in front and close: moving won't help
         if abs(bearing) >= 8.0:
             self.turn(bearing)  # in place; needs no forward camera
-        if distance - reach_x > 0.03:
-            # The costmap inflates the cubes themselves, so move() refuses this last bit;
-            # a short bounded creep it is (live 2026-10-16). Turning/creeping keeps the arm down.
-            self.drive(vx=0.1, seconds=min(distance - reach_x, 0.15) / 0.1)
+            spot = {"x": distance, "y": 0.0}
+        cubes = self.find_cubes().get("cubes", [])
+        nearest = min([c["x"] for c in cubes if abs(c["y"]) < 0.20] + [spot["x"]])
+        creep = min(spot["x"] - reach_x, nearest - keep_x, 0.15)
+        if creep < 0.02:
+            return False  # can't get closer without hitting another cube: report out of reach
+        self.drive(vx=0.1, seconds=creep / 0.1)
         return True
 
     def follow(self, target: str = "person", seconds: float = 60.0, distance_m: float = 0.8):

@@ -324,7 +324,7 @@ def test_stack_cubes_sequences_pick_place_and_repositions_once():
     result = skills.stack_cubes(["red", "green", "blue"])
     assert result["outcome"] == "stacked"
     paths = [path for path, _ in calls]
-    assert paths == ["/arm/pick", "/motion/turn", "/drive", "/arm/pick",
+    assert paths == ["/arm/pick", "/motion/turn", "/arm/find_cubes", "/drive", "/arm/pick",
                      "/arm/place", "/arm/pick", "/arm/place", "/arm/pose"]
     places = [payload for path, payload in calls if path == "/arm/place"]
     assert [(p["on"], p["level"]) for p in places] == [("red", 1), ("green", 2)]
@@ -336,3 +336,15 @@ def test_stack_cubes_stops_on_a_missed_pick():
     assert skills.stack_cubes(["red", "blue"])["outcome"] == "failed to pick blue"
     with pytest.raises(ValueError):
         skills.stack_cubes(["red", "red"])
+
+
+def test_into_reach_creep_never_closes_on_another_cube():
+    skills = GatewaySkills(token="t")
+    drives = []
+    skills.find_cubes = lambda: {"cubes": [{"x": 0.30, "y": 0.0}, {"x": 0.24, "y": -0.08}]}
+    skills.drive = lambda vx=0.0, vy=0.0, wz=0.0, seconds=1.0: drives.append(vx * seconds)
+    assert skills._into_reach({"x": 0.30, "y": 0.0})
+    assert drives == [pytest.approx(0.05)]  # target wants 0.05, the 0.24 cube allows 0.05
+    drives.clear()
+    skills.find_cubes = lambda: {"cubes": [{"x": 0.36, "y": 0.0}, {"x": 0.20, "y": 0.05}]}
+    assert not skills._into_reach({"x": 0.36, "y": 0.0}) and drives == []

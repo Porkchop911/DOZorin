@@ -67,3 +67,20 @@ translates only forward (no-reverse envelope) and stops at hard costmap cells. E
 at zero velocity and a named arm pose.
 
 ## Session log
+
+### 2026-10-16 (live, user present)
+
+| Item | Result |
+|---|---|
+| look_down / find_cubes | cubes found 3/3 after retune; detector = floor-normalised LAB + convex-hull filter (auto white balance moved red b by 54 between two lamps) |
+| FK vs depth at 0.6 m | FK ray 0.68 m vs depth 0.57-0.60 m (~10 % long); close range consistent to ~1 cm |
+| grip check | `close 500` holds a cube at readback 486 = indistinguishable from empty -> `grip: 600` (empty 598, held ~490) |
+| wrist roll | sign was wrong (`roll_sign: -1`); yaw from min-area box was garbage on oblique cubes -> outline edges + overhead re-locate at 8 cm hover |
+| place | red on blue placed (level 1); green on 2-stack released too high -> `place_clearance: -0.005` |
+| pick | 4 holding / 7 tries (red 1st try was a good grasp dropped by the bad grip check) |
+| B2 attempt 1 | FAIL - software (move right after arm_pose, 409) |
+| B2 attempt 2 | FAIL - green on red OK, blue missed at x 0.136 (against the bumper) |
+| incident | into-reach creep (drive, costmap bypassed because it inflates the cubes) **drove into the nearer cubes**. Fix: creep capped so every cube in view stays >= 0.19 m ahead, else refuse. Bumper ~0.125 m. |
+
+Open (user, 2026-10-16): **reverse / backing up** — "we need to talk about this in the future".
+Base is structurally no-reverse (rear-blind); a cube too close to grasp currently needs a human.
