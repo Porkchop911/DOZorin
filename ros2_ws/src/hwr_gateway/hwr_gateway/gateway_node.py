@@ -1035,6 +1035,7 @@ class GatewayNode(Node):
         arm_config = self.arm_config
         size = float(arm_config["cube_size"])
         roll_sign = float(arm_config.get("roll_sign", 1.0))
+        clearance = float(arm_config.get("place_clearance", 0.005))
 
         def refined_plan(color: str, spot: dict, z: float, top_z: float):
             """Hover 8 cm over the look_down estimate, re-locate the cube from almost overhead
@@ -1154,9 +1155,9 @@ class GatewayNode(Node):
                     result = {"outcome": "target not seen", "on": body.on}
                     self._audit("arm_place", result["outcome"], result)
                     return result
-                spot, z = seen[0], size * body.level + size / 2 + 0.005
+                spot, z = seen[0], size * body.level + size / 2 + clearance
             elif body.x is not None and body.y is not None:
-                spot, z = {"x": body.x, "y": body.y, "yaw": 0.0}, size / 2 + 0.005
+                spot, z = {"x": body.x, "y": body.y, "yaw": 0.0}, size / 2 + clearance
             else:
                 raise HTTPException(422, "give on=<color> or x,y")
             if body.on:

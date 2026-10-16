@@ -17,6 +17,8 @@ gripper:
 grasp_margin: 40
 # Wrist roll direction vs cube yaw: live 2026-10-16 green (34 deg roll) met the cube rotated wrong with +1.
 roll_sign: -1
+# Held-cube centre height above the contact point at release; +0.005 dropped green off a 2-stack (live).
+place_clearance: -0.005
 # Kit cube edge (m) and OpenCV LAB ranges AFTER floor normalisation (image median a/b -> 128),
 # tuned live 2026-10-16 under two lamps (evidence/phase14/find3-5.jpg); glare is b >= 83, shadows a 129-144.
 cube_size: 0.03
