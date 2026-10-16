@@ -496,7 +496,7 @@ class GatewaySkills:
             self.turn(bearing)  # in place; needs no forward camera
             spot = {"x": distance, "y": 0.0}
         # The held cube shows at the image bottom (S2 #4 refused the creep because of it).
-        cubes = [c for c in self.find_cubes().get("cubes", []) if c.get("color") != held]
+        cubes = [c for c in self.find_cubes().get("cubes", []) if held is None or c.get("color") != held]
         nearest = min([c["x"] for c in cubes if abs(c["y"]) < 0.20] + [spot["x"]])
         creep = min(spot["x"] - reach_x, nearest - keep_x, 0.15)
         if creep < 0.02:
