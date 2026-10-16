@@ -1138,7 +1138,9 @@ class GatewayNode(Node):
             if not seen:
                 result = {"outcome": "not seen", "color": body.color}
             else:
-                plan, cube = refined_plan(body.color, seen[0], size / 2, size)
+                # Live: picks at -75..-60 deg held, -40 missed (B2 #5); steeper or reposition.
+                plan, cube = refined_plan(body.color, seen[0], size / 2, size,
+                                          flattest=-math.radians(55))
                 if plan is None:
                     result = {"outcome": "out of reach", "cube": cube}
                 else:

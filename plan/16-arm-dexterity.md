@@ -58,7 +58,7 @@ Intermediate gates: pick 8/10, place-on-cube 8/10 (user counts).
 - [ ] **14.7 Live calibration** (user present): (a) forward/floor/look_down camera directions vs
   FK; (b) reach to 3 tape marks ≤ 1 cm (gravity trims per joint if not); (c) LAB ranges for the
   3 cubes in room light; (d) gripper `grip` level + readback threshold.
-- [~] **14.8 Benchmarks B1, B2** (B2 1/3 so far: attempts 1-2 fail, 3 pass; B1 not run) with rates and photos in `evidence/phase14/`.
+- [~] **14.8 Benchmarks B1, B2** (B2 series 1: 1/5, not accepted; B1 not run) with rates and photos in `evidence/phase14/`.
 
 ## Safety
 
@@ -81,6 +81,9 @@ at zero velocity and a named arm pose.
 | B2 attempt 1 | FAIL - software (move right after arm_pose, 409) |
 | B2 attempt 2 | FAIL - green on red OK, blue missed at x 0.136 (against the bumper) |
 | B2 attempt 3 | **PASS** (user-verified 3-high standing) - one `stack_cubes` call, 41 s, 2 picks + 2 places all first-try, 1 reposition (turn + capped creep); `b2_3_before/after.jpg` |
+| B2 attempt 4 | FAIL - tool said "stacked", all 3 on the floor: places at -60/-55 deg (edge of reach) fell. Fix: place only at <= -70 deg + after-release check from look_down |
+| B2 attempt 5 | FAIL - green pick at -40 deg missed (overhead re-locate saw nothing at that angle). Fix: pick only at <= -55 deg, else reposition |
+| **B2 series 1** | **1/5 (#3)** - not accepted (needs >= 3/5). Every failure was a different bug, each fixed; rerun a fresh 5 |
 | incident | into-reach creep (drive, costmap bypassed because it inflates the cubes) **drove into the nearer cubes**. Fix: creep capped so every cube in view stays >= 0.19 m ahead, else refuse. Bumper ~0.125 m. |
 
 Open (user, 2026-10-16): **reverse / backing up** — "we need to talk about this in the future".
