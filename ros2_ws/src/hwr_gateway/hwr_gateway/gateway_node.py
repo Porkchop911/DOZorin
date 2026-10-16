@@ -1139,9 +1139,10 @@ class GatewayNode(Node):
             if not seen:
                 result = {"outcome": "not seen", "color": body.color}
             else:
-                # Live: picks at -75..-60 deg held, -40 missed (B2 #5); steeper or reposition.
+                # Live: -40 missed (B2 #5); -55 picks held but the tilted hold failed every
+                # later place (S2 #1, #5). Pick steep or reposition (creep) first.
                 plan, cube = refined_plan(body.color, seen[0], size / 2, size,
-                                          flattest=-math.radians(55))
+                                          flattest=-math.radians(70))
                 if plan is None:
                     result = {"outcome": "out of reach", "cube": cube}
                 else:
@@ -1177,12 +1178,12 @@ class GatewayNode(Node):
                 raise HTTPException(422, "give on=<color> or x,y")
             # Live B2 #3 placed at -85/-80 deg and stood; #4 at -60/-55 and fell: place steep only.
             # S2 #1: picked at -55, placed at -75 -> cube came down 20 deg tilted and slid off.
-            # With the pick pitch known, place within 15 deg of it: exact was unreachable (S2 #2),
-            # 10-15 deg off still stood (series 1 #3), 20 deg slid off.
+            # With the pick pitch known, place within 10 deg of it: exact was unreachable (S2 #2),
+            # 10 deg off stood (series 1 #3), 15-20 deg off fell (S2 #5, #1).
             steepest, flattest = -math.pi / 2, -math.radians(70)
             if body.pitch_deg is not None:
-                steepest = max(-math.pi / 2, math.radians(body.pitch_deg - 15))
-                flattest = min(-math.radians(55), math.radians(body.pitch_deg + 15))
+                steepest = max(-math.pi / 2, math.radians(body.pitch_deg - 10))
+                flattest = min(-math.radians(60), math.radians(body.pitch_deg + 10))
             if body.on:
                 plan, spot = refined_plan(body.on, spot, z, size * body.level,
                                           flattest=flattest, steepest=steepest)

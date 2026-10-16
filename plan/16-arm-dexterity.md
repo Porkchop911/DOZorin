@@ -87,6 +87,9 @@ at zero velocity and a named arm pose.
 | S2 #1 | FAIL - placed "not on target" (check worked): picked -55, placed -75 -> cube 20 deg tilted, slid off (user). Fix: place within 15 deg of the pick pitch |
 | S2 #2 | FAIL - exact pick pitch (-90) unreachable for the place. Fix: +/-15 deg window |
 | S2 #3 | FAIL - green pick missed; green 4.5 cm from red (layout left by #2's drop), jaw hit red |
+| S2 #4 | FAIL - place out of reach; creep refused because the HELD cube looked like an obstacle. Fix: creep ignores the held colour. (Also: sensor supervisor latched estop on a lidar dropout mid-session; recovered, reset) |
+| S2 #5 | FAIL - creep worked; pick -55, place -70: green hit red's edge and tumbled (user). Fix: picks <= -70 (else creep), place within +/-10 deg of pick |
+| **B2 series 2** | **0/5** - total 1/10 |
 | Setup rule (user) | cubes >= 8 cm apart. Jaws close left-right at roll 0 (user) - input for a later neighbour-clearance roll choice |
 | incident | into-reach creep (drive, costmap bypassed because it inflates the cubes) **drove into the nearer cubes**. Fix: creep capped so every cube in view stays >= 0.19 m ahead, else refuse. Bumper ~0.125 m. |
 
