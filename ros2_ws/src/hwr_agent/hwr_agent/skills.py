@@ -635,19 +635,40 @@ class GatewaySkills:
                 look()
                 continue
             last = None
-            here = self._to_base(self._pose(), stack_xy)
-            self._into_reach(here, reach_x=0.22, held=color)
-            placed = self.place(on=stack[-1], level=len(stack), color=color,
-                                pitch_deg=picked.get("pitch_deg"))
-            log.append({"place_on": stack[-1], **placed})
+            for _ in range(2):  # still holding: get the stack in view/reach and try again
+                here = self._to_base(self._pose(), stack_xy)
+                self._into_reach(here, reach_x=0.22, held=color)
+                placed = self.place(on=stack[-1], level=len(stack), color=color,
+                                    pitch_deg=picked.get("pitch_deg"))
+                log.append({"place_on": stack[-1], **placed})
+                if placed.get("outcome") not in ("target not seen", "out of reach"):
+                    break
             if placed.get("outcome") == "placed":
                 stack.append(color)
+                if placed.get("spot"):
+                    stack_xy = self._to_world(self._pose(), placed["spot"])  # tower as last seen
+            elif placed.get("outcome") in ("target not seen", "out of reach"):
+                # Never open mid-air (live 2026-10-17 that dropped cubes "for no reason"):
+                # set it down in front and put it back in the pool.
+                log.append({"set_down": color, **self.place(x=0.22, y=0.0, color=color)})
+                look()
             else:
-                self.gripper("open")
-                look()  # the cube is on the floor somewhere: back in the pool
+                look()  # released but not on the stack: on the floor, back in the pool
         self.arm_pose("forward")
         done = len(stack) == len(wanted)
-        return {"outcome": "stacked" if done else f"stack of {len(stack)}", "stack": stack,
+        if done:
+            # The tool once said "stacked" with a cube on the floor beside it (2026-10-17): every
+            # stack colour still visible must sit at the top cube's spot.
+            seen = {c["color"]: c for c in self.find_cubes().get("cubes", [])}
+            top = seen.get(stack[-1])
+            apart = [c for c in stack[:-1] if c in seen and top is not None and
+                     math.hypot(seen[c]["x"] - top["x"], seen[c]["y"] - top["y"]) > 0.06]
+            if top is None or apart:
+                done = False
+                log.append({"final_check": "failed", "top_seen": top is not None, "apart": apart})
+            self.arm_pose("forward")
+        return {"outcome": "stacked" if done else f"stack of {len(stack)} unverified"
+                if len(stack) == len(wanted) else f"stack of {len(stack)}", "stack": stack,
                 "log": log}
 
     def unstack_cubes(self, stack: list[str]):

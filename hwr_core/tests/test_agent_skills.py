@@ -311,8 +311,9 @@ def test_map_tools_validate_names_before_touching_the_robot():
 class FakeArm:
     """Scripted gateway: cubes on the floor in base frame at pose (0, 0, 0)."""
 
-    def __init__(self, skills, cubes, picks, places):
+    def __init__(self, skills, cubes, picks, places, final=None):
         self.calls, self.cubes, self.picks, self.places = [], cubes, list(picks), list(places)
+        self.final = final  # what look_down shows once every scripted place is used up
         skills._motion = self.motion
         skills._pose = lambda: [0.0, 0.0, 0.0]
         skills._act = lambda description, path, payload=None: self.calls.append((path, payload))
@@ -322,6 +323,8 @@ class FakeArm:
         self.calls.append((path, payload))
         if path == "/arm/find_cubes":
             cubes = self.cubes(payload) if callable(self.cubes) else self.cubes
+            if self.final is not None and not self.places:
+                cubes = self.final
             return {"cubes": [dict(c) for c in cubes]}
         if path == "/arm/pick":
             return dict(self.picks.pop(0))
@@ -337,7 +340,7 @@ CUBES = [{"color": "red", "x": 0.30, "y": 0.0}, {"color": "green", "x": 0.22, "y
 def test_stack_cubes_any_order_picks_base_and_nearest_first():
     skills = GatewaySkills(token="t")
     fake = FakeArm(skills, CUBES, [{"outcome": "holding", "pitch_deg": -80}] * 2,
-                   [{"outcome": "placed"}] * 2)
+                   [{"outcome": "placed"}] * 2, final=[{"color": "green", "x": 0.3, "y": 0.0}])
     result = skills.stack_cubes()
     assert result["outcome"] == "stacked"
     assert result["stack"] == ["red", "blue", "green"]  # red nearest (0.22, 0); then nearest-first
@@ -350,7 +353,8 @@ def test_stack_cubes_retries_after_a_miss_and_a_fall():
     skills = GatewaySkills(token="t")
     fake = FakeArm(skills, CUBES,
                    [{"outcome": "missed"}] + [{"outcome": "holding", "pitch_deg": -80}] * 3,
-                   [{"outcome": "not on target"}, {"outcome": "placed"}, {"outcome": "placed"}])
+                   [{"outcome": "not on target"}, {"outcome": "placed"}, {"outcome": "placed"}],
+                   final=[{"color": "blue", "x": 0.3, "y": 0.0}, {"color": "green", "x": 0.31, "y": 0.02}])
     result = skills.stack_cubes(["red", "green", "blue"])
     assert result["outcome"] == "stacked" and result["stack"] == ["red", "green", "blue"]
     assert [p for p, _ in fake.calls].count("/arm/pick") == 4
@@ -449,7 +453,19 @@ def test_stack_cubes_searches_around_for_cubes_out_of_view():
             return [c for c in CUBES if c["color"] != "red"] if seen["n"] >= 2 else []
         return [CUBES[0]]
 
-    fake = FakeArm(skills, view, [{"outcome": "holding", "pitch_deg": -80}] * 2, [{"outcome": "placed"}] * 2)
+    fake = FakeArm(skills, view, [{"outcome": "holding", "pitch_deg": -80}] * 2, [{"outcome": "placed"}] * 2,
+                   final=[{"color": "green", "x": 0.3, "y": 0.0}])
     result = skills.stack_cubes()
     assert turns[:2] == [60, 60] and result["outcome"] == "stacked"
     assert ("/arm/find_cubes", {"view": "floor"}) in fake.calls
+
+
+def test_stack_cubes_never_drops_a_held_cube_and_checks_the_tower():
+    skills = GatewaySkills(token="t")
+    fake = FakeArm(skills, CUBES, [{"outcome": "holding", "pitch_deg": -80}] * 2,
+                   [{"outcome": "target not seen"}, {"outcome": "placed"}, {"outcome": "placed"}],
+                   final=[{"color": "blue", "x": 0.3, "y": 0.0}, {"color": "red", "x": 0.45, "y": 0.1}])
+    result = skills.stack_cubes(["red", "green", "blue"])
+    assert not any(path == "/gripper" for path, _ in fake.calls)
+    assert [p["on"] for path, p in fake.calls if path == "/arm/place"] == ["red", "red", "green"]
+    assert result["outcome"] == "stack of 3 unverified"  # red seen 0.18 m from the top cube
