@@ -32,7 +32,7 @@ def test_live_frames_two_lamps():
     import yaml
     root = pathlib.Path(__file__).resolve().parents[2]
     ranges = yaml.safe_load((root / "ros2_ws/src/hwr_arm/config/poses.yaml").read_text())["cubes"]
-    for name, expected in [("find4", 3), ("find5", 3), ("find1", 0), ("find2", 0)]:
+    for name, expected in [("find4", 3), ("find5", 3), ("sun_find1", 3), ("find1", 0), ("find2", 0)]:
         blobs = find_color_blobs(cv2.imread(str(root / f"evidence/phase14/{name}.jpg")), ranges)
         assert sorted(b["class"] for b in blobs) == (
             ["blue_cube", "green_cube", "red_cube"] if expected else []), name

@@ -24,5 +24,6 @@ place_clearance: -0.005
 cube_size: 0.03
 cubes:
   red: {min: [30, 160, 95], max: [255, 255, 200]}
-  green: {min: [20, 0, 80], max: [255, 120, 110]}
-  blue: {min: [30, 125, 0], max: [255, 255, 75]}
+  # 2026-10-17 sunlight: green b 113-118, blue b 75-83 / a 125-128 (sun_find1.jpg) -> widened.
+  green: {min: [20, 0, 80], max: [255, 118, 124]}
+  blue: {min: [50, 112, 0], max: [140, 255, 100]}  # L <= 140: bright bluish floor glare

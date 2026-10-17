@@ -35,6 +35,10 @@ def find_color_blobs(bgr: np.ndarray, ranges: dict, min_area: float = 150.0,
                 continue
             x, y, w, h = cv2.boundingRect(contour)
             moments = cv2.moments(contour)
+            # The camera rides on the gripper: jaws + plate always fill the bottom ~60 px and read
+            # blue/green-ish (2026-10-17). A cube that low is under the jaws anyway.
+            if moments["m01"] / moments["m00"] > bgr.shape[0] - 65:
+                continue
             blobs.append({"class": f"{color}_cube", "conf": 1.0, "id": None,
                           "box": [x, y, x + w, y + h],
                           "center": [round(moments["m10"] / moments["m00"], 1),
@@ -44,4 +48,15 @@ def find_color_blobs(bgr: np.ndarray, ranges: dict, min_area: float = 150.0,
                           "outline": cv2.approxPolyDP(contour, 3.0, True).reshape(-1, 2).tolist(),
                           "area": round(area)})
         found += sorted(blobs, key=lambda b: -b["area"])
-    return found
+    # A cube's shaded face can pass another colour's range (red's dark side read blue): drop a
+    # blob mostly inside the box of a larger blob of another colour.
+    return [b for b in found if not any(
+        o["class"] != b["class"] and o["area"] > b["area"] and _overlap(b["box"], o["box"]) > 0.3
+        for o in found)]
+
+
+def _overlap(small: list, big: list) -> float:
+    """Fraction of box `small` covered by box `big`."""
+    w = min(small[2], big[2]) - max(small[0], big[0])
+    h = min(small[3], big[3]) - max(small[1], big[1])
+    return max(w, 0) * max(h, 0) / max((small[2] - small[0]) * (small[3] - small[1]), 1)
