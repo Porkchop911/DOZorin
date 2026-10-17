@@ -1239,8 +1239,11 @@ class GatewayNode(Node):
                 if not body.level and math.hypot(seen[0]["x"], seen[0]["y"]) < 0.19:
                     plan, cube = None, seen[0]
                 else:
+                    # Evening 2026-10-17: floor picks at -75/-80 deg (0.228-0.238 m) missed 3/3, the
+                    # jaws landing short and shoving the cube; -90 deg at 0.20 m held 2/2. Floor
+                    # picks stay within 5 deg of vertical (reach <= 0.223 m); the skill creeps closer.
                     plan, cube = refined_plan(body.color, seen[0], grasp_z, centre + size / 2,
-                                              flattest=-math.radians(70))
+                                              flattest=-math.radians(70 if body.level else 85))
                 if plan is None:
                     result = {"outcome": "out of reach", "cube": cube}
                 else:

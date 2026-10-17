@@ -511,7 +511,9 @@ class GatewaySkills:
             raise ValueError(f"color must be one of {self.CUBE_COLORS}")
         payload = {"color": color, "level": int(level)}
         result = self._motion(f"pick the {color} cube", "/arm/pick", payload, 20.0)
-        if result.get("outcome") == "out of reach" and self._into_reach(result["cube"], target=color):
+        # Floor picks are near-vertical only (gateway, reach <= 0.223 m): bring the cube to 0.205 m.
+        if result.get("outcome") == "out of reach" and self._into_reach(result["cube"], reach_x=0.205,
+                                                                        target=color):
             result = self._motion(f"pick the {color} cube", "/arm/pick", payload, 20.0)
             result["repositioned"] = True
         return result
@@ -690,7 +692,7 @@ class GatewaySkills:
                 todo, key=lambda c: math.hypot(*self._to_base(pose, world[c]).values()))
             picked = self.pick(color)
             for _ in range(4):  # far (found by the search): creep up in capped steps
-                if picked.get("outcome") != "not seen" or color not in world or                         not self._into_reach(self._to_base(self._pose(), world[color]), reach_x=0.22):
+                if picked.get("outcome") != "not seen" or color not in world or                         not self._into_reach(self._to_base(self._pose(), world[color]), reach_x=0.205):
                     break
                 picked = self.pick(color)
             log.append({"pick": color, **picked})
