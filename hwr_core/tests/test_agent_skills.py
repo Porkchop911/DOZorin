@@ -440,8 +440,8 @@ def test_into_reach_strafes_around_a_cube_in_the_way(monkeypatch):
     skills.drive = lambda vx=0.0, vy=0.0, wz=0.0, seconds=1.0: calls.append(("drive", round(vx * seconds, 2)))
     skills.find_cubes = lambda: views.pop(0)
     assert skills._into_reach({"x": 0.36, "y": 0.0})
-    # Stack 0.16 off the centre line; creep until red is 0.14 ahead, no turn.
-    assert calls == [("move", 0.16, "left"), ("drive", 0.22)]
+    # Stack 0.16 off the centre line; creep until red sits on the 0.22 reach circle, no turn.
+    assert calls == [("move", 0.16, "left"), ("drive", 0.21)]
     assert skills_mod._detour({"x": 0.36, "y": 0.0}, [{"x": 0.2, "y": 0.0}]) == 0.16
     assert skills_mod._detour({"x": 0.36, "y": 0.0}, [{"x": 0.2, "y": 0.1}, {"x": 0.2, "y": -0.1}]) is None
 
@@ -511,7 +511,7 @@ def test_into_reach_detours_when_a_cube_only_partly_caps_the_creep(monkeypatch):
     skills.drive = lambda vx=0.0, vy=0.0, wz=0.0, seconds=1.0: calls.append(("drive", round(vx * seconds, 2)))
     skills.find_cubes = lambda: views.pop(0)
     assert skills._into_reach({"x": 0.30, "y": 0.0})
-    assert calls[0][0] == "move" and calls[1] == ("drive", 0.16)
+    assert calls[0][0] == "move" and calls[1] == ("drive", 0.1)  # red ends 0.22 out, not under the jaws
 
 
 def test_unstack_stops_at_first_failed_place_and_never_moves_the_body(monkeypatch):
@@ -629,4 +629,4 @@ def test_into_reach_short_strafe_does_not_creep_the_target_under_the_jaws(monkey
     skills.find_cubes = lambda: views.pop(0)
     skills._into_reach({"x": 0.422, "y": -0.016}, target="blue")
     drives = [c[1] for c in calls if c[0] == "drive"]
-    assert drives and 0.422 - sum(drives) >= 0.22 - 1e-6  # blue ends at reach_x, not 0.14-0.19
+    assert drives and math.hypot(0.422 - sum(drives), 0.047) >= 0.22 - 1e-6  # on the reach circle
