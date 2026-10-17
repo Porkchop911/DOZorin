@@ -100,5 +100,22 @@ at zero velocity and a named arm pose.
 
 | 2026-10-17 (offline) | `unstack_cubes(stack)` skill + tool: top-down to the floor 0.10 m beside the tower, stops at first failure, no body moves. Floor place: no pitch window, flattest -45 deg. Untested live |
 
+### 2026-10-17 (live, sunlight, user present part-time)
+
+| Item | Result |
+|---|---|
+| detector | sunlight washed colours out -> wider LAB ranges with L caps, jaw band (bottom 65 px ignored: camera rides on the gripper), shaded-face suppression |
+| map pose | degraded localization froze map x/y over ~1 m driving -> stack tracked in odometry |
+| moves | into-reach strafes away from too-close cubes and sidesteps around a blocker; stack_cubes searches (floor view, 60 deg turns) |
+| S4 #1-#5 | #3 **PASS** (user-verified). #2 tool lied "stacked" + opened gripper mid-air on a failed find (user: "dropping cubes for no good reason") -> fixed: never open mid-air, final tower check. #5 started from a standing tower (my error) |
+| centring analysis (user: "mostly about centering") | (1) place re-located the target at hover where the HELD cube hides it -> 3.5 cm wrong spot; now look_down spot. (2) side bias -0.73 cm on 6 places -> place_side_trim. (3) floor calibration 14 places: radial overshoot 0.76 mm/deg tilt from vertical -> place_radial_per_deg. (4) pick error along the fingers rides into the place -> 90 deg re-grip (turn at hover: turning down there dragged the cube) |
+| stack picks | finger tips caught the cube below -> grip stacked cubes 8 mm high |
+| final check | per-level planes (floor plane read a standing tower as apart) |
+| cycles c1-c8 | verified place errors after trims mostly <= 1 cm; remaining failures: misses near the bumper (x < 0.17), cubes boxed in (base choice), unstack floor spots too close |
+| last change (untested) | base = farthest cube <= 0.4 m; unstack spots x >= 0.19 |
+| end | battery 9.5 V (user: needs charging). /stop latched estop; arm left in last pose |
+
+Open: re-run cycles with re-grip + farthest base; supervisor does not release its estop after a lidar respawn (manual reset twice); B2 still not accepted.
+
 Open (user, 2026-10-16): **reverse / backing up** — "we need to talk about this in the future".
 Base is structurally no-reverse (rear-blind); a cube too close to grasp currently needs a human.
