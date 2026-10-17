@@ -58,6 +58,18 @@ def body_velocity(rps: tuple[float, float, float, float]) -> tuple[float, float,
     return vx, vy, wz
 
 
+URDF_WHEELS = ("wheel_fl_joint", "wheel_rl_joint", "wheel_fr_joint", "wheel_rr_joint")  # m1..m4
+
+
+def rps_to_urdf(rps: tuple[float, float, float, float]) -> dict:
+    """Wire rev/s (m1..m4) -> sim wheel joint rad/s; every URDF wheel spins +y = forward."""
+    return {name: 2 * math.pi * s * r for name, s, r in zip(URDF_WHEELS, WIRE_SIGNS, rps)}
+
+
+def urdf_to_rps(q_dot: dict) -> tuple[float, float, float, float]:
+    return tuple(s * q_dot[name] / (2 * math.pi) for name, s in zip(URDF_WHEELS, WIRE_SIGNS))
+
+
 def scale_to_limit(rps: tuple[float, float, float, float],
                    max_rps: float) -> tuple[float, float, float, float]:
     """Uniformly scale wheel speeds so none exceeds max_rps (direction preserved)."""

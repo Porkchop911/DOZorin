@@ -43,6 +43,36 @@ def joints_to_pulses(joints: JointSolution) -> dict:
     return out
 
 
+# Sim model (rosorin_pro_isaac.urdf): joint1 turns about -Z, so it is -pan; joints 2-4 match.
+# FK agrees with ArmKinematics.fk to 2 mm (the vendor's 0.5 deg joint1 tilt).
+# shortcut: joint5 = +roll sign not yet checked on hardware; verify with one wrist-roll photo.
+def joints_to_urdf(joints: JointSolution) -> dict:
+    return {"joint1": -joints.pan, "joint2": joints.shoulder, "joint3": joints.elbow,
+            "joint4": joints.wrist, "joint5": joints.roll}
+
+
+def urdf_to_joints(q: dict) -> JointSolution:
+    return JointSolution(pan=-q["joint1"], shoulder=q["joint2"], elbow=q["joint3"],
+                         wrist=q["joint4"], roll=q["joint5"])
+
+
+# Gripper servo 10 pulse <-> URDF r_joint (the other four finger joints mimic it). Two live
+# readbacks (poses.yaml, 2026-10-16) matched to the model's finger gap: empty jaws stall at 598
+# = gap 0 (r_joint -0.70), a 3 cm cube at 486 = gap 30 mm (r_joint -0.147).
+# shortcut: linear 2-point fit, fully open (pulse 200) is extrapolated; re-fit if open width matters.
+GRIPPER_RAD_PER_PULSE = (-0.70 + 0.147) / (598 - 486)
+GRIPPER_URDF_RANGE = (-0.70, 0.85)  # fingers touch .. widest gap in the model
+
+
+def gripper_pulse_to_urdf(pulse: float) -> float:
+    lo, hi = GRIPPER_URDF_RANGE
+    return min(hi, max(lo, -0.147 + (pulse - 486) * GRIPPER_RAD_PER_PULSE))
+
+
+def urdf_to_gripper_pulse(r_joint: float) -> int:
+    return round(486 + (r_joint + 0.147) / GRIPPER_RAD_PER_PULSE)
+
+
 class ArmKinematics:
     def __init__(self, pan_x: float = 0.0466, shoulder_z: float = 0.1907,
                  upper: float = 0.08513, forearm: float = 0.085147,

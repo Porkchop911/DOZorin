@@ -4,7 +4,8 @@ import random
 import pytest
 
 from hwr_core.kinematics import (Calibration, K, WHEEL_DIAMETER, WIRE_SIGNS,
-                                 body_velocity, scale_to_limit, wheel_speeds)
+                                 body_velocity, rps_to_urdf, scale_to_limit, urdf_to_rps,
+                                 wheel_speeds)
 
 CIRC = math.pi * WHEEL_DIAMETER
 
@@ -77,3 +78,10 @@ def test_calibration_yaml_roundtrip(tmp_path):
     p.write_text("linear: 1.02\nstrafe: 0.97\nangular: 1.1\n")
     cal = Calibration.load(p)
     assert (cal.linear, cal.strafe, cal.angular) == (1.02, 0.97, 1.1)
+
+
+def test_urdf_wheels_all_spin_forward_for_forward_motion():
+    q_dot = rps_to_urdf(wheel_speeds(0.2, 0.0, 0.0))
+    assert all(v == pytest.approx(0.2 / (WHEEL_DIAMETER / 2)) for v in q_dot.values())
+    rps = wheel_speeds(0.1, -0.05, 0.3)
+    assert urdf_to_rps(rps_to_urdf(rps)) == pytest.approx(rps)

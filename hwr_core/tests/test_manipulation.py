@@ -55,3 +55,15 @@ def test_fixed_pitch_plan_uses_exactly_that_pitch():
     plan = plan_grasp(ArmKinematics(), 0.20, 0.0, 0.04, 0.0,
                       steepest=math.radians(-60), flattest=math.radians(-60))
     assert plan is not None and plan[2] == pytest.approx(math.radians(-60))
+
+
+def test_urdf_joint_mapping_roundtrip_and_gripper_anchors():
+    from hwr_core.arm import (JointSolution, gripper_pulse_to_urdf, joints_to_urdf,
+                              urdf_to_gripper_pulse, urdf_to_joints)
+    j = JointSolution(0.3, -0.4, 1.1, 0.2, -0.5)
+    assert urdf_to_joints(joints_to_urdf(j)) == j
+    assert joints_to_urdf(j)["joint1"] == -0.3  # URDF joint1 turns about -Z
+    assert gripper_pulse_to_urdf(598) == pytest.approx(-0.70)
+    assert gripper_pulse_to_urdf(486) == pytest.approx(-0.147)
+    assert gripper_pulse_to_urdf(0) == 0.85  # clamped at the model's widest gap
+    assert urdf_to_gripper_pulse(gripper_pulse_to_urdf(520)) == 520
