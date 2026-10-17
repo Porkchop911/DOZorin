@@ -524,10 +524,15 @@ class GatewaySkills:
         corridor = [c for c in cubes if abs(c["y"]) < 0.13]
         nearest = min([c["x"] for c in corridor] + [spot["x"]])
         creep = min(spot["x"] - reach_x, nearest - keep_x, 0.15)
-        if creep < 0.02:
+        # Detour whenever another cube caps the creep short of the target (c1 2026-10-17: a few-cm
+        # creep per call next to the 2-stack, then "out of reach" twice and give up).
+        if nearest - keep_x < min(spot["x"] - reach_x, 0.15) - 0.01:
             blockers = [c for c in corridor if c["x"] < spot["x"] - 0.05]
             shift = _detour(spot, blockers) if detour and blockers and spot["x"] - reach_x >= 0.02 else None
             if shift is None or not self._strafe(shift):
+                if creep >= 0.02:
+                    self.drive(vx=0.1, seconds=creep / 0.1)  # as close as the blocker allows
+                    return True
                 return moved  # can't get closer without hitting another cube
             # Live 2026-10-17: red sat right behind the 2-stack. Step beside it and creep past it;
             # the arm takes the target off to the side (a turn would line the stack up again).
@@ -539,6 +544,8 @@ class GatewaySkills:
             if creep >= 0.02:
                 self.drive(vx=0.1, seconds=creep / 0.1)
             return True
+        if creep < 0.02:
+            return moved  # already as close as reach_x
         self.drive(vx=0.1, seconds=creep / 0.1)
         return True
 

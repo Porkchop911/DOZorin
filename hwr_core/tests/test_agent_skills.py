@@ -375,7 +375,7 @@ def test_into_reach_creep_never_closes_on_another_cube():
     drives = []
     skills.find_cubes = lambda: {"cubes": [{"x": 0.30, "y": 0.0}, {"x": 0.24, "y": -0.08}]}
     skills.drive = lambda vx=0.0, vy=0.0, wz=0.0, seconds=1.0: drives.append(vx * seconds)
-    assert skills._into_reach({"x": 0.30, "y": 0.0})
+    assert skills._into_reach({"x": 0.30, "y": 0.0}, detour=False)
     assert drives == [pytest.approx(0.05)]  # target wants 0.05, the 0.24 cube allows 0.05
     drives.clear()
     skills.find_cubes = lambda: {"cubes": [{"x": 0.36, "y": 0.0}, {"x": 0.20, "y": 0.05}]}
@@ -469,3 +469,17 @@ def test_stack_cubes_never_drops_a_held_cube_and_checks_the_tower():
     assert not any(path == "/gripper" for path, _ in fake.calls)
     assert [p["on"] for path, p in fake.calls if path == "/arm/place"] == ["red", "red", "green"]
     assert result["outcome"] == "stack of 3 unverified"  # red seen 0.18 m from the top cube
+
+
+def test_into_reach_detours_when_a_cube_only_partly_caps_the_creep(monkeypatch):
+    monkeypatch.setattr("hwr_agent.skills.time.sleep", lambda s: None)
+    skills = GatewaySkills(token="t")
+    calls = []
+    views = [{"cubes": [{"x": 0.30, "y": 0.0}, {"x": 0.21, "y": -0.08}]},  # creep capped at 0.02
+             {"cubes": [{"x": 0.30, "y": -0.15}, {"x": 0.21, "y": -0.23}]}]
+    skills.arm_pose = lambda name: None
+    skills.move = lambda meters, direction="forward": calls.append(("move", round(meters, 2), direction))
+    skills.drive = lambda vx=0.0, vy=0.0, wz=0.0, seconds=1.0: calls.append(("drive", round(vx * seconds, 2)))
+    skills.find_cubes = lambda: views.pop(0)
+    assert skills._into_reach({"x": 0.30, "y": 0.0})
+    assert calls[0][0] == "move" and calls[1] == ("drive", 0.16)
