@@ -1187,6 +1187,15 @@ class GatewayNode(Node):
                     reach(hover, 1200, 1.4)
                     reach(grasp, 800, 1.0)
                     grip("grip")
+                    if not body.level:
+                        # Re-grip square: the jaws centre the cube only across their closing axis;
+                        # along the fingers the pick estimate's error (1-3 cm) rode along into the
+                        # place (c6 2026-10-17). Open, turn the wrist 90 deg, grip again.
+                        grip("open")
+                        turned = dict(grasp)
+                        turned[5] += -375 if grasp[5] > 500 else 375  # 90 deg / 0.24
+                        reach(turned, 600, 0.8)
+                        grip("grip")
                     reach(hover, 800, 1.0)
                     closed = arm_pulses().get(10)
                     target = int(arm_config["gripper"]["grip"])
