@@ -1051,8 +1051,7 @@ class GatewayNode(Node):
             return spot["x"] - side_trim * math.sin(pan), spot["y"] + side_trim * math.cos(pan)
 
         def refined_plan(color: str, spot: dict, z: float, top_z: float,
-                         flattest: float = -math.radians(30), steepest: float = -math.pi / 2,
-                         trim: bool = False):
+                         flattest: float = -math.radians(30), steepest: float = -math.pi / 2):
             """Hover 8 cm over the look_down estimate, re-locate the cube from almost overhead
             (mostly its top face: true edges for yaw, small parallax), then plan the descent."""
             plan = plan_grasp(self.kin, spot["x"], spot["y"], z, spot["yaw"], hover=0.08,
@@ -1069,8 +1068,7 @@ class GatewayNode(Node):
                 spot = {**spot, **min(near, key=lambda s: math.hypot(s["x"] - spot["x"],
                                                                    s["y"] - spot["y"])),
                         "refined": True}
-            x, y = trimmed(spot) if trim else (spot["x"], spot["y"])
-            return plan_grasp(self.kin, x, y, z, spot["yaw"],
+            return plan_grasp(self.kin, spot["x"], spot["y"], z, spot["yaw"],
                               roll_sign=roll_sign, flattest=flattest, steepest=steepest), spot
 
         def seen_near(color: str, spot: dict, plane_z: float, within: float = 0.03):
@@ -1210,8 +1208,11 @@ class GatewayNode(Node):
                 steepest = max(-math.pi / 2, math.radians(body.pitch_deg - 10))
                 flattest = min(-math.radians(60), math.radians(body.pitch_deg + 10))
             if body.on:
-                plan, spot = refined_plan(body.on, spot, z, size * body.level,
-                                          flattest=flattest, steepest=steepest, trim=True)
+                # No overhead re-locate here: at hover the held cube hides most of the target and
+                # its visible sliver moved the spot 3.5 cm (c3 2026-10-17, green fell off blue).
+                # From look_down the held cube sits at the image bottom, clear of the target.
+                plan = plan_grasp(self.kin, *trimmed(spot), z, spot["yaw"], roll_sign=roll_sign,
+                                  flattest=flattest, steepest=steepest)
             else:
                 plan = plan_grasp(self.kin, *trimmed(spot), z, 0.0, roll_sign=roll_sign,
                                   flattest=flattest, steepest=steepest)
@@ -1226,9 +1227,11 @@ class GatewayNode(Node):
                 outcome = "placed"
                 if body.color:  # verify from look_down (at hover the cube is cut off at the image edge)
                     pose("look_down", 2.0)
-                    top = size * (body.level + 1) if body.on else size
-                    error = seen_near(body.color, spot, top, within=0.04)
-                    outcome = ("placed" if error is not None and math.hypot(*error) < 0.03
+                    # Mid-height planes for the placed cube, as find() used for the target.
+                    middle = size * body.level + size / 2 if body.on else size / 2
+                    error = seen_near(body.color, spot, middle, within=0.04)
+                    # Good places land within ~1.2 cm; one 2 cm off had fallen (c3 2026-10-17).
+                    outcome = ("placed" if error is not None and math.hypot(*error) < 0.015
                                else "not on target")
                 result = {"outcome": outcome, "spot": spot, "z": round(z, 3),
                           "pitch_deg": round(math.degrees(pitch))}
