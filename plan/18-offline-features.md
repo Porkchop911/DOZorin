@@ -1,6 +1,13 @@
 # 18 — Offline features: landmarks, follow v2, mapping, reverse (2026-10-18)
 
 Built while the robot was off. Nothing in this file has run on the robot yet.
+
+| Item | Commit | Status |
+|---|---|---|
+| 18.1 landmarks | `55c97c0` | code + tests; also fixed `/places/mark` (its request model was shadowed, would 500 live) |
+| 18.2 follow v2 | `69c20ee` | code + tests of the pure helpers; the gateway loop is untested |
+| 18.3 mapping | `eac5c35` | code + tests; explore node change untested |
+| 18.4 reverse | `17097c5` | code + tests; base/gateway/depth wiring untested. Needs a stack restart (poses.yaml, base, depth node) |
 The rule for every item: the logic is a pure function in `hwr_core` with unit tests, and the ROS
 nodes and gateway only wire it in. Each item ends with the live acceptance test to run next session.
 
