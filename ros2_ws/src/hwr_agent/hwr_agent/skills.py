@@ -12,6 +12,16 @@ from pathlib import Path
 import requests
 
 
+def _detour(target: dict, blockers: list, clear: float = 0.15, side: float = 0.17) -> float | None:
+    """Smallest sideways shift (m, + = left) that puts every blocker >= clear off the robot's
+    centre line while the target stays within the arm's side reach (|y| <= side). Base frame."""
+    for step in range(2, 31, 2):
+        for shift in (step / 100, -step / 100):
+            if abs(target["y"] - shift) <= side and all(abs(b["y"] - shift) >= clear for b in blockers):
+                return shift
+    return None
+
+
 class GatewaySkills:
     _FLOOR_HAZARD_WORDS = ("wire", "cable", "cord", "clothing", "chair",
                            "obstruction", "clutter", "object on floor")
@@ -481,28 +491,22 @@ class GatewaySkills:
         return result
 
     def _into_reach(self, spot: dict, reach_x: float = 0.22, keep_x: float = 0.19,
-                    held: str | None = None) -> bool:
+                    held: str | None = None, detour: bool = True) -> bool:
         """Turn to face a base-frame spot and creep (<= 0.15 m) until it sits ~reach_x ahead.
 
         The creep bypasses the costmap (it inflates the cubes themselves), so it is capped by every
         cube in view: none may end closer than keep_x (bumper ~0.125 m). Live 2026-10-16 the
-        uncapped creep drove into the nearer cubes."""
+        uncapped creep drove into the nearer cubes. The base can't reverse, so a cube too close is
+        handled by strafing away, and a cube behind another by strafing around it."""
         if self.dry_run:
             return False
         moved = False
         if math.hypot(spot["x"], spot["y"]) < keep_x:
-            # Too close to grasp and the base can't reverse: strafe away from it, then face it
-            # (live 2026-10-17 a cube beside the jaw needed a human otherwise).
+            # Live 2026-10-17 a cube beside the jaw needed a human otherwise.
             side = 1.0 if spot["y"] >= 0 else -1.0
             step = min(math.sqrt(max(reach_x ** 2 - spot["x"] ** 2, 0.0)) - abs(spot["y"]), 0.15)
-            if step < 0.02:
+            if step < 0.02 or not self._strafe(-side * step):
                 return False
-            self.arm_pose("forward")  # move() needs the verified forward camera
-            time.sleep(2.0)
-            try:
-                self.move(step, "right" if side > 0 else "left")
-            except RuntimeError:
-                return False  # costmap says the side is blocked
             spot, moved = {"x": spot["x"], "y": spot["y"] + side * step}, True
         bearing = math.degrees(math.atan2(spot["y"], spot["x"]))
         distance = math.hypot(spot["x"], spot["y"])
@@ -515,11 +519,35 @@ class GatewaySkills:
         # The held cube shows at the image bottom (S2 #4 refused the creep because of it).
         cubes = [c for c in self.find_cubes().get("cubes", []) if held is None or c.get("color") != held]
         # Corridor = robot half-width ~0.1 m + half a cube.
-        nearest = min([c["x"] for c in cubes if abs(c["y"]) < 0.13] + [spot["x"]])
+        corridor = [c for c in cubes if abs(c["y"]) < 0.13]
+        nearest = min([c["x"] for c in corridor] + [spot["x"]])
         creep = min(spot["x"] - reach_x, nearest - keep_x, 0.15)
         if creep < 0.02:
-            return moved  # can't get closer without hitting another cube
+            blockers = [c for c in corridor if c["x"] < spot["x"] - 0.05]
+            shift = _detour(spot, blockers) if detour and blockers and spot["x"] - reach_x >= 0.02 else None
+            if shift is None or not self._strafe(shift):
+                return moved  # can't get closer without hitting another cube
+            # Live 2026-10-17: red sat right behind the 2-stack. Step beside it and creep past it;
+            # the arm takes the target off to the side (a turn would line the stack up again).
+            cubes = [c for c in self.find_cubes().get("cubes", [])
+                     if held is None or c.get("color") != held]
+            nearest = min([c["x"] for c in cubes if abs(c["y"]) < 0.13] + [1.0])  # target is aside now
+            # Steep side reach ends ~0.2 m from the pan axis (x 0.047): (0.14, 0.16) is inside.
+            creep = min(spot["x"] - 0.14, nearest - keep_x, 0.25)
+            if creep >= 0.02:
+                self.drive(vx=0.1, seconds=creep / 0.1)
+            return True
         self.drive(vx=0.1, seconds=creep / 0.1)
+        return True
+
+    def _strafe(self, meters: float) -> bool:
+        """Sideways (+ = left) through move(): costmap-checked, which needs the forward camera."""
+        self.arm_pose("forward")
+        time.sleep(2.0)
+        try:
+            self.move(abs(meters), "left" if meters > 0 else "right")
+        except RuntimeError:
+            return False
         return True
 
     def follow(self, target: str = "person", seconds: float = 60.0, distance_m: float = 0.8):

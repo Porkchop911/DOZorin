@@ -9,6 +9,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "ros2_ws/src/hwr_agent"))
 
 from hwr_agent import GatewaySkills  # noqa: E402
+import hwr_agent.skills as skills_mod  # noqa: E402
 
 CLI_SPEC = importlib.util.spec_from_file_location("hwr_cli", ROOT / "cli/hwr.py")
 HWR_CLI = importlib.util.module_from_spec(CLI_SPEC)
@@ -373,7 +374,7 @@ def test_into_reach_creep_never_closes_on_another_cube():
     assert drives == [pytest.approx(0.05)]  # target wants 0.05, the 0.24 cube allows 0.05
     drives.clear()
     skills.find_cubes = lambda: {"cubes": [{"x": 0.36, "y": 0.0}, {"x": 0.20, "y": 0.05}]}
-    assert not skills._into_reach({"x": 0.36, "y": 0.0}) and drives == []
+    assert not skills._into_reach({"x": 0.36, "y": 0.0}, detour=False) and drives == []
 
 
 def test_into_reach_ignores_the_held_cube():
@@ -415,3 +416,21 @@ def test_into_reach_strafes_away_from_a_cube_too_close_then_faces_it(monkeypatch
     skills.find_cubes = lambda: {"cubes": []}
     assert skills._into_reach({"x": 0.14, "y": 0.10})  # beside the left jaw
     assert calls == [("pose", "forward"), ("move", 0.07, "right"), ("turn", 50)]
+
+
+def test_into_reach_strafes_around_a_cube_in_the_way(monkeypatch):
+    monkeypatch.setattr("hwr_agent.skills.time.sleep", lambda s: None)
+    skills = GatewaySkills(token="t")
+    calls = []
+    views = [{"cubes": [{"color": "green", "x": 0.20, "y": 0.0}, {"color": "red", "x": 0.36, "y": 0.0}]},
+             {"cubes": [{"color": "green", "x": 0.20, "y": -0.16}, {"color": "red", "x": 0.36, "y": -0.16}]}]
+    skills.arm_pose = lambda name: None
+    skills.move = lambda meters, direction="forward": calls.append(("move", round(meters, 2), direction))
+    skills.turn = lambda degrees: calls.append(("turn", round(degrees)))
+    skills.drive = lambda vx=0.0, vy=0.0, wz=0.0, seconds=1.0: calls.append(("drive", round(vx * seconds, 2)))
+    skills.find_cubes = lambda: views.pop(0)
+    assert skills._into_reach({"x": 0.36, "y": 0.0})
+    # Stack 0.16 off the centre line; creep until red is 0.14 ahead, no turn.
+    assert calls == [("move", 0.16, "left"), ("drive", 0.22)]
+    assert skills_mod._detour({"x": 0.36, "y": 0.0}, [{"x": 0.2, "y": 0.0}]) == 0.16
+    assert skills_mod._detour({"x": 0.36, "y": 0.0}, [{"x": 0.2, "y": 0.1}, {"x": 0.2, "y": -0.1}]) is None
