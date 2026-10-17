@@ -27,7 +27,8 @@ from hwr_msgs.action import NavigateToPose
 from hwr_msgs.msg import LocalizationHealth
 from hwr_msgs.srv import AimCamera, ArmPose, ArmReach, Gripper
 from hwr_core.arm import ArmKinematics, CameraAim, pulses_to_joints
-from hwr_core.arm.manipulation import follow_step, locate_cube, plan_grasp
+from hwr_core.arm.manipulation import (follow_step, locate_cube, lost_search_wz, plan_grasp,
+                                       smooth_range, sweep_bearing)
 from hwr_core.control.closed_loop import (TurnTracker, approach_command, approach_speed,
                                           pick_target, progress_along, wrap)
 from hwr_core.navigation import (anchor_object, directional_escape_profile,
@@ -1377,7 +1378,9 @@ class GatewayNode(Node):
             pose("forward", 1.8)
             aim = CameraAim()
             state = {"bearing": 0.0, "elevation": 0.0, "seen": None,
-                     "last_seen": time.monotonic(), "frames": 0, "centred": 0}
+                     "last_seen": time.monotonic(), "frames": 0, "centred": 0,
+                     "range": None, "target": 0.0, "lost": False, "searches": 0, "reacquired": 0}
+            search_s = 8.0
             start = time.monotonic()
             clearance = float(self.get_parameter("move_clearance_m").value)
 
@@ -1393,18 +1396,41 @@ class GatewayNode(Node):
                 item = pick_target(frame["objects"], body.target,
                                    (state["seen"] or {}).get("id"))
                 if item is None:
-                    if now - state["last_seen"] > 3.0:
-                        return "target lost" if state["seen"] else "target not found"
-                    return (0.0, 0.0, 0.0)
+                    lost_s = now - state["last_seen"]
+                    if state["seen"] is None:
+                        # Not seen yet: sweep the camera ahead/left/right before giving up.
+                        sweep = sweep_bearing(now - start)
+                        if sweep is None:
+                            return "target not found"
+                        if sweep != state["bearing"]:
+                            state["bearing"] = sweep
+                            try:
+                                self._call(self.arm_aim, AimCamera.Request(
+                                    bearing=sweep, elevation=state["elevation"], duration_ms=400),
+                                    timeout=0.5)
+                            except HTTPException as exc:
+                                return f"arm aim failed: {exc.detail}"
+                        return (0.0, 0.0, 0.0)
+                    if lost_s > search_s:
+                        return "target lost"
+                    # Lost: the camera stays on the side it left by and the base turns that way.
+                    wz = lost_search_wz(state["target"], lost_s)
+                    if wz and not state["lost"]:
+                        state["lost"], state["searches"] = True, state["searches"] + 1
+                    return (0.0, 0.0, wz)
+                if state["lost"]:
+                    state["lost"], state["reacquired"], state["range"] = False, state["reacquired"] + 1, None
                 state["seen"], state["last_seen"] = item, now
                 box = item["box"]
                 centre = item.get("center") or [(box[0] + box[2]) / 2, (box[1] + box[3]) / 2]
                 k = frame["k"]
                 state["frames"] += 1
                 state["centred"] += abs(math.atan2(centre[0] - k[2], k[0])) < math.radians(10)
+                state["target"] = state["bearing"] - math.atan2(centre[0] - k[2], k[0])
+                state["range"] = smooth_range(state["range"], item.get("range_m"))
                 bearing, elevation, vx, wz = follow_step(centre, k, state["bearing"],
                                                          state["elevation"],
-                                                         item.get("range_m"), body.distance_m)
+                                                         state["range"], body.distance_m)
                 bearing = max(-aim.max_bearing, min(aim.max_bearing, bearing))
                 elevation = max(aim.min_elevation, min(aim.max_elevation, elevation))
                 state["bearing"], state["elevation"] = bearing, elevation
@@ -1429,7 +1455,8 @@ class GatewayNode(Node):
             result = {"outcome": outcome, "target": body.target,
                       "frames_tracked": state["frames"],
                       "centred_pct": round(100 * state["centred"] / max(1, state["frames"])),
-                      "last_range_m": seen.get("range_m"), "pose": self.pose}
+                      "last_range_m": seen.get("range_m"), "searches": state["searches"],
+                      "reacquired": state["reacquired"], "pose": self.pose}
             self._audit("arm_follow", outcome, result)
             return result
 

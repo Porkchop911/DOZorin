@@ -63,3 +63,27 @@ def follow_step(center, k, bearing: float, elevation: float, range_m: float | No
     if range_m is not None and abs(target) < align and range_m > distance:
         vx = min(max_v, 0.5 * (range_m - distance))
     return bearing, elevation, vx, wz
+
+
+def lost_search_wz(last_target: float, lost_s: float, grace: float = 0.5,
+                   wz: float = 0.35) -> float:
+    """Base yaw rate while a followed target is out of view: turn toward the side it left on
+    (its last bearing from the base, + = left) after a short grace for detector flicker."""
+    if lost_s < grace:
+        return 0.0
+    return math.copysign(wz, last_target) if last_target else wz
+
+
+def sweep_bearing(elapsed: float, dwell: float = 1.5,
+                  bearings=(0.0, math.radians(60), -math.radians(60))) -> float | None:
+    """Camera bearing while looking for a target not seen yet; None once the sweep is done."""
+    index = int(elapsed // dwell)
+    return bearings[index] if index < len(bearings) else None
+
+
+def smooth_range(previous: float | None, current: float | None, alpha: float = 0.4) -> float | None:
+    """Exponential moving average of the target range; a missing reading keeps the last value."""
+    if current is None:
+        return previous
+    return current if previous is None else alpha * current + (1.0 - alpha) * previous
+

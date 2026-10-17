@@ -67,3 +67,14 @@ def test_urdf_joint_mapping_roundtrip_and_gripper_anchors():
     assert gripper_pulse_to_urdf(486) == pytest.approx(-0.147)
     assert gripper_pulse_to_urdf(0) == 0.85  # clamped at the model's widest gap
     assert urdf_to_gripper_pulse(gripper_pulse_to_urdf(520)) == 520
+
+
+def test_follow_search_turns_toward_the_side_the_target_left():
+    from hwr_core.arm.manipulation import lost_search_wz, smooth_range, sweep_bearing
+    assert lost_search_wz(math.radians(40), 0.2) == 0.0          # flicker grace
+    assert lost_search_wz(math.radians(40), 1.0) == pytest.approx(0.35)
+    assert lost_search_wz(-math.radians(5), 1.0) == pytest.approx(-0.35)
+    assert [sweep_bearing(t) for t in (0.1, 1.6, 3.1, 4.6)] == [
+        0.0, math.radians(60), -math.radians(60), None]
+    assert smooth_range(None, 2.0) == 2.0 and smooth_range(2.0, None) == 2.0
+    assert smooth_range(2.0, 1.0) == pytest.approx(1.6)
