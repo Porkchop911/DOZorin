@@ -124,6 +124,7 @@ at zero velocity and a named arm pose.
 | unstack | `unstack_cubes` from a tower at 0.155 m: 2 picks + 2 floor places first try, verified <= 9 mm |
 | S5 #2 | FAIL: red 0.17 m out beside the front wheel; the jaw hit the robot's own wheel (user). Fix: gateway reports floor cubes < 0.19 m from the arm base "out of reach" -> skill strafes away first |
 | S5 #3 | FAIL: red on blue OK; then green placed "not on target"/"out of reach" 7x over 368 s. Cause (user): the body turned while the arm was in look_down holding green at stack height -> swept the 2-stack over. Fix: `_into_reach` lifts the arm to forward before every turn/creep |
+| S5 #4 | FAIL: green held; strafe + 36 deg turn toward the blue base lost it ("target not seen"), then set down / re-pick / lost 3x for 90 s; camera disconnected twice -> lidar stale -> estop. Fix: stop when a place fails the same way twice |
 
 Open: re-run cycles with re-grip + farthest base; vision_node does not recover from a camera reconnect; supervisor does not release its estop after a lidar respawn (manual reset twice); B2 still not accepted.
 

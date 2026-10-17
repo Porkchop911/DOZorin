@@ -571,3 +571,15 @@ def test_into_reach_lifts_the_arm_before_moving_the_body(monkeypatch):
     skills.find_cubes = lambda: {"cubes": []}
     assert skills._into_reach({"x": 0.30, "y": 0.10})  # held cube hangs at stack height in look_down
     assert [c[0] for c in calls] == ["arm", "turn", "arm", "drive"]
+
+
+def test_stack_cubes_stops_when_the_tower_is_lost_twice(monkeypatch):
+    monkeypatch.setattr("hwr_agent.skills.time.sleep", lambda s: None)
+    skills = GatewaySkills(token="t")
+    skills.turn = lambda degrees: None
+    lost = {"outcome": "target not seen"}
+    fake = FakeArm(skills, CUBES[:2], [{"outcome": "holding", "pitch_deg": -80}] * 8,
+                   [lost, lost, {"outcome": "placed"}] * 4)
+    result = skills.stack_cubes(order=["red", "green"])
+    assert result["outcome"] == "stack of 1"
+    assert sum(1 for path, _ in fake.calls if path == "/arm/pick") == 2

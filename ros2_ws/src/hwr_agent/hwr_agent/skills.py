@@ -656,7 +656,6 @@ class GatewaySkills:
                 last = (color, picked.get("outcome"))
                 look()
                 continue
-            last = None
             for _ in range(2):  # still holding: get the stack in view/reach and try again
                 here = self._to_base(self._pose(), stack_xy)
                 self._into_reach(here, reach_x=0.22, held=color)
@@ -666,6 +665,7 @@ class GatewaySkills:
                 if placed.get("outcome") not in ("target not seen", "out of reach"):
                     break
             if placed.get("outcome") == "placed":
+                last = None
                 stack.append(color)
                 if placed.get("spot"):
                     stack_xy = self._to_world(self._pose(), placed["spot"])  # tower as last seen
@@ -673,6 +673,10 @@ class GatewaySkills:
                 # Never open mid-air (live 2026-10-17 that dropped cubes "for no reason"):
                 # set it down in front and put it back in the pool.
                 log.append({"set_down": color, **self.place(x=0.22, y=0.0, color=color)})
+                # S5 #4 2026-10-17: lost the tower, then set down/picked/missed it 3x for 90 s.
+                if last == (color, placed.get("outcome")):
+                    break
+                last = (color, placed.get("outcome"))
                 look()
             else:
                 look()  # released but not on the stack: on the floor, back in the pool
