@@ -500,6 +500,22 @@ def test_stack_cubes_never_drops_a_held_cube_and_checks_the_tower():
     assert result["outcome"] == "stack of 3 unverified"  # red seen 0.18 m from the top cube
 
 
+def test_stack_cubes_sweeps_the_arm_for_a_lost_tower(monkeypatch):
+    monkeypatch.setattr("hwr_agent.skills.time.sleep", lambda s: None)
+    skills = GatewaySkills(token="t")
+    fake = FakeArm(skills, CUBES, [{"outcome": "holding", "pitch_deg": -90}],
+                   [{"outcome": "target not seen"}, {"outcome": "placed"}],
+                   final=[{"color": "red", "x": 0.3, "y": 0.0}])
+    skills.turn = lambda degrees: pytest.fail("the body turned to find the tower")
+    skills.stack_cubes(["red", "green"])
+    sweeps = [p.get("pan_deg", 0) for path, p in fake.calls
+              if path == "/arm/find_cubes" and p["view"] == "floor"]
+    first_place = next(i for i, (path, _) in enumerate(fake.calls) if path == "/arm/place")
+    after = [p for path, p in fake.calls[first_place:] if path == "/arm/find_cubes" and p["view"] == "floor"]
+    assert after and after[0] == {"view": "floor"}  # red is the base: level 0, seen at pan 0 -> stop
+    assert sweeps
+
+
 def test_into_reach_detours_when_a_cube_only_partly_caps_the_creep(monkeypatch):
     monkeypatch.setattr("hwr_agent.skills.time.sleep", lambda s: None)
     skills = GatewaySkills(token="t")

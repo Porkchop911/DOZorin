@@ -1095,15 +1095,16 @@ class GatewayNode(Node):
         roll_sign = float(arm_config.get("roll_sign", 1.0))
         clearance = float(arm_config.get("place_clearance", 0.005))
         side_trim = float(arm_config.get("place_side_trim", 0.0))
+        side_trim_on = float(arm_config.get("place_side_trim_on", side_trim))
 
         radial_per_deg = float(arm_config.get("place_radial_per_deg", 0.0))
 
-        def place_plan(spot: dict, z: float, yaw: float, **window):
+        def place_plan(spot: dict, z: float, yaw: float, trim: float = side_trim, **window):
             """plan_grasp for a release, corrected by the floor calibration: side trim, then a
             radial pull-back that grows with the tilt from vertical (replanned once)."""
             pan = math.atan2(spot["y"], spot["x"] - self.kin.pan_x)
-            x = spot["x"] - side_trim * math.sin(pan)
-            y = spot["y"] + side_trim * math.cos(pan)
+            x = spot["x"] - trim * math.sin(pan)
+            y = spot["y"] + trim * math.cos(pan)
             plan = plan_grasp(self.kin, x, y, z, yaw, roll_sign=roll_sign, **window)
             if plan is None or radial_per_deg == 0.0:
                 return plan
@@ -1303,7 +1304,7 @@ class GatewayNode(Node):
                 # No overhead re-locate here: at hover the held cube hides most of the target and
                 # its visible sliver moved the spot 3.5 cm (c3 2026-10-17, green fell off blue).
                 # From look_down the held cube sits at the image bottom, clear of the target.
-                plan = place_plan(spot, z, spot["yaw"], flattest=flattest, steepest=steepest)
+                plan = place_plan(spot, z, spot["yaw"], side_trim_on, flattest=flattest, steepest=steepest)
             else:
                 plan = place_plan(spot, z, 0.0, flattest=flattest, steepest=steepest)
             if plan is None:

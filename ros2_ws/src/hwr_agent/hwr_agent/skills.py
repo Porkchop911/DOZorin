@@ -476,7 +476,8 @@ class GatewaySkills:
                    **({"pan_deg": float(pan_deg)} if pan_deg else {})}
         return self._motion("look for cubes", "/arm/find_cubes", payload, 12.0)
 
-    def look_around(self, target: str | None = None, view: str = "floor", pans=(0, 50, -50)):
+    def look_around(self, target: str | None = None, view: str = "floor", pans=(0, 50, -50),
+                    level: int = 0):
         """Search by swinging the arm (camera) left/right; the body stays put. Cubes come back in
         the base frame (first sighting per colour); any other target is matched against the
         YOLO classes with bearing = arm pan + bearing in the image. Stops early once `target`
@@ -487,7 +488,7 @@ class GatewaySkills:
         found = {}
         for pan in pans:
             if cube:
-                for c in self.find_cubes(view, pan_deg=pan).get("cubes", []):
+                for c in self.find_cubes(view, level, pan_deg=pan).get("cubes", []):
                     found.setdefault(c["color"], {**c, "pan_deg": pan})
             else:
                 self.arm_aim(math.radians(pan))
@@ -712,6 +713,13 @@ class GatewaySkills:
                 log.append({"place_on": stack[-1], **placed})
                 if placed.get("outcome") not in ("target not seen", "out of reach"):
                     break
+                if placed.get("outcome") == "target not seen":
+                    # The tower position is odometry since the last place: sweep the arm for its
+                    # top cube (on its own level's plane) before the second try.
+                    pose = self._pose()
+                    found = self.look_around(stack[-1], level=len(stack) - 1)["found"]
+                    if found:
+                        stack_xy = self._to_world(pose, found[0])
             if placed.get("outcome") == "placed":
                 last = None
                 stack.append(color)

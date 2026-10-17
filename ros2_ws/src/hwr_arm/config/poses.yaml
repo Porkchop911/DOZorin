@@ -22,6 +22,9 @@ place_clearance: -0.005
 # Place-only sideways trim (m, + = left of the arm's direction): 6 verified places 2026-10-17 all
 # landed right, mean -0.0073 +/- 0.0035. Picks hide it (the jaws re-centre the cube sideways).
 place_side_trim: 0.0073
+# Places ON a cube landed -8.3/-8.6/-9.1 mm sideways with the floor trim (S6 2026-10-17) -> 7.3 + 8.7.
+# Untested live: verify with tools/side_cal_cycle.zsh (blue on red, level 1).
+place_side_trim_on: 0.016
 # Places overshoot radially in proportion to tilt from vertical: floor calibration 2026-10-17
 # (14 places) +0.3..0.95 cm at -85, +1.3 at -70, +2.75 at -55 -> 0.76 mm/deg, pulled back.
 place_radial_per_deg: 0.00076
