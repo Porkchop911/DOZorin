@@ -594,6 +594,37 @@ class GatewaySkills:
         return {"outcome": "stacked" if done else f"stack of {len(stack)}", "stack": stack,
                 "log": log}
 
+    def unstack_cubes(self, stack: list[str]):
+        """Take a tower (bottom first) apart top-down onto the floor 0.10 m either side of it.
+        Stops at the first failure and never moves the body: live 2026-10-16 an ad-hoc reset kept
+        going after a failed place and dropped a cube out of view."""
+        stack = list(stack)
+        if not 2 <= len(stack) <= 3 or len(set(stack)) != len(stack) or                 not set(stack) <= set(self.CUBE_COLORS):
+            raise ValueError(f"stack must be 2-3 distinct colours from {self.CUBE_COLORS}")
+        if self.dry_run:
+            return {"dry_run": True, "would": f"unstack {stack} onto the floor"}
+        log, sides = [], None
+        for level in range(len(stack) - 1, 0, -1):
+            color = stack[level]
+            picked = self._motion(f"pick the {color} cube", "/arm/pick",
+                                  {"color": color, "level": level}, 20.0)
+            log.append({"pick": color, **picked})
+            if picked.get("outcome") != "holding":
+                break
+            tower = picked["cube"]
+            if sides is None:  # nearer-the-centre side first; the tower itself stays put
+                sides = sorted((0.10, -0.10), key=lambda d: abs(tower["y"] + d))
+            spot = {"x": tower["x"], "y": tower["y"] + sides.pop(0)}
+            placed = self._motion(f"put the {color} cube down", "/arm/place",
+                                  {"level": 1, **spot, "color": color}, 20.0)
+            log.append({"place_at": spot, **placed})
+            if placed.get("outcome") != "placed":
+                break
+        else:
+            self.arm_pose("forward")
+            return {"outcome": "unstacked", "log": log}
+        return {"outcome": f"stopped: {log[-1].get('outcome')}", "log": log}
+
     def roam_step(self, max_distance: float = 1.5):
         """One idle-life tick: sense, wander, sense; the VLM runs only when something new shows up."""
         if self.dry_run:
@@ -670,7 +701,8 @@ class GatewaySkills:
                    "drive", "arm_aim", "arm_reach", "gripper",
                    "say", "seen_objects", "wander", "turn", "move",
                    "approach", "roam_step", "map_room", "use_map", "list_maps",
-                   "find_cubes", "pick", "place", "follow", "stack_cubes"}
+                   "find_cubes", "pick", "place", "follow", "stack_cubes",
+                   "unstack_cubes"}
         if name not in allowed:
             raise ValueError(f"unknown skill {name!r}")
         return getattr(self, name)(**arguments)

@@ -1184,8 +1184,10 @@ class GatewayNode(Node):
             # S2 #1: picked at -55, placed at -75 -> cube came down 20 deg tilted and slid off.
             # With the pick pitch known, place within 10 deg of it: exact was unreachable (S2 #2),
             # 10 deg off stood (series 1 #3), 15-20 deg off fell (S2 #5, #1).
-            steepest, flattest = -math.pi / 2, -math.radians(70)
-            if body.pitch_deg is not None:
+            # The floor can't topple a cube: no pitch window there (unstack spot was unreachable at
+            # the pick pitch, 2026-10-16), steep enough not to drag the jaw across the floor.
+            steepest, flattest = -math.pi / 2, -math.radians(70 if body.on else 45)
+            if body.pitch_deg is not None and body.on:
                 steepest = max(-math.pi / 2, math.radians(body.pitch_deg - 10))
                 flattest = min(-math.radians(60), math.radians(body.pitch_deg + 10))
             if body.on:

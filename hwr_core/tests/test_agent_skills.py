@@ -384,3 +384,22 @@ def test_into_reach_ignores_the_held_cube():
     skills.drive = lambda vx=0.0, vy=0.0, wz=0.0, seconds=1.0: drives.append(vx * seconds)
     assert skills._into_reach({"x": 0.30, "y": 0.0}, held="green")
     assert drives == [pytest.approx(0.08)]  # to reach_x 0.22; the held green at 0.15 is ignored
+
+
+def test_unstack_cubes_top_first_beside_the_tower_and_stops_on_failure():
+    skills = GatewaySkills(token="t")
+    tower = {"x": 0.22, "y": 0.03}
+    fake = FakeArm(skills, CUBES, [{"outcome": "holding", "cube": tower}] * 2,
+                   [{"outcome": "placed"}] * 2)
+    assert skills.unstack_cubes(["red", "green", "blue"])["outcome"] == "unstacked"
+    picks = [(p["color"], p["level"]) for path, p in fake.calls if path == "/arm/pick"]
+    places = [(p["x"], round(p["y"], 2), p["color"]) for path, p in fake.calls if path == "/arm/place"]
+    assert picks == [("blue", 2), ("green", 1)]
+    assert places == [(0.22, -0.07, "blue"), (0.22, 0.13, "green")]
+    fake = FakeArm(skills, CUBES, [{"outcome": "holding", "cube": tower}] * 2,
+                   [{"outcome": "not on target"}])
+    result = skills.unstack_cubes(["red", "green", "blue"])
+    assert result["outcome"] == "stopped: not on target"
+    assert [p for p, _ in fake.calls].count("/arm/pick") == 1 and "/drive" not in dict(fake.calls)
+    with pytest.raises(ValueError):
+        skills.unstack_cubes(["red"])

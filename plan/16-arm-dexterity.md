@@ -98,5 +98,7 @@ at zero velocity and a named arm pose.
 | Setup rule (user) | cubes >= 8 cm apart. Jaws close left-right at roll 0 (user) - input for a later neighbour-clearance roll choice |
 | incident | into-reach creep (drive, costmap bypassed because it inflates the cubes) **drove into the nearer cubes**. Fix: creep capped so every cube in view stays >= 0.19 m ahead, else refuse. Bumper ~0.125 m. |
 
+| 2026-10-17 (offline) | `unstack_cubes(stack)` skill + tool: top-down to the floor 0.10 m beside the tower, stops at first failure, no body moves. Floor place: no pitch window, flattest -45 deg. Untested live |
+
 Open (user, 2026-10-16): **reverse / backing up** — "we need to talk about this in the future".
 Base is structurally no-reverse (rear-blind); a cube too close to grasp currently needs a human.
