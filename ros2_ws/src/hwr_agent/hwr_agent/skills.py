@@ -478,7 +478,7 @@ class GatewaySkills:
             raise ValueError(f"color must be one of {self.CUBE_COLORS}")
         payload = {"color": color, "level": int(level)}
         result = self._motion(f"pick the {color} cube", "/arm/pick", payload, 20.0)
-        if result.get("outcome") == "out of reach" and self._into_reach(result["cube"]):
+        if result.get("outcome") == "out of reach" and self._into_reach(result["cube"], target=color):
             result = self._motion(f"pick the {color} cube", "/arm/pick", payload, 20.0)
             result["repositioned"] = True
         return result
@@ -495,7 +495,7 @@ class GatewaySkills:
         return result
 
     def _into_reach(self, spot: dict, reach_x: float = 0.22, keep_x: float = 0.19,
-                    held: str | None = None, detour: bool = True) -> bool:
+                    held: str | None = None, detour: bool = True, target: str | None = None) -> bool:
         """Turn to face a base-frame spot and creep (<= 0.15 m) until it sits ~reach_x ahead.
 
         The creep bypasses the costmap (it inflates the cubes themselves), so it is capped by every
@@ -523,6 +523,12 @@ class GatewaySkills:
             spot, moved = {"x": distance, "y": 0.0}, True
         # The held cube shows at the image bottom (S2 #4 refused the creep because of it).
         cubes = [c for c in self.find_cubes().get("cubes", []) if held is None or c.get("color") != held]
+        # S5 #4/#5 2026-10-17: the turn undershot and the target, seen ~6 cm left of the estimate, was
+        # taken for a blocker -> strafed away from it -> "target not seen". Use where it is now.
+        seen = [c for c in cubes if target is not None and c.get("color") == target]
+        if seen:
+            spot = {"x": seen[0]["x"], "y": seen[0]["y"]}
+        cubes = [c for c in cubes if target is None or c.get("color") != target]
         # Corridor = robot half-width ~0.1 m + half a cube.
         corridor = [c for c in cubes if abs(c["y"]) < 0.13]
         nearest = min([c["x"] for c in corridor] + [spot["x"]])
@@ -658,7 +664,9 @@ class GatewaySkills:
                 continue
             for _ in range(2):  # still holding: get the stack in view/reach and try again
                 here = self._to_base(self._pose(), stack_xy)
-                self._into_reach(here, reach_x=0.22, held=color)
+                # The tower's top reads off on the floor plane; only a lone base is a reliable fix.
+                self._into_reach(here, reach_x=0.22, held=color,
+                                 target=stack[0] if len(stack) == 1 else None)
                 placed = self.place(on=stack[-1], level=len(stack), color=color,
                                     pitch_deg=picked.get("pitch_deg"))
                 log.append({"place_on": stack[-1], **placed})

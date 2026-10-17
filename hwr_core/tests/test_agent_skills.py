@@ -583,3 +583,17 @@ def test_stack_cubes_stops_when_the_tower_is_lost_twice(monkeypatch):
     result = skills.stack_cubes(order=["red", "green"])
     assert result["outcome"] == "stack of 1"
     assert sum(1 for path, _ in fake.calls if path == "/arm/pick") == 2
+
+
+def test_into_reach_never_detours_around_its_own_target(monkeypatch):
+    monkeypatch.setattr("hwr_agent.skills.time.sleep", lambda s: None)
+    skills = GatewaySkills(token="t")
+    calls = []
+    skills.arm_pose = lambda name: None
+    skills.turn = lambda degrees: calls.append(("turn", round(degrees)))
+    skills.move = lambda meters, direction="forward": calls.append(("move", direction))
+    skills.drive = lambda vx=0.0, vy=0.0, wz=0.0, seconds=1.0: calls.append(("drive", round(vx * seconds, 3)))
+    # S5 #5: estimate 0.30 m ahead after the turn, blue really at (0.225, 0.063)
+    skills.find_cubes = lambda: {"cubes": [{"color": "blue", "x": 0.225, "y": 0.063}]}
+    skills._into_reach({"x": 0.29, "y": 0.08}, held="red", target="blue")
+    assert ("move", "right") not in calls and ("move", "left") not in calls
