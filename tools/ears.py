@@ -101,6 +101,32 @@ def hermes_message(heard: str) -> str:
             "Answer out loud with say (one or two sentences, in character), then do what was asked.")
 
 
+class NoiseFloor:
+    """Fan-noise floor as a low percentile of recent idle 0.1 s chunk RMS; speech is a ratio above it.
+
+    shortcut: SPEECH_RATIO=3 is a guess (July peaks: floor ~800, speech ~3100); tune from the
+    [heard]/[unclear] log lines, which print rms/floor.
+    """
+    SPEECH_RATIO = 3.0
+
+    def __init__(self, chunks: int = 100):
+        self.recent, self.chunks = [], chunks
+
+    def update(self, rms: float) -> None:
+        self.recent = (self.recent + [rms])[-self.chunks:]
+
+    @property
+    def floor(self) -> float:
+        return float(np.percentile(self.recent, 20)) if len(self.recent) >= 10 else float("inf")
+
+    def is_speech(self, rms: float) -> bool:
+        return rms >= self.SPEECH_RATIO * self.floor
+
+
+def chunk_rms(raw: bytes) -> float:
+    return float(np.sqrt(np.mean(np.frombuffer(raw, dtype=np.int16).astype(np.float32) ** 2)))
+
+
 class Ears:
     def __init__(self, session: str, dry: bool):
         import requests
@@ -201,6 +227,7 @@ class Ears:
         print(f"ears online: session={self.session} dry={self.dry}", flush=True)
         armed = cmd_started = False
         cmd_buf, cmd_max, capture_from, capture_until = b"", 0, 0.0, 0.0
+        noise, cmd_rms = NoiseFloor(), 0.0
         utt_buf = b""
         try:
             while raw := proc.stdout.read(3200):
@@ -212,24 +239,29 @@ class Ears:
                     if now >= capture_from:
                         if not cmd_started:
                             self.rec.reset(stream)
-                            cmd_started, cmd_max = True, 0
+                            cmd_started, cmd_max, cmd_rms = True, 0, 0.0
                         cmd_buf += raw
                         cmd_max = max(cmd_max, int(np.abs(np.frombuffer(raw, dtype=np.int16)).max()))
-                    ended = (cmd_started and cmd_max > 2500 and len(cmd_buf) > 12000
+                        cmd_rms = max(cmd_rms, chunk_rms(raw))
+                    # Fixed peak gate (loud speech) OR well above the measured fan floor (soft speech).
+                    voiced = cmd_max > 2500 or noise.is_speech(cmd_rms)
+                    ended = (cmd_started and voiced and len(cmd_buf) > 12000
                              and self.rec.is_endpoint(stream)) or now >= capture_until
                     if cmd_started and ended:
                         armed = cmd_started = False
                         audio, cmd_buf = cmd_buf, b""
                         self.rec.reset(stream)
-                        command = self.transcribe(audio) if cmd_max > 2000 else ""
+                        level = f"peak={cmd_max} rms={cmd_rms:.0f} floor={noise.floor:.0f}"
+                        command = self.transcribe(audio) if cmd_max > 2000 or noise.is_speech(cmd_rms) else ""
                         clean = spoken_text(command).lower()
                         if clean and clean not in JUNK and len(clean) > 2:
-                            print(f"[heard] {command}", flush=True)
+                            print(f"[heard] {command} ({level})", flush=True)
                             self.handle(command)
                         else:
-                            print(f"[unclear, ignored: {command!r}, peak={cmd_max}]", flush=True)
+                            print(f"[unclear, ignored: {command!r}, {level}]", flush=True)
                 else:
                     utt_buf = (utt_buf + raw)[-16000 * 2 * 8:]   # current utterance, max 8 s
+                    noise.update(chunk_rms(raw))
                 if not armed and self.rec.is_endpoint(stream):
                     text = self.rec.get_result(stream).strip().lower()
                     self.rec.reset(stream)
@@ -253,6 +285,12 @@ class Ears:
 
 if __name__ == "__main__":
     assert is_wake("sudru") and is_wake("so who") and not is_wake("comrade")
+    _noise = NoiseFloor()
+    assert not _noise.is_speech(1e9)  # no floor measured yet -> only the fixed peak gate applies
+    for _ in range(100):
+        _noise.update(200.0)
+    assert _noise.is_speech(650.0) and not _noise.is_speech(500.0)
+    assert chunk_rms(np.full(1600, 300, dtype=np.int16).tobytes()) == 300.0
     assert not is_wake("this is a long sentence about nothing")
     assert "[Heard through your microphone] go left" in hermes_message("go left")
     assert reflex("So who, turn right.") == ("/motion/turn", {"degrees": -90.0}, "Turning right.")
