@@ -129,8 +129,10 @@ at zero velocity and a named arm pose.
 | hub | user re-seated; 3 min arm cycling + S6 #1: 0 hub resets |
 | S6 #1 | FAIL: green on blue placed 9 mm off (passed the 1.5 cm check); red placed centred on green (user) -> tower toppled. Fix: a place > 6 mm off that will carry another cube is re-picked from the stack and re-placed once |
 | S6 #2 | FAIL: blue on red placed 9 mm off again; the redo re-pick's jaws knocked blue off red (user) -> redo reverted. Level-1 side errors today -8.3/-8.6/-9.1 mm vs floor +3.6..+5.7 mm: one side trim fits neither -> per-level calibration |
+| calibration | not started: evening light lost red (a 154-157 < 160 -> min 150) and made a phantom blue from floor glare (b 88-98 -> blue max b 86); cycle-1 pick crept blue under the jaws (short strafe 0.01/0.04 m, side-reach creep with the target still ahead) -> fixed `31b897b`. `/tmp/cal_cycle.sh` on the robot (log `state/side_cal.jsonl`) - now `tools/side_cal_cycle.zsh` |
+| end | user: shut down. Arm forward, gripper open, mode stopped |
 
-Open: re-run cycles with re-grip + farthest base; vision_node does not recover from a camera reconnect; supervisor does not release its estop after a lidar respawn (manual reset twice); B2 still not accepted.
+Open: per-level place side calibration (level-1 places land ~9 mm right, floor ~+5 mm), then series 6 (0/1 counted); stack re-locate when the tower is not seen; vision_node hangs after a camera reconnect; USB hub 1-2.1 resets (camera moved to hub port 2 - watch dmesg); re-run cycles with re-grip + farthest base; vision_node does not recover from a camera reconnect; supervisor does not release its estop after a lidar respawn (manual reset twice); B2 still not accepted.
 
 Open (user, 2026-10-16): **reverse / backing up** — "we need to talk about this in the future".
 Base is structurally no-reverse (rear-blind); a cube too close to grasp currently needs a human.
