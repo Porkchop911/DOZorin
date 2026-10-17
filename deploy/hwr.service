@@ -1,21 +1,23 @@
 [Unit]
 Description=Highwonder rework autonomous stack
 After=network-online.target dev-rrc.device dev-lidar.device
-Wants=network-online.target
+Wants=network-online.target hwr-ears.service
 
 [Service]
-Type=simple
+# mode.sh detaches the launch into its own process group, so manual mode swaps
+# (mode.sh restart ...) keep working on top of the boot stack.
+Type=oneshot
+RemainAfterExit=yes
 User=ubuntu
 EnvironmentFile=-/home/ubuntu/hwr/config/hwr.env
 ExecStartPre=+/bin/systemctl start start_app_node.service
 ExecStartPre=/bin/sleep 8
 ExecStartPre=/home/ubuntu/hwr/deploy/takeover.sh
-ExecStart=/bin/zsh -lc 'source /home/ubuntu/hwr/deploy/env.zsh; exec ros2 launch hwr_gateway autonomy.launch.py map_yaml:=${HWR_MAP_YAML:-/home/ubuntu/hwr/maps/hwr_map_01.yaml}'
+ExecStart=/bin/zsh /home/ubuntu/hwr/deploy/mode.sh start navigation ${HWR_MAP_YAML}
+ExecStop=/bin/zsh /home/ubuntu/hwr/deploy/mode.sh stop
 ExecStop=/home/ubuntu/hwr/deploy/handback.sh
-Restart=on-failure
-RestartSec=3
+TimeoutStartSec=120
 TimeoutStopSec=75
-KillSignal=SIGTERM
 
 [Install]
 WantedBy=multi-user.target

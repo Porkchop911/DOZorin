@@ -52,3 +52,10 @@
   - run 3: 1/13 — 9 "unconfirmed by fused translation odometry" with arrival ~2 cm per map; check allowed only 2.5 cm absolute. 0 remarks aloud.
   - run 4 (10 % allowance, wander retry, remark prompt): stopped after 1 tick for shutdown — 2/3 legs reached, 1 "blocked after live-costmap replans", 1 remark aloud, 0 rejections. Too short to judge; rerun the full 30 min next session.
 - Open: boot integration (12.6) still manual; startup needs estop reset + arm forward + relocalize.
+
+## 12.6 boot design (2026-10-17, offline; not run on the robot yet)
+
+- Robot: `hwr.service` (still **disabled by default**, `boot.sh enable` flips it) runs takeover, then `mode.sh start navigation $HWR_MAP_YAML`, so the boot stack is the same process group that manual mode swaps use. rosbridge (:9090 + rosapi) joins `autonomy.launch.py`; it is skipped if the package is missing. `hwr-ears.service` (`PartOf=hwr.service`) waits for the PulseAudio socket, then runs `ears.py --session $HWR_HERMES_SESSION`, restarting every 10 s if it dies.
+- PC: `deploy/pc_up.ps1` starts whatever is missing: relay :12340→8080, relay :12341→8643, `hermes -p robot gateway`. `-Register` adds a logon scheduled task. Strata itself is the user's to start. The script only warns when :8080 is down.
+- Deliberately NOT automated: estop reset, arm `forward` and relocalize. The driver latches estop at start by design (boot into stopped state), and the arm does not move unasked (RUNBOOK). Hermes or the human does these 3 steps.
+- Acceptance: cold power-on with `hwr.service` enabled, then, with no SSH, "Soudruhu, turn left" works after the human estop reset. Report reboots that worked out of reboots tried.

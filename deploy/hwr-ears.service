@@ -1,0 +1,16 @@
+[Unit]
+Description=Soudruhu ears (wake word -> reflexes / Hermes)
+After=hwr.service
+PartOf=hwr.service
+
+[Service]
+User=ubuntu
+EnvironmentFile=/home/ubuntu/hwr/config/hwr.env
+# Microphone and speaker go through the desktop user's PulseAudio.
+Environment=XDG_RUNTIME_DIR=/run/user/1000
+ExecStartPre=/bin/sh -c 'until [ -S /run/user/1000/pulse/native ]; do sleep 2; done'
+ExecStart=/usr/bin/python3 -u /home/ubuntu/hwr/tools/ears.py --session ${HWR_HERMES_SESSION}
+Restart=always
+RestartSec=10
+TimeoutStartSec=180
+# No [Install]: hwr.service Wants= this unit, so it follows the stack's boot default.
