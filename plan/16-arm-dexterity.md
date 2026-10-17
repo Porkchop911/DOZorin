@@ -115,7 +115,14 @@ at zero velocity and a named arm pose.
 | last change (untested) | base = farthest cube <= 0.4 m; unstack spots x >= 0.19 |
 | end | battery 9.5 V (user: needs charging). /stop latched estop; arm left in last pose |
 
-Open: re-run cycles with re-grip + farthest base; supervisor does not release its estop after a lidar respawn (manual reset twice); B2 still not accepted.
+### 2026-10-17 (afternoon, live, user present)
+
+| Item | Result |
+|---|---|
+| search | cubes 0.6-0.8 m out: look_down saw none, the search turned before ever using the floor view, and the floor pose (servo4 88) cut them at the image top. Fix: floor view first, floor pose servo4 130 -> all 3 at 0.63-0.78 m |
+| S5 #1 | FAIL (sensor estop): camera cable trapped under a wheel -> lidar stale x3 + camera disconnect mid-carry; supervisor released its estop after each lidar respawn, but vision_node hung after the camera reconnect (hand-restarted). Finished by hand: blue on red (-5/+5 mm), green on blue (-6/0 mm), user-verified standing |
+
+Open: re-run cycles with re-grip + farthest base; vision_node does not recover from a camera reconnect; supervisor does not release its estop after a lidar respawn (manual reset twice); B2 still not accepted.
 
 Open (user, 2026-10-16): **reverse / backing up** — "we need to talk about this in the future".
 Base is structurally no-reverse (rear-blind); a cube too close to grasp currently needs a human.

@@ -610,11 +610,12 @@ class GatewaySkills:
 
         stack = []
         pose = look()
-        for _ in range(6):  # search: turn in 60 deg steps looking ~1 m out
+        for i in range(7):  # search: floor view (~1 m out) here first, then in 60 deg turns
             if set(order or self.CUBE_COLORS) <= set(world):
                 break
-            self.turn(60)
-            pose = self._pose()
+            if i:
+                self.turn(60)
+                pose = self._pose()
             for cube in self.find_cubes("floor").get("cubes", []):
                 world.setdefault(cube["color"], self._to_world(pose, cube))
         wanted = order or sorted(world)

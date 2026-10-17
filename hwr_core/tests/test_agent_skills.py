@@ -450,7 +450,7 @@ def test_stack_cubes_searches_around_for_cubes_out_of_view():
     def view(payload):  # only red in front; green + blue show up in the floor view after 2 turns
         if payload["view"] == "floor":
             seen["n"] += 1
-            return [c for c in CUBES if c["color"] != "red"] if seen["n"] >= 2 else []
+            return [c for c in CUBES if c["color"] != "red"] if seen["n"] >= 3 else []
         return [CUBES[0]]
 
     fake = FakeArm(skills, view, [{"outcome": "holding", "pitch_deg": -80}] * 2, [{"outcome": "placed"}] * 2,
@@ -458,6 +458,15 @@ def test_stack_cubes_searches_around_for_cubes_out_of_view():
     result = skills.stack_cubes()
     assert turns[:2] == [60, 60] and result["outcome"] == "stacked"
     assert ("/arm/find_cubes", {"view": "floor"}) in fake.calls
+
+
+def test_stack_cubes_looks_up_before_turning():
+    skills = GatewaySkills(token="t")
+    skills.turn = lambda degrees: pytest.fail("turned although the floor view here shows the cubes")
+    FakeArm(skills, lambda payload: CUBES if payload["view"] == "floor" else [],
+            [{"outcome": "holding", "pitch_deg": -80}] * 2, [{"outcome": "placed"}] * 2,
+            final=[{"color": "green", "x": 0.3, "y": 0.0}])
+    assert skills.stack_cubes()["outcome"] == "stacked"
 
 
 def test_stack_cubes_never_drops_a_held_cube_and_checks_the_tower():

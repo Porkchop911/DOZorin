@@ -3,7 +3,7 @@
 # physical clearance gates are accepted.
 poses:
   forward: {1: 500, 2: 701, 3: 120, 4: 300, 5: 500}
-  floor: {1: 500, 2: 701, 3: 120, 4: 88, 5: 500}
+  floor: {1: 500, 2: 701, 3: 120, 4: 130, 5: 500}  # 88 cut cubes ~0.6 m out at the image top (2026-10-17)
   ceiling: {1: 500, 2: 701, 3: 120, 4: 500, 5: 500}
   carry: {1: 500, 2: 701, 3: 120, 4: 300, 5: 500}
   tucked: {1: 500, 2: 701, 3: 120, 4: 300, 5: 500}
