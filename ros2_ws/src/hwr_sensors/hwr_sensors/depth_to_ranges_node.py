@@ -61,6 +61,8 @@ class DepthToRangesNode(Node):
         self.tf_listener = TransformListener(self.tf_buffer, self)
         qos = QoSProfile(depth=2, reliability=QoSReliabilityPolicy.BEST_EFFORT)
         self.pub = self.create_publisher(LaserScan, "depth_ranges", qos)
+        # Any bearing, base frame: what the arm camera sees wherever it points (rear look).
+        self.full_pub = self.create_publisher(LaserScan, "depth_ranges_full", qos)
         self.support_pub = self.create_publisher(LaserScan, "floor_support", qos)
         self.create_subscription(CameraInfo, "camera/depth/camera_info",
                                  self._on_info, qos)
@@ -105,6 +107,15 @@ class DepthToRangesNode(Node):
                 min_range=float(self.get_parameter("min_range").value),
                 max_range=float(self.get_parameter("max_range").value),
                 stride=int(self.get_parameter("stride").value))
+            # Behind the robot the floor plane fit (forward-only) falls back to base z: a higher
+            # cut keeps floor noise out.
+            full = depth_to_ranges(
+                depth, intrinsics, base_from_camera, beam_count=64,
+                angle_min=-math.pi, angle_max=math.pi, min_height=0.05,
+                max_height=float(self.get_parameter("max_height").value),
+                min_range=float(self.get_parameter("min_range").value),
+                max_range=float(self.get_parameter("max_range").value),
+                stride=int(self.get_parameter("stride").value), forward_only=False)
             support_count = int(self.get_parameter("floor_support_beams").value)
             support_max = float(
                 self.get_parameter("floor_support_max_range").value)
@@ -128,6 +139,16 @@ class DepthToRangesNode(Node):
         out.range_max = float(self.get_parameter("max_range").value)
         out.ranges = ranges.astype(float).tolist()
         self.pub.publish(out)
+
+        full_out = LaserScan()
+        full_out.header = out.header
+        full_out.angle_min = -math.pi + math.pi / 64.0
+        full_out.angle_increment = 2.0 * math.pi / 64.0
+        full_out.angle_max = full_out.angle_min + 63 * full_out.angle_increment
+        full_out.scan_time, full_out.range_min, full_out.range_max = (
+            out.scan_time, out.range_min, out.range_max)
+        full_out.ranges = full.astype(float).tolist()
+        self.full_pub.publish(full_out)
 
         support_out = LaserScan()
         support_out.header.stamp = msg.header.stamp

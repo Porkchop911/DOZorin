@@ -4,6 +4,8 @@ Pipeline (20 Hz tick, not per-message, so stale sources decay to stop):
     teleop/agent/nav command mux -> NO-REVERSE clamp (vx >= 0,
     structural: the robot is rear-blind) -> velocity clamp -> accel ramp ->
     mecanum mixing -> wheel_speeds
+    The one exception: cmd_vel_reverse (gateway /motion/back, plan/18.4) drives slow pure -x,
+    only while no mux source is active.
 
 Model odometry: integrates the APPLIED command (vx and vy — the vendor
 drops vy!) with yaw from the IMU gyro (bias estimated at rest on startup).
@@ -27,6 +29,7 @@ from tf2_ros import TransformBroadcaster
 from hwr_core.control import CommandMux
 from hwr_core.kinematics import Calibration, wheel_speeds
 from hwr_core.safety import Limits
+from hwr_core.navigation.retrace import clamp_reverse
 
 BIAS_SAMPLES = 100  # ~2 s of IMU at 50 Hz, robot must start at rest
 
@@ -66,6 +69,11 @@ class BaseNode(Node):
             self.create_subscription(
                 Twist, f"cmd_vel_{source}",
                 lambda msg, source=source: self._on_cmd_vel(source, msg), 10)
+        # plan/18.4: reverse only arrives here (gateway /motion/back after a retrace budget and a
+        # rear camera look), never through the mux, and only while no other source is active.
+        self._reverse = (0.0, 0.0, 0.0)
+        self._reverse_stamp = float("-inf")
+        self.create_subscription(Twist, "cmd_vel_reverse", self._on_reverse, 10)
         sensor_qos = QoSProfile(depth=10, reliability=QoSReliabilityPolicy.BEST_EFFORT)
         self.create_subscription(Imu, "imu", self._on_imu, sensor_qos)
 
@@ -94,6 +102,10 @@ class BaseNode(Node):
     def _on_cmd_vel(self, source: str, msg: Twist) -> None:
         stamp = self.get_clock().now().nanoseconds * 1e-9
         self.mux.update(source, (msg.linear.x, msg.linear.y, msg.angular.z), stamp)
+
+    def _on_reverse(self, msg: Twist) -> None:
+        self._reverse = clamp_reverse(msg.linear.x, msg.linear.y, msg.angular.z)
+        self._reverse_stamp = self.get_clock().now().nanoseconds * 1e-9
 
     def _on_imu(self, msg: Imu) -> None:
         gz = msg.angular_velocity.z
@@ -133,6 +145,8 @@ class BaseNode(Node):
         else:
             if not self.get_parameter("allow_reverse").value and vx < 0.0:
                 vx = 0.0  # structural no-reverse: rear ~140 deg is lidar-blind
+            if source is None and now.nanoseconds * 1e-9 - self._reverse_stamp <= 0.3:
+                vx, vy, wz = self._reverse  # already clamp_reverse'd: pure -x, <= 0.06 m/s
             cmd = self.limits.clamp_velocity(vx, vy, wz)
             cmd = self.limits.clamp_accel(cmd, self._applied, dt)
         self._applied = cmd

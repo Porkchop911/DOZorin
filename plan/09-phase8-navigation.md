@@ -61,7 +61,7 @@ Before any new floor-motion acceptance run, all of the following remain open:
 
 ## Acceptance & evidence
 
-- **Test:** tour 3/3 with per-station photos and measured object distance ≤0.50 m for window, drums, and door; soak ≥18/20 goals reached without human touch; dynamic-obstacle test passes; zero reverse commands in the entire log (grep the cmd log — structural guarantee audited).
+- **Test:** tour 3/3 with per-station photos and measured object distance ≤0.50 m for window, drums, and door; soak ≥18/20 goals reached without human touch; dynamic-obstacle test passes; zero reverse commands in the entire log outside `/motion/back` (plan/18.4; grep the cmd log — structural guarantee audited).
 - **Evidence:** `evidence/phase8/`: tour photo sets, soak results table (goal, outcome, time), cmd_vel audit note.
 
 ## Safety / rollback

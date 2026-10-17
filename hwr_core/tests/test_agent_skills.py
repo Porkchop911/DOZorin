@@ -665,3 +665,14 @@ def test_map_room_reports_area_gained(monkeypatch):
     result = skills.map_room("room_x", 5)
     assert result["known_m2"] == 10.5 and result["known_m2_gained"] == 6.5
     assert result["half_leg_retries"] == {"tried": 2, "passed": 1}
+
+
+def test_back_is_capped_and_goes_through_the_gateway_check():
+    skills = GatewaySkills(token="t")
+    calls = []
+    skills._motion = lambda description, path, payload, seconds: calls.append((path, payload)) or {}
+    for bad in (0, -0.1, 0.2):
+        with pytest.raises(ValueError):
+            skills.back(bad)
+    skills.back(0.1)
+    assert calls == [("/motion/back", {"meters": 0.1})]

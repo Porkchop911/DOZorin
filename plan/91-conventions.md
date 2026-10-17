@@ -4,7 +4,7 @@
 
 1. **Bench-first.** The first time any new code path can move an actuator, the robot is on a stand with wheels off the ground (motors) or in open space with the arm clear (servos). Floor tests only after bench behavior is understood.
 2. **Operator power responsibility.** Power telemetry is observational only and never gates software behavior. The human operator alone decides when to continue, stop, or charge.
-3. **No reverse, ever.** The robot is rear-blind (lidar ~140° aft blocked). No controller, recovery, or teleop default may command negative vx unless a rear-sensing story exists first.
+3. **Reverse only via `/motion/back`** (user 2026-10-18, plan/18.4; was "no reverse, ever"). The robot is rear-blind (lidar ~140° aft blocked). Negative vx exists only on `cmd_vel_reverse`: ≤ 0.15 m along the straight path just driven forward, after an arm-camera look behind on both sides, ≤ 0.06 m/s. No controller, recovery, teleop or `/drive` may command negative vx.
 4. **Watchdog before power.** Any node that can command motion ships its command watchdog (auto-stop on stale input) in the same commit — never later.
 5. **Attended actuation.** Until Phase 8's soak test, every run that can move the robot is attended with a hand on the estop path.
 6. **Takeover hygiene.** Hardware access only between `takeover.sh` and `handback.sh`. Never kill `button_scan` (it legitimately shares ttyACM0). Always hand back before ending a session.

@@ -288,8 +288,11 @@ def depth_to_ranges(depth_m: np.ndarray, intrinsics: tuple[float, float, float, 
                     angle_max: float = math.radians(37.0),
                     min_height: float = 0.03, max_height: float = 0.35,
                     min_range: float = 0.15, max_range: float = 3.0,
-                    stride: int = 4) -> np.ndarray:
-    """Project optical-frame depth into minimum planar range per bearing."""
+                    stride: int = 4, forward_only: bool = True) -> np.ndarray:
+    """Project optical-frame depth into minimum planar range per bearing.
+
+    forward_only=False keeps returns at any bearing (the rear look of /motion/back, plan/18.4);
+    depth holes are then not inferred as obstacles (that inference is forward-only)."""
     depth = np.asarray(depth_m, dtype=float)
     transform = np.asarray(base_from_camera, dtype=float)
     if depth.ndim != 2 or transform.shape != (4, 4):
@@ -313,7 +316,7 @@ def depth_to_ranges(depth_m: np.ndarray, intrinsics: tuple[float, float, float, 
     height = ground_relative_heights(x, y, base[2], v, depth.shape[0])
     ranges = np.hypot(x, y)
     angles = np.arctan2(y, x)
-    keep = ((x > 0.0) & (height >= min_height) & (height <= max_height)
+    keep = (((x > 0.0) | (not forward_only)) & (height >= min_height) & (height <= max_height)
             & (ranges >= min_range) & (ranges <= max_range)
             & (angles >= angle_min) & (angles <= angle_max))
     output = np.full(beam_count, np.inf)
@@ -322,6 +325,8 @@ def depth_to_ranges(depth_m: np.ndarray, intrinsics: tuple[float, float, float, 
         bins = np.floor((angles[keep] - angle_min) * scale).astype(int)
         bins = np.clip(bins, 0, beam_count - 1)
         np.minimum.at(output, bins, ranges[keep])
+    if not forward_only:
+        return output
     gaps = invalid_gap_ranges(
         depth, intrinsics, transform, beam_count, angle_min, angle_max,
         min_range, max_range, stride)

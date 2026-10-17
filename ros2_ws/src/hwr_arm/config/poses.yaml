@@ -9,6 +9,10 @@ poses:
   tucked: {1: 500, 2: 701, 3: 120, 4: 300, 5: 500}
   # FK: camera ~61 deg below horizontal, image centre on the floor ~0.30 m ahead (plan/16, tune in 14.7).
   look_down: {1: 500, 2: 701, 3: 120, 4: 50, 5: 500}
+  # /motion/back rear look (plan/18.4): forward-pose arm, pan +-114 deg (25 pulses short of the
+  # servo ends), camera 41 deg down. FK: arm tip at (-0.02, +-0.11) m, inside the 0.20 m footprint.
+  rear_left: {1: 975, 2: 701, 3: 120, 4: 130, 5: 500}
+  rear_right: {1: 25, 2: 701, 3: 120, 4: 130, 5: 500}
 gripper:
   open: 200
   close: 500

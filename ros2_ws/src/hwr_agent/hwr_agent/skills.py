@@ -335,6 +335,15 @@ class GatewaySkills:
         return self._motion(f"move {meters} m {direction}", "/motion/move",
                             {"meters": meters, "direction": direction}, 3.0 * meters / 0.05 + 3.0)
 
+    def back(self, meters: float = 0.1):
+        """Back up <= 0.15 m, only along the straight path just driven forward, after the arm camera
+        looked behind on both sides (plan/18.4). Refused after a turn or strafe."""
+        meters = float(meters)
+        if not 0.0 < meters <= 0.15:
+            raise ValueError("back meters must be in 0..0.15")
+        return self._motion(f"back up {meters} m", "/motion/back", {"meters": meters},
+                            3.0 * meters / 0.05 + 15.0)
+
     def arm_aim(self, bearing: float, elevation: float = 0.0):
         return self._act(f"aim camera bearing={bearing} elevation={elevation}", "/arm/aim",
                          {"bearing": float(bearing), "elevation": float(elevation),
@@ -885,7 +894,7 @@ class GatewaySkills:
                    "assess_scene", "patrol", "arm_pose", "pick_test",
                    "where_am_i", "relocalize", "stop", "reset_estop",
                    "drive", "arm_aim", "arm_reach", "gripper",
-                   "say", "seen_objects", "wander", "turn", "move",
+                   "say", "seen_objects", "wander", "turn", "move", "back",
                    "approach", "roam_step", "map_room", "use_map", "list_maps",
                    "find_cubes", "look_around", "pick", "place", "follow", "stack_cubes",
                    "unstack_cubes", "mark_place", "list_places", "anchor_places"}

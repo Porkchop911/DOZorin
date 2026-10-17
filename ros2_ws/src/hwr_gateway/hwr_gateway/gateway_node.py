@@ -32,6 +32,7 @@ from hwr_core.arm.manipulation import (follow_step, locate_cube, lost_search_wz,
 from hwr_core.control.closed_loop import (TurnTracker, approach_command, approach_speed,
                                           pick_target, progress_along, wrap)
 from hwr_core.exploration import map_coverage
+from hwr_core.navigation.retrace import MAX_REVERSE_M, rear_blocked, retrace_budget
 from hwr_core.navigation import (anchor_object, directional_escape_profile,
                                  evaluate_object_reach,
                                  load_places, mark_place, save_places,
@@ -45,7 +46,7 @@ from rclpy.callback_groups import ReentrantCallbackGroup
 from rclpy.executors import MultiThreadedExecutor
 from rclpy.node import Node
 from rclpy.qos import DurabilityPolicy, QoSProfile, QoSReliabilityPolicy
-from sensor_msgs.msg import BatteryState, Image, JointState
+from sensor_msgs.msg import BatteryState, Image, JointState, LaserScan
 from std_msgs.msg import Bool, String, UInt16
 from std_srvs.srv import SetBool, Trigger
 
@@ -153,7 +154,7 @@ class MoveRequest(BaseModel):
     direction: str = "forward"
 
 
-# Body-frame heading per move direction; no "back": the base clamps vx >= 0 (no-reverse envelope).
+# Body-frame heading per move direction; no "back" here: reverse is only /motion/back (plan/18.4).
 MOVE_DIRECTIONS = {"forward": 0.0, "left": math.pi / 2, "right": -math.pi / 2}
 
 
@@ -189,6 +190,8 @@ class GatewayNode(Node):
         self.pose_stamp = 0.0
         self.odom_pose = None
         self.odom_stamp = 0.0
+        self.trail = []        # odom x/y/yaw while moving: the path /motion/back may retrace
+        self.rear_fan = None   # (monotonic stamp, angles, ranges) from depth_ranges_full
         self.odom_motion_pose = [0.0, 0.0, 0.0]
         self.last_odom_motion_stamp = None
         self.loc = {"healthy": False, "state": "unavailable", "score": 0.0}
@@ -259,6 +262,9 @@ class GatewayNode(Node):
                                  callback_group=self.group)
         self.create_subscription(JointState, "joint_states", self._joint_state, 10,
                                  callback_group=self.group)
+        self.create_subscription(LaserScan, "depth_ranges_full", self._rear_fan, 1,
+                                 callback_group=self.group)
+        self.reverse_pub = self.create_publisher(Twist, "cmd_vel_reverse", 10)
         self.create_timer(0.05, self._drive_tick, callback_group=self.group)
         self.app = self._make_app()
         config = uvicorn.Config(self.app,
@@ -298,6 +304,10 @@ class GatewayNode(Node):
         with self.lock:
             self.odom_pose = [msg.pose.pose.position.x,
                               msg.pose.pose.position.y, yaw]
+            last = self.trail[-1] if self.trail else None
+            if last is None or math.hypot(self.odom_pose[0] - last[0],
+                                          self.odom_pose[1] - last[1]) >= 0.01 or                     abs(math.atan2(math.sin(yaw - last[2]), math.cos(yaw - last[2]))) >= 0.03:
+                self.trail = (self.trail + [list(self.odom_pose)])[-300:]
             if self.last_odom_motion_stamp is not None:
                 dt = now - self.last_odom_motion_stamp
                 twist = msg.twist.twist
@@ -348,6 +358,11 @@ class GatewayNode(Node):
             self.map_grid = np.asarray(msg.data, dtype=np.int16).reshape(
                 msg.info.height, msg.info.width)
             self.map_resolution = msg.info.resolution
+
+    def _rear_fan(self, msg: LaserScan) -> None:
+        angles = [msg.angle_min + i * msg.angle_increment for i in range(len(msg.ranges))]
+        with self.lock:
+            self.rear_fan = (time.monotonic(), angles, list(msg.ranges))
 
     def _estop_state(self, msg: Bool) -> None:
         with self.lock:
@@ -411,7 +426,9 @@ class GatewayNode(Node):
         msg.linear.x = float(command[0])
         msg.linear.y = float(command[1])
         msg.angular.z = float(command[2])
-        self.drive_pub.publish(msg)
+        # Negative vx only comes from /motion/back (/drive rejects it); the base takes it only on
+        # its reverse input, and only while cmd_vel_agent is quiet.
+        (self.reverse_pub if command[0] < 0.0 else self.drive_pub).publish(msg)
 
     def status(self) -> dict:
         with self.lock:
@@ -1468,6 +1485,65 @@ class GatewayNode(Node):
                       "last_range_m": seen.get("range_m"), "searches": state["searches"],
                       "reacquired": state["reacquired"], "pose": self.pose}
             self._audit("arm_follow", outcome, result)
+            return result
+
+        @app.post("/motion/back", dependencies=[Depends(auth)])
+        def motion_back(body: MoveRequest):
+            """Back up (plan/18.4): only along the straight path just driven forward, at most
+            0.15 m, after the camera looked behind on both sides; it keeps watching the left rear
+            while backing. Directly behind (~+-23 deg) is not in view: retracing covers it."""
+            if not math.isfinite(body.meters) or not 0.0 < body.meters <= MAX_REVERSE_M:
+                raise HTTPException(422, f"meters must be in 0..{MAX_REVERSE_M}")
+            with self.lock:
+                trail = [list(p) for p in self.trail]
+                odom = None if self.odom_pose is None else list(self.odom_pose)
+            if odom is None:
+                raise HTTPException(503, "odometry unavailable")
+            budget = retrace_budget(trail, odom)
+            if body.meters > budget + 0.005:
+                raise HTTPException(409, f"retrace budget {budget:.2f} m: reverse only along the "
+                                         "straight path just driven forward (a turn or strafe ends it)")
+
+            def rear_hit(after: float):
+                deadline = time.monotonic() + 2.0
+                while time.monotonic() < deadline:
+                    with self.lock:
+                        fan = self.rear_fan
+                    if fan is not None and fan[0] > after:
+                        return rear_blocked(fan[1], fan[2], body.meters), True
+                    time.sleep(0.05)
+                return None, False
+
+            for side in ("rear_right", "rear_left"):  # ends looking left-rear, watched while backing
+                pose(side, 1.8)
+                hit, fresh = rear_hit(time.monotonic())
+                if not fresh or hit:
+                    pose("forward", 0.0)
+                    raise HTTPException(409, f"{side}: " + (f"something at {hit} (base frame, m)"
+                                                            if fresh else "rear depth view stale"))
+            start = self._motion_start()
+            travelled = [0.0]
+
+            def step(odom_now):
+                travelled[0] = -progress_along(start, odom_now[:2], 0.0)
+                if travelled[0] >= body.meters - 0.005:
+                    return None
+                hit, fresh = rear_hit(time.monotonic() - 0.6)
+                if not fresh:
+                    return "rear depth view stale"
+                if hit:
+                    return f"rear blocked at {hit}"
+                return (-0.05, 0.0, 0.0)
+
+            try:
+                outcome = self._motion_loop(step, 3.0 * body.meters / 0.05 + 3.0)
+            finally:
+                pose("forward", 0.0)
+            with self.lock:
+                self.trail = []  # the retraced path is used up
+            result = {"outcome": outcome, "requested_m": body.meters, "budget_m": round(budget, 3),
+                      "travelled_m": round(travelled[0], 3), "pose": self.pose}
+            self._audit("motion_back", outcome, result)
             return result
 
         @app.get("/snapshot", dependencies=[Depends(auth)])

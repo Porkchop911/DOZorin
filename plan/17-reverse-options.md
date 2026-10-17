@@ -1,6 +1,6 @@
 # 17 — Reverse / backing up: options (decision doc)
 
-Status: **open, for discussion.** Not a plan to implement. Nothing here is approved.
+Status: **decided 2026-10-18**: option b (retrace, ≤ 0.15 m) plus a rear look with the arm camera panned ±114° (user). Built in plan/18.4, untested live. Q3 (rear sensor) and Q5 (voice "go back") stay open.
 Source of the open item: `plan/16-arm-dexterity.md` (Open, user 2026-10-16: "we need to talk about this in the future").
 
 ## 1. Why reverse is disabled today

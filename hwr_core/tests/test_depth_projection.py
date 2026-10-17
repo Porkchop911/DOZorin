@@ -278,3 +278,18 @@ def test_floor_support_requires_corridor_wide_coverage():
         margin_m=0.10, half_width_m=0.20, required_fraction=0.80)
     assert not allowed
     assert "swept corridor" in reasons[0]
+
+
+def test_full_fan_keeps_returns_behind_the_robot():
+    # Camera turned to look straight back (yaw pi): an obstacle 0.5 m out lands behind the base.
+    depth = np.full((5, 5), np.nan)
+    depth[2, 2] = 0.5
+    back = np.eye(4)
+    back[:3, :3] = _rpy_matrix((0.0, 0.0, math.pi))
+    transform = back @ optical_to_base()
+    assert np.isinf(depth_to_ranges(depth, (100, 100, 2, 2), transform, beam_count=8,
+                                    angle_min=-math.pi, angle_max=math.pi, stride=1)).all()
+    full = depth_to_ranges(depth, (100, 100, 2, 2), transform, beam_count=8,
+                           angle_min=-math.pi, angle_max=math.pi, stride=1, forward_only=False)
+    assert np.isfinite(full).sum() == 1 and np.nanmin(full) == pytest.approx(0.5)
+    assert np.argmin(full) in (0, 7)  # the +-pi beams
