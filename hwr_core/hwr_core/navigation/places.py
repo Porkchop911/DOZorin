@@ -148,7 +148,56 @@ def mark_place(path: str | Path, name: str, pose: Sequence[float]) -> dict:
     path = Path(path)
     places = load_places(path)
     places[name] = place
+    save_places(path, places)
+    return place
+
+
+def save_places(path: str | Path, places: dict) -> None:
+    path = Path(path)
     tmp = path.with_name(path.name + ".tmp")
     tmp.write_text(yaml.safe_dump({"places": places}, sort_keys=True), encoding="utf-8")
     os.replace(tmp, path)  # atomic: a crash mid-write never loses the other places
-    return place
+
+
+# Things that move or that the arm plays with are not landmarks.
+NOT_LANDMARKS = {"person", "cat", "dog", "bird", "horse", "sheep", "cow",
+                 "red_cube", "green_cube", "blue_cube"}
+
+
+def anchor_object(places: dict, cls: str, object_xy: Sequence[float],
+                  robot_xy: Sequence[float], *, approach_m: float = 0.40,
+                  merge_m: float = 0.75) -> str | None:
+    """Record a sighting of `cls` at `object_xy` (map frame) in `places`; return the place name.
+
+    Same-class auto places within merge_m take the sighting as a running mean; farther ones get
+    `<class>_2`, `_3`. Verified (human-marked) places and movers are never written."""
+    name = re.sub(r"[^a-z0-9_]", "_", cls.lower())[:36]
+    if not name or cls in NOT_LANDMARKS:
+        return None
+    ox, oy = (_finite_number(v, "object point") for v in object_xy)
+    rx, ry = (_finite_number(v, "robot point") for v in robot_xy)
+    same = [(n, p) for n, p in places.items()
+            if p.get("auto") and p.get("class") == cls
+            and math.hypot(p["object_x"] - ox, p["object_y"] - oy) <= merge_m]
+    if same:
+        key, old = min(same, key=lambda item: math.hypot(item[1]["object_x"] - ox,
+                                                         item[1]["object_y"] - oy))
+        n = int(old.get("sightings", 1))
+        ox = (old["object_x"] * n + ox) / (n + 1)
+        oy = (old["object_y"] * n + oy) / (n + 1)
+        sightings = n + 1
+    else:
+        key = next(k for k in (name if i == 1 else f"{name}_{i}" for i in range(1, 1000))
+                   if k not in places)
+        sightings = 1
+    # Approach from the side the robot saw it from, facing the object.
+    dx, dy = rx - ox, ry - oy
+    norm = math.hypot(dx, dy) or 1.0
+    ax, ay = ox + approach_m * dx / norm, oy + approach_m * dy / norm
+    places[key] = {"kind": "object", "class": cls, "auto": True, "verified": False,
+                   "x": round(ax, 3), "y": round(ay, 3),
+                   "yaw_deg": round(math.degrees(math.atan2(-dy, -dx)) % 360.0, 1),
+                   "object_x": round(ox, 3), "object_y": round(oy, 3),
+                   "max_object_distance_m": 0.5, "sightings": sightings}
+    normalize_place_definition(key, places[key])  # same contract as hand-written object places
+    return key

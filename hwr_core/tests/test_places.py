@@ -110,3 +110,18 @@ def test_places_are_stored_per_map_and_marked_from_pose(tmp_path):
         mark_place(path, "../etc", (0.0, 0.0, 0.0))
     with pytest.raises(ValueError, match="pose"):
         mark_place(path, "x", None)
+
+
+def test_anchor_object_merges_sightings_and_spares_movers_and_marked_places():
+    from hwr_core.navigation import anchor_object
+    places = {"chair": {"kind": "reference", "x": 5.0, "y": 5.0, "yaw_deg": 0, "verified": True}}
+    assert anchor_object(places, "person", (1.0, 0.0), (0.0, 0.0)) is None
+    # A hand-marked "chair" keeps its name: the first auto chair becomes chair_2.
+    assert anchor_object(places, "chair", (2.0, 0.0), (0.0, 0.0)) == "chair_2"
+    assert anchor_object(places, "chair", (2.2, 0.0), (0.0, 0.0)) == "chair_2"  # same chair
+    chair = places["chair_2"]
+    assert chair["object_x"] == pytest.approx(2.1) and chair["sightings"] == 2
+    assert (chair["x"], chair["y"], chair["yaw_deg"]) == (pytest.approx(1.7), 0.0, 0.0)  # 0.4 m short, facing it
+    assert anchor_object(places, "chair", (2.0, 3.0), (0.0, 3.0)) == "chair_3"  # another chair
+    assert places["chair"]["kind"] == "reference"
+    normalize_place_definition("chair_2", chair)

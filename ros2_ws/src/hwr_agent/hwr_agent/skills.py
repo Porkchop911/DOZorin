@@ -801,6 +801,10 @@ class GatewaySkills:
         except RuntimeError as exc:
             move = {"state": "refused", "message": str(exc)}
         after = self._classes()
+        try:
+            anchored = self.anchor_places().get("anchored", [])
+        except (RuntimeError, requests.RequestException):  # unhealthy pose etc.: roam on without
+            anchored = []
         seen = before | after
         try:
             last_seen = json.loads(self._roam_file.read_text(encoding="utf-8"))
@@ -812,7 +816,8 @@ class GatewaySkills:
         last_seen.update({c: now for c in seen})
         self._roam_file.write_text(json.dumps(last_seen), encoding="utf-8")
         result = {"move": move, "pose": self.where_am_i()["pose"],
-                  "objects": sorted(seen), "new_objects": new}
+                  "objects": sorted(seen), "new_objects": new,
+                  "anchored": [a["name"] for a in anchored]}
         if new:
             result["view"] = self.describe_view(
                 f"In one or two sentences: what are the {', '.join(new)} here and what is around them?")["description"]
@@ -854,6 +859,10 @@ class GatewaySkills:
     def mark_place(self, name: str):
         return self._act(f"mark the current pose as place {name}", "/places/mark", {"name": name})
 
+    def anchor_places(self):
+        """Remember where the static objects in view are (auto object places, plan/18.1)."""
+        return self._act("anchor the objects in view as places", "/places/anchor")
+
     def list_places(self):
         if self.dry_run:
             return {"dry_run": True, "would": "list places on the loaded map"}
@@ -874,7 +883,7 @@ class GatewaySkills:
                    "say", "seen_objects", "wander", "turn", "move",
                    "approach", "roam_step", "map_room", "use_map", "list_maps",
                    "find_cubes", "look_around", "pick", "place", "follow", "stack_cubes",
-                   "unstack_cubes", "mark_place", "list_places"}
+                   "unstack_cubes", "mark_place", "list_places", "anchor_places"}
         if name not in allowed:
             raise ValueError(f"unknown skill {name!r}")
         return getattr(self, name)(**arguments)

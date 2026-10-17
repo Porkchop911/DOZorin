@@ -10,7 +10,8 @@ from .controller import (ForwardRecovery, GoalProgress, HolonomicController,
                          translation_goal_reached_or_passed)
 from .planner import astar, simplify_path
 from .places import (MAX_OBJECT_REACH_DISTANCE_M, evaluate_object_reach,
-                     load_places, mark_place, normalize_place_definition,
+                     anchor_object, load_places, mark_place, normalize_place_definition,
+                     save_places,
                      places_file)
 from .object_approach import (ObjectApproach, closest_point_on_segment,
                               object_approach_candidates,
@@ -38,6 +39,7 @@ __all__ = ["Costmap", "ForwardRecovery", "GoalProgress", "HolonomicController",
            "translation_goal_reached_or_passed",
            "MAX_OBJECT_REACH_DISTANCE_M", "evaluate_object_reach",
            "normalize_place_definition", "load_places", "mark_place", "places_file",
+           "anchor_object", "save_places",
            "assessment_from_visual_observation",
            "bounded_escape_evidence", "metric_translation_preflight",
            "metric_rotation_preflight",

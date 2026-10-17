@@ -260,15 +260,18 @@ def test_roam_step_describes_only_new_objects(tmp_path, monkeypatch):
         "objects": [{"class": c} for c in next(frames)]})
     monkeypatch.setattr(skills, "wander", lambda d: {"result": {"state": "succeeded"}, "recovered": []})
     monkeypatch.setattr(skills, "where_am_i", lambda: {"pose": [0, 0, 0]})
+    monkeypatch.setattr(skills, "anchor_places", lambda: {"anchored": [{"name": "chair"}]})
     asked = []
     monkeypatch.setattr(skills, "describe_view", lambda q: asked.append(q) or {"description": "x"})
     first = skills.roam_step()
     assert first["new_objects"] == ["chair", "person"] and len(asked) == 1
+    assert first["anchored"] == ["chair"]
     second = GatewaySkills(token="test")  # fresh process, same state file
     monkeypatch.setattr(second, "_get", skills._get)
     monkeypatch.setattr(second, "wander", skills.wander)
     monkeypatch.setattr(second, "where_am_i", skills.where_am_i)
     monkeypatch.setattr(second, "describe_view", skills.describe_view)
+    monkeypatch.setattr(second, "anchor_places", skills.anchor_places)
     assert second.roam_step()["new_objects"] == [] and len(asked) == 1
 
 
