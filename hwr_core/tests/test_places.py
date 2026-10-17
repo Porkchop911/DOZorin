@@ -91,3 +91,22 @@ def test_point_object_remains_backward_compatible():
     result = evaluate_object_reach((1.0, 2.0), 1.2, 2.0, 0.50)
     assert result["object_reached"]
     assert result["object_closest_x"] == pytest.approx(1.2)
+
+
+def test_places_are_stored_per_map_and_marked_from_pose(tmp_path):
+    from hwr_core.navigation import load_places, mark_place, places_file
+    path = places_file(tmp_path / "room_20261015.yaml")
+    assert path.name == "room_20261015.places.yaml"
+    assert load_places(path) == {}
+    mark_place(path, "sofa", (1.0, -2.0, -math.pi / 2))
+    mark_place(path, "door", (0.5, 0.25, 0.0))
+    places = load_places(path)
+    assert places["sofa"] == {"kind": "reference", "x": 1.0, "y": -2.0,
+                              "yaw_deg": 270.0, "verified": True}
+    assert normalize_place_definition("door", places["door"])["x"] == 0.5
+    mark_place(path, "sofa", (3.0, 0.0, 0.0))
+    assert load_places(path)["sofa"]["x"] == 3.0 and "door" in load_places(path)
+    with pytest.raises(ValueError, match="name"):
+        mark_place(path, "../etc", (0.0, 0.0, 0.0))
+    with pytest.raises(ValueError, match="pose"):
+        mark_place(path, "x", None)

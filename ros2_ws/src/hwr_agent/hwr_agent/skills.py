@@ -781,6 +781,14 @@ class GatewaySkills:
     def relocalize(self):
         return self._act("global relocalize", "/localization/relocalize")
 
+    def mark_place(self, name: str):
+        return self._act(f"mark the current pose as place {name}", "/places/mark", {"name": name})
+
+    def list_places(self):
+        if self.dry_run:
+            return {"dry_run": True, "would": "list places on the loaded map"}
+        return self._get("/places")
+
     def where_am_i(self):
         if self.dry_run:
             return {"dry_run": True, "would": "read pose and localization"}
@@ -796,7 +804,7 @@ class GatewaySkills:
                    "say", "seen_objects", "wander", "turn", "move",
                    "approach", "roam_step", "map_room", "use_map", "list_maps",
                    "find_cubes", "pick", "place", "follow", "stack_cubes",
-                   "unstack_cubes"}
+                   "unstack_cubes", "mark_place", "list_places"}
         if name not in allowed:
             raise ValueError(f"unknown skill {name!r}")
         return getattr(self, name)(**arguments)

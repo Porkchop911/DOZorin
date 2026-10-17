@@ -38,8 +38,12 @@ Do not start long-lived nodes from only `ros2_ws/install/setup.zsh`;
    at least 24 characters, and keep the real file uncommitted.
 3. Set the same `HWR_GATEWAY_TOKEN` on the PC. The gateway listens on port 8090;
    every route requires the token, including telemetry.
-4. Leave every entry in `hwr_nav/config/places.yaml` marked `verified: false`
-   until it is physically rechecked on the accepted HWR-built map. For an
+4. Named places are per map: the gateway reads only `<map>.places.yaml` beside
+   the loaded map YAML (`mark_place` writes the robot's localized pose there as a
+   verified reference place; `list_places` shows them). The packaged
+   `hwr_nav/config/places.yaml` (old map_04 frame) is no longer read; copy an
+   object entry from it into a map's places file only after it has been
+   physically rechecked on that map. For an
    object place, measure `object_x/object_y` on the physical object, then choose
    a collision-free `x/y` approach pose whose robot-center distance to that
    anchor is at most 0.50 m. Only then mark it verified. A camera view or photo

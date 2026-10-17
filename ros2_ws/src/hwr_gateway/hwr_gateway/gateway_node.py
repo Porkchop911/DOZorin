@@ -32,7 +32,8 @@ from hwr_core.control.closed_loop import (TurnTracker, approach_command, approac
                                           pick_target, progress_along, wrap)
 from hwr_core.navigation import (directional_escape_profile,
                                  evaluate_object_reach,
-                                 normalize_place_definition,
+                                 load_places, mark_place,
+                                 normalize_place_definition, places_file,
                                  rank_goal_candidates_by_clearance,
                                  reachable_goal_candidates)
 from nav_msgs.msg import OccupancyGrid, Odometry
@@ -86,6 +87,10 @@ class AimRequest(BaseModel):
 class GripperRequest(BaseModel):
     command: str
     duration_ms: int = 800
+
+
+class PlaceRequest(BaseModel):
+    name: str
 
 
 class SayRequest(BaseModel):
@@ -204,8 +209,6 @@ class GatewayNode(Node):
                                    str(Path.home() / "hwr/state/gateway_audit.jsonl")))
         audit.parent.mkdir(parents=True, exist_ok=True)
         self.audit_path = audit
-        places_path = Path(get_package_share_directory("hwr_nav")) / "config/places.yaml"
-        self.places = yaml.safe_load(places_path.read_text(encoding="utf-8"))["places"]
         arm_path = Path(get_package_share_directory("hwr_arm")) / "config/poses.yaml"
         arm_config = yaml.safe_load(arm_path.read_text(encoding="utf-8"))
         forward_pulses = arm_config["poses"]["forward"]
@@ -812,6 +815,36 @@ class GatewayNode(Node):
             return {"mode": read("mode_session.name"),
                     "map": Path(map_path).stem if map_path else None}
 
+        def active_places_file() -> Path:
+            # Places are per map frame: only the loaded map's own file applies.
+            state = HWR_ROOT / "state" / "mode_session.map"
+            map_path = state.read_text().strip() if state.exists() else ""
+            if not map_path:
+                raise HTTPException(409, "no map loaded (navigation mode not running)")
+            return places_file(map_path)
+
+        @app.get("/places", dependencies=[Depends(auth)])
+        def places():
+            path = active_places_file()
+            return {"map": path.name.removesuffix(".places.yaml"),
+                    "places": {name: {k: place.get(k) for k in ("kind", "x", "y", "yaw_deg", "verified")}
+                               for name, place in load_places(path).items()}}
+
+        @app.post("/places/mark", dependencies=[Depends(auth)])
+        def place_mark(body: PlaceRequest):
+            with self.lock:
+                healthy = self._localization_state_locked(time.monotonic())["healthy"]
+                pose = self.pose
+            if not healthy or pose is None:
+                raise HTTPException(409, "localization is unhealthy; relocalize before marking a place")
+            path = active_places_file()
+            try:
+                place = mark_place(path, body.name, pose)
+            except ValueError as exc:
+                raise HTTPException(422, str(exc)) from exc
+            self._audit("place_mark", "accepted", {"name": body.name, "file": str(path), **place})
+            return {"name": body.name, "map": path.name.removesuffix(".places.yaml"), **place}
+
         @app.get("/maps", dependencies=[Depends(auth)])
         def maps():
             names = sorted(p.stem for p in (HWR_ROOT / "maps").glob("*.yaml")
@@ -929,9 +962,9 @@ class GatewayNode(Node):
                 raise HTTPException(409, "localization is unhealthy")
             goal_metadata = None
             if body.place:
-                place = self.places.get(body.place)
+                place = load_places(active_places_file()).get(body.place)
                 if place is None:
-                    raise HTTPException(404, "unknown place")
+                    raise HTTPException(404, "unknown place on the loaded map (list_places)")
                 if not place.get("verified", False):
                     raise HTTPException(409, "place is not verified on the current HWR map")
                 try:

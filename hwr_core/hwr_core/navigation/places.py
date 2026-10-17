@@ -2,7 +2,12 @@
 from __future__ import annotations
 
 import math
+import os
+import re
 from collections.abc import Mapping, Sequence
+from pathlib import Path
+
+import yaml
 
 from .object_approach import closest_point_on_segment
 
@@ -112,3 +117,38 @@ def evaluate_object_reach(pose: Sequence[float], object_x: float,
         "object_closest_x": nearest[0],
         "object_closest_y": nearest[1],
     }
+
+
+PLACE_NAME = re.compile(r"[a-z0-9_]{1,40}")
+
+
+def places_file(map_yaml: str | Path) -> Path:
+    """Places live beside their map (``room.yaml`` -> ``room.places.yaml``): coordinates are per map frame."""
+    path = Path(map_yaml)
+    return path.with_name(f"{path.stem}.places.yaml")
+
+
+def load_places(path: str | Path) -> dict:
+    path = Path(path)
+    if not path.exists():
+        return {}
+    return (yaml.safe_load(path.read_text(encoding="utf-8")) or {}).get("places") or {}
+
+
+def mark_place(path: str | Path, name: str, pose: Sequence[float]) -> dict:
+    """Store the robot's current localized pose as a verified reference place (overwrites ``name``)."""
+    if not PLACE_NAME.fullmatch(name):
+        raise ValueError("place name must be 1-40 chars of a-z, 0-9, _")
+    if pose is None or len(pose) < 3:
+        raise ValueError("a localized robot pose is required")
+    x, y = _finite_number(pose[0], "pose x"), _finite_number(pose[1], "pose y")
+    yaw_deg = math.degrees(_finite_number(pose[2], "pose yaw")) % 360.0
+    place = {"kind": "reference", "x": round(x, 3), "y": round(y, 3),
+             "yaw_deg": round(yaw_deg, 1), "verified": True}
+    path = Path(path)
+    places = load_places(path)
+    places[name] = place
+    tmp = path.with_name(path.name + ".tmp")
+    tmp.write_text(yaml.safe_dump({"places": places}, sort_keys=True), encoding="utf-8")
+    os.replace(tmp, path)  # atomic: a crash mid-write never loses the other places
+    return place
