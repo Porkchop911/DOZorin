@@ -489,21 +489,35 @@ class GatewaySkills:
         uncapped creep drove into the nearer cubes."""
         if self.dry_run:
             return False
+        moved = False
+        if math.hypot(spot["x"], spot["y"]) < keep_x:
+            # Too close to grasp and the base can't reverse: strafe away from it, then face it
+            # (live 2026-10-17 a cube beside the jaw needed a human otherwise).
+            side = 1.0 if spot["y"] >= 0 else -1.0
+            step = min(math.sqrt(max(reach_x ** 2 - spot["x"] ** 2, 0.0)) - abs(spot["y"]), 0.15)
+            if step < 0.02:
+                return False
+            self.arm_pose("forward")  # move() needs the verified forward camera
+            try:
+                self.move(step, "right" if side > 0 else "left")
+            except RuntimeError:
+                return False  # costmap says the side is blocked
+            spot, moved = {"x": spot["x"], "y": spot["y"] + side * step}, True
         bearing = math.degrees(math.atan2(spot["y"], spot["x"]))
         distance = math.hypot(spot["x"], spot["y"])
         # Steep-only grasps end ~0.25 m; +0.04 slack here once called 0.275 "close" (S3 #1).
         if abs(bearing) < 8.0 and distance <= reach_x + 0.02:
-            return False  # already in front and close: moving won't help
+            return moved  # in front and close: moving forward won't help
         if abs(bearing) >= 8.0:
             self.turn(bearing)  # in place; needs no forward camera
-            spot = {"x": distance, "y": 0.0}
+            spot, moved = {"x": distance, "y": 0.0}, True
         # The held cube shows at the image bottom (S2 #4 refused the creep because of it).
         cubes = [c for c in self.find_cubes().get("cubes", []) if held is None or c.get("color") != held]
         # Corridor = robot half-width ~0.1 m + half a cube.
         nearest = min([c["x"] for c in cubes if abs(c["y"]) < 0.13] + [spot["x"]])
         creep = min(spot["x"] - reach_x, nearest - keep_x, 0.15)
         if creep < 0.02:
-            return False  # can't get closer without hitting another cube: report out of reach
+            return moved  # can't get closer without hitting another cube
         self.drive(vx=0.1, seconds=creep / 0.1)
         return True
 

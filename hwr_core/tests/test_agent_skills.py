@@ -403,3 +403,14 @@ def test_unstack_cubes_top_first_beside_the_tower_and_stops_on_failure():
     assert [p for p, _ in fake.calls].count("/arm/pick") == 1 and "/drive" not in dict(fake.calls)
     with pytest.raises(ValueError):
         skills.unstack_cubes(["red"])
+
+
+def test_into_reach_strafes_away_from_a_cube_too_close_then_faces_it():
+    skills = GatewaySkills(token="t")
+    calls = []
+    skills.arm_pose = lambda name: calls.append(("pose", name))
+    skills.move = lambda meters, direction="forward": calls.append(("move", round(meters, 3), direction))
+    skills.turn = lambda degrees: calls.append(("turn", round(degrees)))
+    skills.find_cubes = lambda: {"cubes": []}
+    assert skills._into_reach({"x": 0.14, "y": 0.10})  # beside the left jaw
+    assert calls == [("pose", "forward"), ("move", 0.07, "right"), ("turn", 50)]
