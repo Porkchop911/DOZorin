@@ -117,6 +117,7 @@ class ApproachRequest(BaseModel):
 
 class FindRequest(BaseModel):
     view: str = "look_down"    # "floor" sees ~1 m out (coarser): for searching, not grasping
+    level: int = 0             # locate on the mid-plane of a cube with this many cubes under it
 
 
 class PickRequest(BaseModel):
@@ -1154,7 +1155,9 @@ class GatewayNode(Node):
         def arm_find_cubes(body: FindRequest = FindRequest()):
             if body.view not in ("look_down", "floor"):
                 raise HTTPException(422, "view must be look_down or floor")
-            cubes = find(None, size / 2, body.view)
+            if not 0 <= body.level <= 3:
+                raise HTTPException(422, "level must be 0..3")
+            cubes = find(None, size * body.level + size / 2, body.view)
             self._audit("arm_find_cubes", "done", {"cubes": cubes})
             return {"cubes": cubes}
 
@@ -1172,7 +1175,10 @@ class GatewayNode(Node):
             else:
                 # Live: -40 missed (B2 #5); -55 picks held but the tilted hold failed every
                 # later place (S2 #1, #5). Pick steep or reposition (creep) first.
-                plan, cube = refined_plan(body.color, seen[0], centre, centre + size / 2,
+                # Off a stack, grip 8 mm high: at mid-height the finger tips caught the cube below
+                # and the lift left it tilted (c5 2026-10-17 unstack, next pick missed).
+                grasp_z = centre + (0.008 if body.level else 0.0)
+                plan, cube = refined_plan(body.color, seen[0], grasp_z, centre + size / 2,
                                           flattest=-math.radians(70))
                 if plan is None:
                     result = {"outcome": "out of reach", "cube": cube}

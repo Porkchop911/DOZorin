@@ -466,10 +466,11 @@ class GatewaySkills:
 
     CUBE_COLORS = ("red", "green", "blue")
 
-    def find_cubes(self, view: str = "look_down"):
+    def find_cubes(self, view: str = "look_down", level: int = 0):
         if view not in ("look_down", "floor"):
             raise ValueError("view must be look_down or floor")
-        return self._motion("look for cubes", "/arm/find_cubes", {"view": view}, 10.0)
+        payload = {"view": view, **({"level": int(level)} if level else {})}
+        return self._motion("look for cubes", "/arm/find_cubes", payload, 10.0)
 
     def pick(self, color: str, level: int = 0):
         if color not in self.CUBE_COLORS:
@@ -667,10 +668,13 @@ class GatewaySkills:
         if done:
             # The tool once said "stacked" with a cube on the floor beside it (2026-10-17, twice,
             # once ~5 cm apart): every stack colour still visible must sit at the top cube's spot.
-            seen = {c["color"]: c for c in self.find_cubes().get("cubes", [])}
-            top = seen.get(stack[-1])
-            apart = [c for c in stack[:-1] if c in seen and top is not None and
-                     math.hypot(seen[c]["x"] - top["x"], seen[c]["y"] - top["y"]) > 0.035]
+            # Each cube located on its own level's plane (all on the floor plane, the top cube
+            # read ~4 cm off and failed a standing tower, c5 2026-10-17).
+            at = {c: {k["color"]: k for k in self.find_cubes(level=i).get("cubes", [])}.get(c)
+                  for i, c in enumerate(stack)}
+            top = at[stack[-1]]
+            apart = [c for c in stack[:-1] if at[c] is not None and top is not None and
+                     math.hypot(at[c]["x"] - top["x"], at[c]["y"] - top["y"]) > 0.035]
             if top is None or apart:
                 done = False
                 log.append({"final_check": "failed", "top_seen": top is not None, "apart": apart})
