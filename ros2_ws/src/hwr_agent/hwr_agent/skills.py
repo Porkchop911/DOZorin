@@ -620,8 +620,11 @@ class GatewaySkills:
         if len(wanted) < 2 or not set(wanted) <= set(world):
             return {"outcome": f"cubes not seen: {sorted(set(order or self.CUBE_COLORS) - set(world))}",
                     "log": log}
-        base = order[0] if order else min(wanted, key=lambda c: math.hypot(
-            self._to_base(pose, world[c])["x"] - 0.22, self._to_base(pose, world[c])["y"]))
+        # Build on the farthest cube in reach-ish range: the others are then nearer and get carried
+        # out to it past at most one cube (c8 2026-10-17: a near base left red behind two cubes).
+        dist = {c: math.hypot(*self._to_base(pose, world[c]).values()) for c in wanted}
+        near = [c for c in wanted if dist[c] <= 0.40]
+        base = order[0] if order else max(near, key=dist.get) if near else min(wanted, key=dist.get)
         stack, stack_xy = [base], world.pop(base)
         last = None
         for _ in range(max_rounds):
@@ -704,7 +707,8 @@ class GatewaySkills:
             tower = picked["cube"]
             if sides is None:  # nearer-the-centre side first; the tower itself stays put
                 sides = sorted((0.10, -0.10), key=lambda d: abs(tower["y"] + d))
-            spot = {"x": tower["x"], "y": tower["y"] + sides.pop(0)}
+            # Not closer than 0.19 m: near the bumper places land up to 2.6 cm off (c8 2026-10-17).
+            spot = {"x": max(tower["x"], 0.19), "y": tower["y"] + sides.pop(0)}
             placed = self._motion(f"put the {color} cube down", "/arm/place",
                                   {"level": 1, **spot, "color": color}, 20.0)
             log.append({"place_at": spot, **placed})

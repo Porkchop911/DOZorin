@@ -343,7 +343,7 @@ def test_stack_cubes_any_order_picks_base_and_nearest_first():
                    [{"outcome": "placed"}] * 2, final=[{"color": "green", "x": 0.3, "y": 0.0}])
     result = skills.stack_cubes()
     assert result["outcome"] == "stacked"
-    assert result["stack"] == ["red", "blue", "green"]  # red nearest (0.22, 0); then nearest-first
+    assert result["stack"] == ["red", "blue", "green"]  # red farthest (base); then nearest-first
     places = [p for path, p in fake.calls if path == "/arm/place"]
     assert [(p["on"], p["level"], p["pitch_deg"]) for p in places] == [("red", 1, -80),
                                                                          ("blue", 2, -80)]
