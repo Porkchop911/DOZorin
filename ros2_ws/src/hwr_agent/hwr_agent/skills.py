@@ -498,6 +498,7 @@ class GatewaySkills:
             if step < 0.02:
                 return False
             self.arm_pose("forward")  # move() needs the verified forward camera
+            time.sleep(2.0)
             try:
                 self.move(step, "right" if side > 0 else "left")
             except RuntimeError:

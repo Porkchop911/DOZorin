@@ -405,7 +405,8 @@ def test_unstack_cubes_top_first_beside_the_tower_and_stops_on_failure():
         skills.unstack_cubes(["red"])
 
 
-def test_into_reach_strafes_away_from_a_cube_too_close_then_faces_it():
+def test_into_reach_strafes_away_from_a_cube_too_close_then_faces_it(monkeypatch):
+    monkeypatch.setattr("hwr_agent.skills.time.sleep", lambda s: None)
     skills = GatewaySkills(token="t")
     calls = []
     skills.arm_pose = lambda name: calls.append(("pose", name))
