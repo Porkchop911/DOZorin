@@ -597,3 +597,20 @@ def test_into_reach_never_detours_around_its_own_target(monkeypatch):
     skills.find_cubes = lambda: {"cubes": [{"color": "blue", "x": 0.225, "y": 0.063}]}
     skills._into_reach({"x": 0.29, "y": 0.08}, held="red", target="blue")
     assert ("move", "right") not in calls and ("move", "left") not in calls
+
+
+def test_into_reach_short_strafe_does_not_creep_the_target_under_the_jaws(monkeypatch):
+    monkeypatch.setattr("hwr_agent.skills.time.sleep", lambda s: None)
+    skills = GatewaySkills(token="t")
+    calls = []
+    # Cal 2026-10-17: red at the corridor edge, strafe left asked 0.04 m, went 0.01; blue still ahead.
+    views = [{"cubes": [{"color": "red", "x": 0.197, "y": -0.128}, {"color": "blue", "x": 0.422, "y": -0.016}]},
+             {"cubes": [{"color": "red", "x": 0.192, "y": -0.148}, {"color": "blue", "x": 0.422, "y": -0.047}]}]
+    skills.arm_pose = lambda name: None
+    skills.move = lambda meters, direction="forward": calls.append(("move", direction))
+    skills.turn = lambda degrees: calls.append(("turn", round(degrees)))
+    skills.drive = lambda vx=0.0, vy=0.0, wz=0.0, seconds=1.0: calls.append(("drive", round(vx * seconds, 3)))
+    skills.find_cubes = lambda: views.pop(0)
+    skills._into_reach({"x": 0.422, "y": -0.016}, target="blue")
+    drives = [c[1] for c in calls if c[0] == "drive"]
+    assert drives and 0.422 - sum(drives) >= 0.22 - 1e-6  # blue ends at reach_x, not 0.14-0.19

@@ -29,7 +29,7 @@ place_radial_per_deg: 0.00076
 # tuned live 2026-10-16 under two lamps (evidence/phase14/find3-5.jpg); glare is b >= 83, shadows a 129-144.
 cube_size: 0.03
 cubes:
-  red: {min: [30, 160, 95], max: [230, 255, 200]}
+  red: {min: [30, 150, 95], max: [230, 255, 200]}  # evening 2026-10-17: red a 154-157, finger < 145
   # 2026-10-17 sunlight: green b 113-118, blue b 75-83 / a 125-128 (sun_find1.jpg) -> widened.
   green: {min: [20, 0, 80], max: [150, 118, 124]}  # L <= 150: sunlit floor reads green-blue
-  blue: {min: [50, 112, 0], max: [140, 255, 100]}  # L <= 140: bright bluish floor glare
+  blue: {min: [50, 112, 0], max: [140, 255, 86]}  # L <= 140: bright bluish floor glare; evening glare b 88-98 made a phantom blue

@@ -548,9 +548,15 @@ class GatewaySkills:
             # the arm takes the target off to the side (a turn would line the stack up again).
             cubes = [c for c in self.find_cubes().get("cubes", [])
                      if held is None or c.get("color") != held]
+            seen = [c for c in cubes if target is not None and c.get("color") == target]
+            spot = {"x": seen[0]["x"], "y": seen[0]["y"]} if seen else {"x": spot["x"], "y": spot["y"] - shift}
+            cubes = [c for c in cubes if target is None or c.get("color") != target]
             nearest = min([c["x"] for c in cubes if abs(c["y"]) < 0.13] + [1.0])  # target is aside now
             # Steep side reach ends ~0.2 m from the pan axis (x 0.047): (0.14, 0.16) is inside.
-            creep = min(spot["x"] - 0.14, nearest - keep_x, 0.25)
+            # Cal 2026-10-17: the strafe fell short (0.01 of 0.04 m), the target was still ahead and
+            # the side-reach creep put it under the jaws. Only reach to the side if it is aside.
+            stop = 0.14 if abs(spot["y"]) >= 0.06 else reach_x
+            creep = min(spot["x"] - stop, nearest - keep_x, 0.25)
             if creep >= 0.02:
                 self._arm_clear()
                 self.drive(vx=0.1, seconds=creep / 0.1)
