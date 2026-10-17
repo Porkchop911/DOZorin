@@ -559,7 +559,9 @@ class GatewaySkills:
                              "distance_m": distance_m}, seconds + 15.0)
 
     def _pose(self):
-        return self.where_am_i()["pose"]  # map [x, y, yaw]
+        # Odometry [x, y, yaw]: live 2026-10-17 the degraded map pose froze x/y over ~1 m of
+        # driving; odom drift over a few short moves is small.
+        return self._get("/navigation/context")["odometry"]["pose"]
 
     @staticmethod
     def _to_world(pose, spot):

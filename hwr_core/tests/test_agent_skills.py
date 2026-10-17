@@ -314,7 +314,7 @@ class FakeArm:
     def __init__(self, skills, cubes, picks, places):
         self.calls, self.cubes, self.picks, self.places = [], cubes, list(picks), list(places)
         skills._motion = self.motion
-        skills.where_am_i = lambda: {"pose": [0.0, 0.0, 0.0], "localization": {}}
+        skills._pose = lambda: [0.0, 0.0, 0.0]
         skills._act = lambda description, path, payload=None: self.calls.append((path, payload))
         skills.drive = lambda vx=0.0, vy=0.0, wz=0.0, seconds=1.0: self.calls.append(("/drive", seconds))
 
