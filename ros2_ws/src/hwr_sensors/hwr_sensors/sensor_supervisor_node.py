@@ -15,7 +15,7 @@ from sensor_msgs.msg import Image, LaserScan
 from std_msgs.msg import Bool
 from std_srvs.srv import SetBool
 
-from hwr_sensors.sensor_liveness import (CAMERA_USB_RESET_TARGETS,
+from hwr_sensors.sensor_liveness import (CAMERA_USB_RESET_TARGETS, may_release_estop,
                                          process_matches, stale_targets)
 
 
@@ -23,8 +23,8 @@ class SensorSupervisor(Node):
     def __init__(self) -> None:
         super().__init__("hwr_sensor_supervisor")
         self.declare_parameter("startup_grace", 15.0)
-        self.declare_parameter("lidar_timeout", 2.0)
-        self.declare_parameter("camera_timeout", 3.0)
+        self.declare_parameter("lidar_timeout", 5.0)
+        self.declare_parameter("camera_timeout", 10.0)
         self.declare_parameter("recovery_cooldown", 15.0)
         now = time.monotonic()
         self.started = now
@@ -33,6 +33,8 @@ class SensorSupervisor(Node):
                               "camera": float("-inf")}
         self.estop_latched = None
         self.estop_pending = False
+        self.tripped_at = None    # monotonic time of this node's own estop trip
+        self.last_scan_at = float("-inf")   # real messages only; recovery never touches it
         self.estop_client = self.create_client(SetBool, "estop")
         state_qos = QoSProfile(
             depth=1, reliability=QoSReliabilityPolicy.RELIABLE,
@@ -47,18 +49,21 @@ class SensorSupervisor(Node):
 
     def _on_estop(self, message: Bool) -> None:
         self.estop_latched = bool(message.data)
+        if not self.estop_latched:
+            self.tripped_at = None  # someone reset it; any later latch is not ours to release
 
     def _on_lidar(self, _message: LaserScan) -> None:
-        self.last_seen["lidar"] = time.monotonic()
+        self.last_seen["lidar"] = self.last_scan_at = time.monotonic()
 
     def _on_camera(self, _message: Image) -> None:
         self.last_seen["camera"] = time.monotonic()
 
-    def _request_stop(self) -> None:
+    def _request_estop(self, trip: bool) -> None:
         if self.estop_pending or not self.estop_client.service_is_ready():
             return
         request = SetBool.Request()
-        request.data = True
+        request.data = trip
+        self.tripped_at = time.monotonic() if trip else None
         self.estop_pending = True
         future = self.estop_client.call_async(request)
         future.add_done_callback(self._stop_complete)
@@ -123,15 +128,23 @@ class SensorSupervisor(Node):
         stale = stale_targets(
             now, self.started, self.last_seen, timeouts,
             float(self.get_parameter("startup_grace").value))
+        # shortcut: a human /stop during our own latch looks identical on estop_state (Bool) and would be
+        # released too; upgrade if the driver publishes the trip reason.
+        if may_release_estop(self.tripped_at, self.last_recovery["lidar"], self.last_scan_at,
+                             self.estop_latched, now, timeouts["lidar"]):
+            self.get_logger().warning("lidar scans back after respawn; releasing supervisor estop")
+            self._request_estop(False)
+            return
         cooldown = float(self.get_parameter("recovery_cooldown").value)
         stale = [target for target in stale
                  if now - self.last_recovery[target] >= cooldown]
         if not stale:
             return
-        if self.estop_latched is not True:
+        # Camera is not a motion-safety sensor (nav gates on lidar), so it respawns without an estop.
+        if "lidar" in stale and self.estop_latched is not True:
             self.get_logger().warning(
                 f"stale sensors {stale}; requesting estop before recovery")
-            self._request_stop()
+            self._request_estop(True)
             return
         for target in stale:
             self._recover(target, now)

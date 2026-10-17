@@ -31,6 +31,65 @@ Typical mode commands on the robot:
 Do not start long-lived nodes from only `ros2_ws/install/setup.zsh`;
 `deploy/env.zsh` also exposes the framework-free `hwr_core` package.
 
+## Boot at power-on (hwr.service) — first test
+
+Not yet run on the robot (designed 2026-10-17). Sources: `deploy/hwr.service`,
+`deploy/hwr-ears.service`, `deploy/boot.sh`, `deploy/pc_up.ps1`,
+`config/hwr.env.example`, plan/14 §12.6, plan/15 "After a reboot".
+
+### One-time setup
+
+Robot:
+
+1. In `~/hwr/config/hwr.env` (copy of `config/hwr.env.example`) fill:
+   `HWR_MAP_YAML`, `HWR_HERMES_URL` (`http://192.168.0.148:12341`),
+   `HWR_HERMES_KEY`, `HWR_HERMES_SESSION`. Keep `HWR_GATEWAY_TOKEN` set.
+2. Sync and build.
+3. `~/hwr/deploy/boot.sh install`: installs `hwr.service` and `hwr-ears.service`, disabled.
+4. `~/hwr/deploy/boot.sh enable`: disables `start_app_node.service` (factory stack),
+   enables and starts `hwr.service`. Ears follows via `Wants=`.
+5. Revert: `~/hwr/deploy/boot.sh disable` stops `hwr.service` and restores the factory stack as boot default.
+
+PC (repo root):
+
+1. Start Strata on :8080 (user's job).
+2. `deploy\pc_up.ps1` starts relay :12340→8080, relay :12341→8643, and
+   `hermes -p robot gateway`. Warns if :8080 is down; does not start Strata.
+3. Optional: `deploy\pc_up.ps1 -Register` adds logon task "HWR pc_up".
+
+### Cold-boot check list
+
+| Check | Command | Expect |
+|---|---|---|
+| Boot unit | `~/hwr/deploy/boot.sh status` | `hwr.service` enabled; `hwr-ears.service` active |
+| Mode | `~/hwr/deploy/mode.sh status` | navigation running |
+| Ears | `journalctl -u hwr-ears -f` | listening; no restart loop (restarts every 10 s on exit) |
+| rosbridge | `ss -ltn \| grep 9090` | listening (skipped with a log line if the package is missing) |
+| Gateway | `python3 ~/hwr/cli/hwr.py --url http://127.0.0.1:8090 nav-context` (on the robot) | answers; `camera_fresh: true` |
+
+### Manual steps (deliberately not automated)
+
+| Step | Why |
+|---|---|
+| 1. Estop reset (`reset_estop`, once) | Driver latches estop at every start, by design (boot into stopped state). |
+| 2. Arm `forward` (`arm_pose('forward')`) | Arm never moves unasked. Goals are refused until `camera_forward: true`. |
+| 3. Relocalize (`relocalize`), robot stationary | Boot does not know where the robot stands on the map. |
+
+Hermes or the human performs these. Power decisions stay with the human.
+
+### Acceptance
+
+- Cold power-on, no SSH.
+- After the human estop reset, "Soudruhu, turn left" moves the robot (speech-end → motion ≤ 1.5 s).
+- Record: reboots worked / reboots tried = ___ / ___.
+
+### Known risks to check on first boot
+
+- `hwr-ears.service` runs `/usr/bin/python3`: confirm it has `sherpa_onnx`.
+- Ears waits up to 180 s for `/run/user/1000/pulse/native`, then fails and retries every 10 s: confirm the robot user is uid 1000 and its desktop session (PulseAudio) starts at boot.
+- `hwr.service` must win the camera from the factory stack (`takeover.sh`); a leftover factory node holds the camera.
+- PC: `pc_up.ps1` does not start Strata; without it the relays and Hermes calls fail.
+
 ## First gateway setup
 
 1. Run `~/hwr/deploy/install_deps.sh` once.
