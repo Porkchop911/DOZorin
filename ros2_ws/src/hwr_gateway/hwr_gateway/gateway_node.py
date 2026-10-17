@@ -1045,10 +1045,20 @@ class GatewayNode(Node):
         clearance = float(arm_config.get("place_clearance", 0.005))
         side_trim = float(arm_config.get("place_side_trim", 0.0))
 
-        def trimmed(spot: dict) -> tuple:
-            """Spot shifted by the place side trim, perpendicular to the arm's direction."""
+        radial_per_deg = float(arm_config.get("place_radial_per_deg", 0.0))
+
+        def place_plan(spot: dict, z: float, yaw: float, **window):
+            """plan_grasp for a release, corrected by the floor calibration: side trim, then a
+            radial pull-back that grows with the tilt from vertical (replanned once)."""
             pan = math.atan2(spot["y"], spot["x"] - self.kin.pan_x)
-            return spot["x"] - side_trim * math.sin(pan), spot["y"] + side_trim * math.cos(pan)
+            x = spot["x"] - side_trim * math.sin(pan)
+            y = spot["y"] + side_trim * math.cos(pan)
+            plan = plan_grasp(self.kin, x, y, z, yaw, roll_sign=roll_sign, **window)
+            if plan is None or radial_per_deg == 0.0:
+                return plan
+            back = radial_per_deg * (90.0 + math.degrees(plan[2]))
+            return plan_grasp(self.kin, x - back * math.cos(pan), y - back * math.sin(pan), z, yaw,
+                              roll_sign=roll_sign, **window) or plan
 
         def refined_plan(color: str, spot: dict, z: float, top_z: float,
                          flattest: float = -math.radians(30), steepest: float = -math.pi / 2):
@@ -1211,11 +1221,9 @@ class GatewayNode(Node):
                 # No overhead re-locate here: at hover the held cube hides most of the target and
                 # its visible sliver moved the spot 3.5 cm (c3 2026-10-17, green fell off blue).
                 # From look_down the held cube sits at the image bottom, clear of the target.
-                plan = plan_grasp(self.kin, *trimmed(spot), z, spot["yaw"], roll_sign=roll_sign,
-                                  flattest=flattest, steepest=steepest)
+                plan = place_plan(spot, z, spot["yaw"], flattest=flattest, steepest=steepest)
             else:
-                plan = plan_grasp(self.kin, *trimmed(spot), z, 0.0, roll_sign=roll_sign,
-                                  flattest=flattest, steepest=steepest)
+                plan = place_plan(spot, z, 0.0, flattest=flattest, steepest=steepest)
             if plan is None:
                 result = {"outcome": "out of reach", "spot": spot}
             else:
