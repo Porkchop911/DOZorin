@@ -483,3 +483,66 @@ def test_into_reach_detours_when_a_cube_only_partly_caps_the_creep(monkeypatch):
     skills.find_cubes = lambda: views.pop(0)
     assert skills._into_reach({"x": 0.30, "y": 0.0})
     assert calls[0][0] == "move" and calls[1] == ("drive", 0.16)
+
+
+def test_unstack_stops_at_first_failed_place_and_never_moves_the_body(monkeypatch):
+    skills = GatewaySkills(token="test")
+    calls = []
+
+    def fake_motion(description, path, payload, seconds):
+        calls.append((path, payload))
+        if path == "/arm/pick":
+            return {"outcome": "holding", "cube": {"x": 0.15, "y": 0.04}}
+        return {"outcome": "fell"}
+
+    monkeypatch.setattr(skills, "_motion", fake_motion)
+    for body_move in ("turn", "move", "drive", "_into_reach"):
+        monkeypatch.setattr(skills, body_move, lambda *a, **k: pytest.fail("body moved"))
+    result = skills.unstack_cubes(["red", "green", "blue"])
+    assert result["outcome"] == "stopped: fell"
+    assert [p for p, _ in calls] == ["/arm/pick", "/arm/place"]  # no second pick after the failure
+    assert calls[0][1] == {"color": "blue", "level": 2}  # top first
+    spot = calls[1][1]
+    assert spot["x"] == 0.19  # never closer than 0.19 m (bumper misses)
+    assert spot["y"] == pytest.approx(-0.06)  # tower at +0.04: the side nearer the centre first
+
+
+def _stack_fixture(monkeypatch, cubes, place_outcomes):
+    skills = GatewaySkills(token="test")
+    log = {"picks": [], "places": []}
+    pending = list(place_outcomes)
+    monkeypatch.setattr(skills, "_pose", lambda: [0.0, 0.0, 0.0])
+    monkeypatch.setattr(skills, "find_cubes", lambda *a, **k: {"cubes": [dict(c) for c in cubes]})
+    monkeypatch.setattr(skills, "arm_pose", lambda name: {})
+    monkeypatch.setattr(skills, "turn", lambda d: pytest.fail("search turn with all cubes in view"))
+    monkeypatch.setattr(skills, "_into_reach", lambda *a, **k: True)
+
+    def pick(color, level=0):
+        log["picks"].append(color)
+        return {"outcome": "holding", "pitch_deg": -80.0}
+
+    def place(on=None, level=1, x=None, y=None, color=None, pitch_deg=None):
+        log["places"].append({"on": on, "x": x, "color": color})
+        return {"outcome": pending.pop(0) if on is not None else "placed"}
+
+    monkeypatch.setattr(skills, "pick", pick)
+    monkeypatch.setattr(skills, "place", place)
+    return skills, log
+
+
+def test_stack_builds_on_the_farthest_cube_within_reach_range(monkeypatch):
+    cubes = [{"color": "red", "x": 0.20, "y": 0.0}, {"color": "green", "x": 0.35, "y": 0.05},
+             {"color": "blue", "x": 0.60, "y": 0.0}]  # blue beyond 0.40 m: not a base candidate
+    skills, log = _stack_fixture(monkeypatch, cubes, ["placed", "placed"])
+    result = skills.stack_cubes()
+    assert result["stack"][0] == "green"
+    assert log["picks"][0] == "red"  # nearest remaining cube is carried first
+
+
+def test_stack_never_opens_mid_air_when_the_tower_is_lost(monkeypatch):
+    cubes = [{"color": "red", "x": 0.20, "y": 0.0}, {"color": "green", "x": 0.30, "y": 0.0}]
+    skills, log = _stack_fixture(monkeypatch, cubes, ["target not seen", "target not seen"] * 8)
+    result = skills.stack_cubes(order=["green", "red"], max_rounds=1)
+    set_downs = [p for p in log["places"] if p["on"] is None]
+    assert set_downs == [{"on": None, "x": 0.22, "color": "red"}]  # set down in front, on the floor
+    assert result["stack"] == ["green"] and result["outcome"] == "stack of 1"
