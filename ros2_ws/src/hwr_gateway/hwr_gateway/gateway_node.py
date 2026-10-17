@@ -31,6 +31,7 @@ from hwr_core.arm.manipulation import (follow_step, locate_cube, lost_search_wz,
                                        smooth_range, sweep_bearing)
 from hwr_core.control.closed_loop import (TurnTracker, approach_command, approach_speed,
                                           pick_target, progress_along, wrap)
+from hwr_core.exploration import map_coverage
 from hwr_core.navigation import (anchor_object, directional_escape_profile,
                                  evaluate_object_reach,
                                  load_places, mark_place, save_places,
@@ -193,6 +194,7 @@ class GatewayNode(Node):
         self.loc = {"healthy": False, "state": "unavailable", "score": 0.0}
         self.loc_stamp = 0.0
         self.map_grid = None
+        self.map_resolution = None
         self.costmap = None
         self.costmap_meta = None
         self.jpeg = None
@@ -345,6 +347,7 @@ class GatewayNode(Node):
         with self.lock:
             self.map_grid = np.asarray(msg.data, dtype=np.int16).reshape(
                 msg.info.height, msg.info.width)
+            self.map_resolution = msg.info.resolution
 
     def _estop_state(self, msg: Bool) -> None:
         with self.lock:
@@ -924,7 +927,7 @@ class GatewayNode(Node):
         def explore_status():
             journal = HWR_ROOT / "state" / "exploration.jsonl"
             last_start = last_finish = None
-            rejections, detail = [], None
+            rejections, detail, half_legs = [], None, {"tried": 0, "passed": 0}
             if journal.exists():
                 with journal.open("rb") as stream:
                     stream.seek(max(0, journal.stat().st_size - 200_000))
@@ -937,6 +940,10 @@ class GatewayNode(Node):
                         if name == "session_started":
                             last_start, last_finish = event, None
                             rejections, detail = [], None
+                            half_legs = {"tried": 0, "passed": 0}
+                        elif name == "half_leg_retry":
+                            half_legs["tried"] += 1
+                            half_legs["passed"] += bool(event.get("allowed"))
                         elif name == "session_finished":
                             last_finish = event
                         elif name == "semantic_preflight_rejected":
@@ -951,9 +958,12 @@ class GatewayNode(Node):
                                                "waypoint": event.get("waypoint"),
                                                "reason": event.get("reason"), "detail": detail})
                             detail = None
+            with self.lock:
+                grid, resolution = self.map_grid, self.map_resolution
             return {"running": last_start is not None and last_finish is None,
                     "started": last_start, "finished": last_finish,
-                    "rejections": rejections[-20:]}
+                    "rejections": rejections[-20:], "half_leg_retries": half_legs,
+                    "coverage": None if grid is None else map_coverage(grid, resolution)}
 
         @app.post("/stop", dependencies=[Depends(auth)])
         def stop():

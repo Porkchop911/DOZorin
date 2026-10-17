@@ -432,6 +432,7 @@ class GatewaySkills:
         self._switch("exploration", name)
         self.arm_pose("forward")
         time.sleep(2.0)
+        before = self._get("/explore/status").get("coverage") or {}
         started = time.monotonic()
         self._act("start exploration", "/explore/start")
         status = {}
@@ -450,6 +451,10 @@ class GatewaySkills:
                   "explored_minutes": round((time.monotonic() - started) / 60.0, 1),
                   "explore_end": (status.get("finished") or {}).get("reason", "unknown"),
                   "frontier_rejections": status.get("rejections", []),
+                  "half_leg_retries": status.get("half_leg_retries"),
+                  "known_m2": (status.get("coverage") or {}).get("known_m2"),
+                  "known_m2_gained": round(((status.get("coverage") or {}).get("known_m2") or 0.0)
+                                           - (before.get("known_m2") or 0.0), 2),
                   "saved": saved}
         if not saved.get("success"):
             result["navigation"] = "not switched: map save failed"

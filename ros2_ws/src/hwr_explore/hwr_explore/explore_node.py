@@ -25,7 +25,7 @@ from std_msgs.msg import Bool
 from std_srvs.srv import SetBool, Trigger
 from sensor_msgs.msg import LaserScan
 
-from hwr_core.exploration import (find_frontiers,
+from hwr_core.exploration import (find_frontiers, shorter_leg,
                                   restore_semantic_boundary_cooldowns)
 from hwr_core.navigation import (SemanticPreflightClient,
                                  limit_translation_target,
@@ -685,12 +685,27 @@ class ExploreNode(Node):
             if not self.enabled or generation != self.session_generation:
                 self._trip_stop()
                 return
+            glass_boundary = bool(
+                (preflight.get("assessment") or {}).get(
+                    "glass_boundary_in_corridor"))
+            half = None if allowed or glass_boundary else shorter_leg(self.pose[:2], waypoint)
+            if half is not None:
+                # plan/18.3: clutter far ahead rejected whole legs; ask once for half of it.
+                half_distance = math.hypot(half[0] - self.pose[0], half[1] - self.pose[1])
+                try:
+                    half_allowed, half_preflight = self.semantic.assess(half_distance)
+                except Exception:
+                    half_allowed = False
+                if not self.enabled or generation != self.session_generation:
+                    self._trip_stop()
+                    return
+                self._journal("half_leg_retry", frontier_goal=list(frontier.goal),
+                              waypoint=list(half), allowed=half_allowed)
+                if half_allowed:
+                    allowed, preflight, waypoint, distance = True, half_preflight, half, half_distance
             if not allowed:
                 self.active_frontier = frontier
                 self.active_waypoint = waypoint
-                glass_boundary = bool(
-                    (preflight.get("assessment") or {}).get(
-                        "glass_boundary_in_corridor"))
                 self._journal("semantic_preflight_rejected",
                               frontier_goal=list(frontier.goal),
                               waypoint=list(waypoint), report=preflight)

@@ -649,3 +649,19 @@ def test_into_reach_short_strafe_does_not_creep_the_target_under_the_jaws(monkey
     skills._into_reach({"x": 0.422, "y": -0.016}, target="blue")
     drives = [c[1] for c in calls if c[0] == "drive"]
     assert drives and math.hypot(0.422 - sum(drives), 0.047) >= 0.22 - 1e-6  # on the reach circle
+
+
+def test_map_room_reports_area_gained(monkeypatch):
+    monkeypatch.setattr("hwr_agent.skills.time.sleep", lambda s: None)
+    skills = GatewaySkills(token="t")
+    statuses = iter([{"coverage": {"known_m2": 4.0}},
+                     {"finished": {"reason": "exploration complete"}, "coverage": {"known_m2": 10.5},
+                      "half_leg_retries": {"tried": 2, "passed": 1}}])
+    skills._get = lambda path: {"maps": []} if path == "/maps" else next(statuses)
+    skills._switch = lambda mode, name: None
+    skills.arm_pose = lambda name: None
+    skills._act = lambda description, path, payload=None: {"success": True}
+    skills.use_map = lambda name: "switched"
+    result = skills.map_room("room_x", 5)
+    assert result["known_m2"] == 10.5 and result["known_m2_gained"] == 6.5
+    assert result["half_leg_retries"] == {"tried": 2, "passed": 1}
