@@ -128,6 +128,7 @@ at zero velocity and a named arm pose.
 | S5 #5 | FAIL (USB hub 1-2.1 reset, error -71: camera + lidar drop together, 15 resets since boot incl. idle) - hardware. Same loop as #4 before it: turn undershot, the base seen 6 cm left of the odometry estimate was treated as a blocker -> strafed away from it -> "target not seen" -> set down in front -> re-picked (nearest cube). Fix: `_into_reach(target=)` re-spots on the live detection and never counts its own target as a blocker |
 | hub | user re-seated; 3 min arm cycling + S6 #1: 0 hub resets |
 | S6 #1 | FAIL: green on blue placed 9 mm off (passed the 1.5 cm check); red placed centred on green (user) -> tower toppled. Fix: a place > 6 mm off that will carry another cube is re-picked from the stack and re-placed once |
+| S6 #2 | FAIL: blue on red placed 9 mm off again; the redo re-pick's jaws knocked blue off red (user) -> redo reverted. Level-1 side errors today -8.3/-8.6/-9.1 mm vs floor +3.6..+5.7 mm: one side trim fits neither -> per-level calibration |
 
 Open: re-run cycles with re-grip + farthest base; vision_node does not recover from a camera reconnect; supervisor does not release its estop after a lidar respawn (manual reset twice); B2 still not accepted.
 

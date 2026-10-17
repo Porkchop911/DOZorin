@@ -672,17 +672,6 @@ class GatewaySkills:
                 log.append({"place_on": stack[-1], **placed})
                 if placed.get("outcome") not in ("target not seen", "out of reach"):
                     break
-            err = placed.get("error_radial_side")
-            if placed.get("outcome") == "placed" and err and math.hypot(*err) > 0.006 and \
-                    len(stack) + 1 < len(wanted):
-                # S6 #1 2026-10-17: green 9 mm off on blue passed the 1.5 cm check; red went on
-                # centred on green and the tower toppled. A cube that will carry another is redone once.
-                regrab = self.pick(color, level=len(stack))
-                log.append({"repick": color, **regrab})
-                if regrab.get("outcome") == "holding":
-                    placed = self.place(on=stack[-1], level=len(stack), color=color,
-                                        pitch_deg=regrab.get("pitch_deg"))
-                    log.append({"place_on": stack[-1], **placed})
             if placed.get("outcome") == "placed":
                 last = None
                 stack.append(color)
