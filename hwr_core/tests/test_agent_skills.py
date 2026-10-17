@@ -370,8 +370,10 @@ def test_stack_cubes_gives_up_after_max_rounds():
         skills.stack_cubes(["red", "red"])
 
 
-def test_into_reach_creep_never_closes_on_another_cube():
+def test_into_reach_creep_never_closes_on_another_cube(monkeypatch):
     skills = GatewaySkills(token="t")
+    monkeypatch.setattr("hwr_agent.skills.time.sleep", lambda s: None)
+    skills.arm_pose = lambda name: None
     drives = []
     skills.find_cubes = lambda: {"cubes": [{"x": 0.30, "y": 0.0}, {"x": 0.24, "y": -0.08}]}
     skills.drive = lambda vx=0.0, vy=0.0, wz=0.0, seconds=1.0: drives.append(vx * seconds)
@@ -382,8 +384,10 @@ def test_into_reach_creep_never_closes_on_another_cube():
     assert not skills._into_reach({"x": 0.36, "y": 0.0}, detour=False) and drives == []
 
 
-def test_into_reach_ignores_the_held_cube():
+def test_into_reach_ignores_the_held_cube(monkeypatch):
     skills = GatewaySkills(token="t")
+    monkeypatch.setattr("hwr_agent.skills.time.sleep", lambda s: None)
+    skills.arm_pose = lambda name: None
     drives = []
     skills.find_cubes = lambda: {"cubes": [{"color": "green", "x": 0.15, "y": 0.0},
                                            {"color": "red", "x": 0.30, "y": 0.0}]}
@@ -420,7 +424,7 @@ def test_into_reach_strafes_away_from_a_cube_too_close_then_faces_it(monkeypatch
     skills.turn = lambda degrees: calls.append(("turn", round(degrees)))
     skills.find_cubes = lambda: {"cubes": []}
     assert skills._into_reach({"x": 0.14, "y": 0.10})  # beside the left jaw
-    assert calls == [("pose", "forward"), ("move", 0.07, "right"), ("turn", 50)]
+    assert calls == [("pose", "forward"), ("move", 0.07, "right"), ("pose", "forward"), ("turn", 50)]
 
 
 def test_into_reach_strafes_around_a_cube_in_the_way(monkeypatch):
@@ -555,3 +559,15 @@ def test_stack_never_opens_mid_air_when_the_tower_is_lost(monkeypatch):
     set_downs = [p for p in log["places"] if p["on"] is None]
     assert set_downs == [{"on": None, "x": 0.22, "color": "red"}]  # set down in front, on the floor
     assert result["stack"] == ["green"] and result["outcome"] == "stack of 1"
+
+
+def test_into_reach_lifts_the_arm_before_moving_the_body(monkeypatch):
+    skills = GatewaySkills(token="t")
+    monkeypatch.setattr("hwr_agent.skills.time.sleep", lambda s: None)
+    calls = []
+    skills.arm_pose = lambda name: calls.append(("arm", name))
+    skills.turn = lambda degrees: calls.append(("turn", degrees))
+    skills.drive = lambda vx=0.0, vy=0.0, wz=0.0, seconds=1.0: calls.append(("drive", vx * seconds))
+    skills.find_cubes = lambda: {"cubes": []}
+    assert skills._into_reach({"x": 0.30, "y": 0.10})  # held cube hangs at stack height in look_down
+    assert [c[0] for c in calls] == ["arm", "turn", "arm", "drive"]

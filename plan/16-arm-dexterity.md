@@ -121,6 +121,9 @@ at zero velocity and a named arm pose.
 |---|---|
 | search | cubes 0.6-0.8 m out: look_down saw none, the search turned before ever using the floor view, and the floor pose (servo4 88) cut them at the image top. Fix: floor view first, floor pose servo4 130 -> all 3 at 0.63-0.78 m |
 | S5 #1 | FAIL (sensor estop): camera cable trapped under a wheel -> lidar stale x3 + camera disconnect mid-carry; supervisor released its estop after each lidar respawn, but vision_node hung after the camera reconnect (hand-restarted). Finished by hand: blue on red (-5/+5 mm), green on blue (-6/0 mm), user-verified standing |
+| unstack | `unstack_cubes` from a tower at 0.155 m: 2 picks + 2 floor places first try, verified <= 9 mm |
+| S5 #2 | FAIL: red 0.17 m out beside the front wheel; the jaw hit the robot's own wheel (user). Fix: gateway reports floor cubes < 0.19 m from the arm base "out of reach" -> skill strafes away first |
+| S5 #3 | FAIL: red on blue OK; then green placed "not on target"/"out of reach" 7x over 368 s. Cause (user): the body turned while the arm was in look_down holding green at stack height -> swept the 2-stack over. Fix: `_into_reach` lifts the arm to forward before every turn/creep |
 
 Open: re-run cycles with re-grip + farthest base; vision_node does not recover from a camera reconnect; supervisor does not release its estop after a lidar respawn (manual reset twice); B2 still not accepted.
 

@@ -1227,8 +1227,13 @@ class GatewayNode(Node):
                 # Off a stack, grip 8 mm high: at mid-height the finger tips caught the cube below
                 # and the lift left it tilted (c5 2026-10-17 unstack, next pick missed).
                 grasp_z = centre + (0.008 if body.level else 0.0)
-                plan, cube = refined_plan(body.color, seen[0], grasp_z, centre + size / 2,
-                                          flattest=-math.radians(70))
+                # S5 #2 2026-10-17: a floor cube 0.17 m out beside the front wheel -> the jaw hit
+                # the wheel. Report it out of reach so the skill strafes away first.
+                if not body.level and math.hypot(seen[0]["x"], seen[0]["y"]) < 0.19:
+                    plan, cube = None, seen[0]
+                else:
+                    plan, cube = refined_plan(body.color, seen[0], grasp_z, centre + size / 2,
+                                              flattest=-math.radians(70))
                 if plan is None:
                     result = {"outcome": "out of reach", "cube": cube}
                 else:

@@ -518,6 +518,7 @@ class GatewaySkills:
         if abs(bearing) < 8.0 and distance <= reach_x + 0.02:
             return moved  # in front and close: moving forward won't help
         if abs(bearing) >= 8.0:
+            self._arm_clear()
             self.turn(bearing)  # in place; needs no forward camera
             spot, moved = {"x": distance, "y": 0.0}, True
         # The held cube shows at the image bottom (S2 #4 refused the creep because of it).
@@ -533,6 +534,7 @@ class GatewaySkills:
             shift = _detour(spot, blockers) if detour and blockers and spot["x"] - reach_x >= 0.02 else None
             if shift is None or not self._strafe(shift):
                 if creep >= 0.02:
+                    self._arm_clear()
                     self.drive(vx=0.1, seconds=creep / 0.1)  # as close as the blocker allows
                     return True
                 return moved  # can't get closer without hitting another cube
@@ -544,17 +546,23 @@ class GatewaySkills:
             # Steep side reach ends ~0.2 m from the pan axis (x 0.047): (0.14, 0.16) is inside.
             creep = min(spot["x"] - 0.14, nearest - keep_x, 0.25)
             if creep >= 0.02:
+                self._arm_clear()
                 self.drive(vx=0.1, seconds=creep / 0.1)
             return True
         if creep < 0.02:
             return moved  # already as close as reach_x
+        self._arm_clear()
         self.drive(vx=0.1, seconds=creep / 0.1)
         return True
 
-    def _strafe(self, meters: float) -> bool:
-        """Sideways (+ = left) through move(): costmap-checked, which needs the forward camera."""
+    def _arm_clear(self):
+        # S5 #3 2026-10-17: a turn in look_down swept the held cube through the 2-stack.
         self.arm_pose("forward")
         time.sleep(2.0)
+
+    def _strafe(self, meters: float) -> bool:
+        """Sideways (+ = left) through move(): costmap-checked, which needs the forward camera."""
+        self._arm_clear()
         try:
             self.move(abs(meters), "left" if meters > 0 else "right")
         except RuntimeError:
