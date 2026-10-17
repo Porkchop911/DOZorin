@@ -665,12 +665,12 @@ class GatewaySkills:
         self.arm_pose("forward")
         done = len(stack) == len(wanted)
         if done:
-            # The tool once said "stacked" with a cube on the floor beside it (2026-10-17): every
-            # stack colour still visible must sit at the top cube's spot.
+            # The tool once said "stacked" with a cube on the floor beside it (2026-10-17, twice,
+            # once ~5 cm apart): every stack colour still visible must sit at the top cube's spot.
             seen = {c["color"]: c for c in self.find_cubes().get("cubes", [])}
             top = seen.get(stack[-1])
             apart = [c for c in stack[:-1] if c in seen and top is not None and
-                     math.hypot(seen[c]["x"] - top["x"], seen[c]["y"] - top["y"]) > 0.06]
+                     math.hypot(seen[c]["x"] - top["x"], seen[c]["y"] - top["y"]) > 0.035]
             if top is None or apart:
                 done = False
                 log.append({"final_check": "failed", "top_seen": top is not None, "apart": apart})

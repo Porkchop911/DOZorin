@@ -19,6 +19,9 @@ grasp_margin: 40
 roll_sign: -1
 # Held-cube centre height above the contact point at release; +0.005 dropped green off a 2-stack (live).
 place_clearance: -0.005
+# Place-only sideways trim (m, + = left of the arm's direction): 6 verified places 2026-10-17 all
+# landed right, mean -0.0073 +/- 0.0035. Picks hide it (the jaws re-centre the cube sideways).
+place_side_trim: 0.0073
 # Kit cube edge (m) and OpenCV LAB ranges AFTER floor normalisation (image median a/b -> 128),
 # tuned live 2026-10-16 under two lamps (evidence/phase14/find3-5.jpg); glare is b >= 83, shadows a 129-144.
 cube_size: 0.03

@@ -1043,9 +1043,16 @@ class GatewayNode(Node):
         size = float(arm_config["cube_size"])
         roll_sign = float(arm_config.get("roll_sign", 1.0))
         clearance = float(arm_config.get("place_clearance", 0.005))
+        side_trim = float(arm_config.get("place_side_trim", 0.0))
+
+        def trimmed(spot: dict) -> tuple:
+            """Spot shifted by the place side trim, perpendicular to the arm's direction."""
+            pan = math.atan2(spot["y"], spot["x"] - self.kin.pan_x)
+            return spot["x"] - side_trim * math.sin(pan), spot["y"] + side_trim * math.cos(pan)
 
         def refined_plan(color: str, spot: dict, z: float, top_z: float,
-                         flattest: float = -math.radians(30), steepest: float = -math.pi / 2):
+                         flattest: float = -math.radians(30), steepest: float = -math.pi / 2,
+                         trim: bool = False):
             """Hover 8 cm over the look_down estimate, re-locate the cube from almost overhead
             (mostly its top face: true edges for yaw, small parallax), then plan the descent."""
             plan = plan_grasp(self.kin, spot["x"], spot["y"], z, spot["yaw"], hover=0.08,
@@ -1062,7 +1069,8 @@ class GatewayNode(Node):
                 spot = {**spot, **min(near, key=lambda s: math.hypot(s["x"] - spot["x"],
                                                                    s["y"] - spot["y"])),
                         "refined": True}
-            return plan_grasp(self.kin, spot["x"], spot["y"], z, spot["yaw"],
+            x, y = trimmed(spot) if trim else (spot["x"], spot["y"])
+            return plan_grasp(self.kin, x, y, z, spot["yaw"],
                               roll_sign=roll_sign, flattest=flattest, steepest=steepest), spot
 
         def seen_near(color: str, spot: dict, plane_z: float, within: float = 0.03):
@@ -1203,9 +1211,9 @@ class GatewayNode(Node):
                 flattest = min(-math.radians(60), math.radians(body.pitch_deg + 10))
             if body.on:
                 plan, spot = refined_plan(body.on, spot, z, size * body.level,
-                                          flattest=flattest, steepest=steepest)
+                                          flattest=flattest, steepest=steepest, trim=True)
             else:
-                plan = plan_grasp(self.kin, spot["x"], spot["y"], z, 0.0, roll_sign=roll_sign,
+                plan = plan_grasp(self.kin, *trimmed(spot), z, 0.0, roll_sign=roll_sign,
                                   flattest=flattest, steepest=steepest)
             if plan is None:
                 result = {"outcome": "out of reach", "spot": spot}
