@@ -585,7 +585,8 @@ class GatewaySkills:
         a missed pick is retried and a fallen place puts that cube back in the pool."""
         if order is not None:
             order = list(order)
-            if not 2 <= len(order) <= 3 or len(set(order)) != len(order) or                     not set(order) <= set(self.CUBE_COLORS):
+            if not 2 <= len(order) <= 3 or len(set(order)) != len(order) or \
+                    not set(order) <= set(self.CUBE_COLORS):
                 raise ValueError(f"order must be 2-3 distinct colours from {self.CUBE_COLORS}")
         if self.dry_run:
             return {"dry_run": True, "would": f"stack {order or 'any order'}"}
@@ -676,7 +677,8 @@ class GatewaySkills:
         Stops at the first failure and never moves the body: live 2026-10-16 an ad-hoc reset kept
         going after a failed place and dropped a cube out of view."""
         stack = list(stack)
-        if not 2 <= len(stack) <= 3 or len(set(stack)) != len(stack) or                 not set(stack) <= set(self.CUBE_COLORS):
+        if not 2 <= len(stack) <= 3 or len(set(stack)) != len(stack) or \
+                not set(stack) <= set(self.CUBE_COLORS):
             raise ValueError(f"stack must be 2-3 distinct colours from {self.CUBE_COLORS}")
         if self.dry_run:
             return {"dry_run": True, "would": f"unstack {stack} onto the floor"}

@@ -1065,15 +1065,20 @@ class GatewayNode(Node):
             return plan_grasp(self.kin, spot["x"], spot["y"], z, spot["yaw"],
                               roll_sign=roll_sign, flattest=flattest, steepest=steepest), spot
 
-        def seen_near(color: str, spot: dict, plane_z: float, within: float = 0.03) -> bool:
+        def seen_near(color: str, spot: dict, plane_z: float, within: float = 0.03):
+            """Offset (radial, sideways m, about the pan axis) of `color` from spot, None if not
+            within. Logged per place to find systematic centring error (2026-10-17)."""
             blobs, k = fresh_cubes(time.time())
             joints = pulses_to_joints(arm_pulses())
             for blob in blobs:
                 if blob["class"] == f"{color}_cube":
                     s = locate_cube(blob, k, joints, self.kin, plane_z)
                     if s and math.hypot(s["x"] - spot["x"], s["y"] - spot["y"]) < within:
-                        return True
-            return False
+                        pan = math.atan2(spot["y"], spot["x"] - self.kin.pan_x)
+                        dx, dy = s["x"] - spot["x"], s["y"] - spot["y"]
+                        return [round(dx * math.cos(pan) + dy * math.sin(pan), 4),
+                                round(-dx * math.sin(pan) + dy * math.cos(pan), 4)]
+            return None
 
         def arm_do(client, request, settle: float):
             response = self._call(client, request)
@@ -1214,9 +1219,13 @@ class GatewayNode(Node):
                 if body.color:  # verify from look_down (at hover the cube is cut off at the image edge)
                     pose("look_down", 2.0)
                     top = size * (body.level + 1) if body.on else size
-                    outcome = "placed" if seen_near(body.color, spot, top) else "not on target"
+                    error = seen_near(body.color, spot, top, within=0.04)
+                    outcome = ("placed" if error is not None and math.hypot(*error) < 0.03
+                               else "not on target")
                 result = {"outcome": outcome, "spot": spot, "z": round(z, 3),
                           "pitch_deg": round(math.degrees(pitch))}
+                if body.color:
+                    result["error_radial_side"] = error
             self._audit("arm_place", result["outcome"], result)
             return result
 
