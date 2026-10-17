@@ -449,6 +449,7 @@ class GatewaySkills:
         result = {"map": name, "extended_existing": existing,
                   "explored_minutes": round((time.monotonic() - started) / 60.0, 1),
                   "explore_end": (status.get("finished") or {}).get("reason", "unknown"),
+                  "frontier_rejections": status.get("rejections", []),
                   "saved": saved}
         if not saved.get("success"):
             result["navigation"] = "not switched: map save failed"

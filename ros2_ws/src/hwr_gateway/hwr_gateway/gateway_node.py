@@ -884,6 +884,7 @@ class GatewayNode(Node):
         def explore_status():
             journal = HWR_ROOT / "state" / "exploration.jsonl"
             last_start = last_finish = None
+            rejections, detail = [], None
             if journal.exists():
                 with journal.open("rb") as stream:
                     stream.seek(max(0, journal.stat().st_size - 200_000))
@@ -892,12 +893,27 @@ class GatewayNode(Node):
                             event = json.loads(line)
                         except ValueError:
                             continue
-                        if event.get("event") == "session_started":
+                        name = event.get("event")
+                        if name == "session_started":
                             last_start, last_finish = event, None
-                        elif event.get("event") == "session_finished":
+                            rejections, detail = [], None
+                        elif name == "session_finished":
                             last_finish = event
+                        elif name == "semantic_preflight_rejected":
+                            report = event.get("report") or {}
+                            detail = {"reasons": report.get("reasons", []),
+                                      "rationale": (report.get("assessment") or {}).get("rationale", "")}
+                        elif name == "floor_support_rejected":
+                            detail = {"reasons": event.get("reasons", [])}
+                        elif name == "frontier_failed":
+                            # Journaled right after its preflight event, so the detail belongs to it.
+                            rejections.append({"frontier_goal": event.get("frontier_goal"),
+                                               "waypoint": event.get("waypoint"),
+                                               "reason": event.get("reason"), "detail": detail})
+                            detail = None
             return {"running": last_start is not None and last_finish is None,
-                    "started": last_start, "finished": last_finish}
+                    "started": last_start, "finished": last_finish,
+                    "rejections": rejections[-20:]}
 
         @app.post("/stop", dependencies=[Depends(auth)])
         def stop():
