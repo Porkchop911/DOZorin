@@ -126,6 +126,8 @@ at zero velocity and a named arm pose.
 | S5 #3 | FAIL: red on blue OK; then green placed "not on target"/"out of reach" 7x over 368 s. Cause (user): the body turned while the arm was in look_down holding green at stack height -> swept the 2-stack over. Fix: `_into_reach` lifts the arm to forward before every turn/creep |
 | S5 #4 | FAIL: green held; strafe + 36 deg turn toward the blue base lost it ("target not seen"), then set down / re-pick / lost 3x for 90 s; camera disconnected twice -> lidar stale -> estop. Fix: stop when a place fails the same way twice |
 | S5 #5 | FAIL (USB hub 1-2.1 reset, error -71: camera + lidar drop together, 15 resets since boot incl. idle) - hardware. Same loop as #4 before it: turn undershot, the base seen 6 cm left of the odometry estimate was treated as a blocker -> strafed away from it -> "target not seen" -> set down in front -> re-picked (nearest cube). Fix: `_into_reach(target=)` re-spots on the live detection and never counts its own target as a blocker |
+| hub | user re-seated; 3 min arm cycling + S6 #1: 0 hub resets |
+| S6 #1 | FAIL: green on blue placed 9 mm off (passed the 1.5 cm check); red placed centred on green (user) -> tower toppled. Fix: a place > 6 mm off that will carry another cube is re-picked from the stack and re-placed once |
 
 Open: re-run cycles with re-grip + farthest base; vision_node does not recover from a camera reconnect; supervisor does not release its estop after a lidar respawn (manual reset twice); B2 still not accepted.
 

@@ -597,3 +597,18 @@ def test_into_reach_never_detours_around_its_own_target(monkeypatch):
     skills.find_cubes = lambda: {"cubes": [{"color": "blue", "x": 0.225, "y": 0.063}]}
     skills._into_reach({"x": 0.29, "y": 0.08}, held="red", target="blue")
     assert ("move", "right") not in calls and ("move", "left") not in calls
+
+
+def test_stack_cubes_redoes_an_off_centre_place_that_will_carry_another(monkeypatch):
+    monkeypatch.setattr("hwr_agent.skills.time.sleep", lambda s: None)
+    skills = GatewaySkills(token="t")
+    skills.turn = lambda degrees: None
+    held = {"outcome": "holding", "pitch_deg": -90}
+    fake = FakeArm(skills, CUBES, [held] * 3,
+                   [{"outcome": "placed", "error_radial_side": [0.0, -0.009]},  # S6 #1: 9 mm off
+                    {"outcome": "placed", "error_radial_side": [0.0, 0.002]},
+                    {"outcome": "placed", "error_radial_side": [0.0, -0.009]}],  # top: no redo
+                   final=[{"color": "green", "x": 0.3, "y": 0.0}])
+    result = skills.stack_cubes()
+    picks = [payload for path, payload in fake.calls if path == "/arm/pick"]
+    assert len(picks) == 3 and picks[1]["level"] == 1 and len(result["stack"]) == 3
