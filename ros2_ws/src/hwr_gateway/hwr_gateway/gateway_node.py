@@ -123,6 +123,7 @@ class ApproachRequest(BaseModel):
 class FindRequest(BaseModel):
     view: str = "look_down"    # "floor" sees ~1 m out (coarser): for searching, not grasping
     level: int = 0             # locate on the mid-plane of a cube with this many cubes under it
+    pan_deg: float = 0.0       # swing the arm (servo 1) sideways to look without moving the body
 
 
 class PickRequest(BaseModel):
@@ -1185,9 +1186,13 @@ class GatewayNode(Node):
                 time.sleep(0.1)
             raise HTTPException(503, "vision stale")
 
-        def find(color, plane_z: float, view: str = "look_down") -> list:
+        def find(color, plane_z: float, view: str = "look_down", pan_deg: float = 0.0) -> list:
             """look_down (or floor), settle, then base-frame cubes (largest blob per colour first)."""
             pose(view, 2.0)
+            if pan_deg:  # keep the view's tilt; locate_cube reads the panned joints back
+                tilt = math.radians(0.24) * (arm_config["poses"][view][4] - 300)
+                arm_do(self.arm_aim, AimCamera.Request(bearing=math.radians(pan_deg), elevation=tilt,
+                                                       duration_ms=800), 1.2)
             blobs, k = fresh_cubes(time.time())
             joints = pulses_to_joints(arm_pulses())
             out = []
@@ -1206,7 +1211,9 @@ class GatewayNode(Node):
                 raise HTTPException(422, "view must be look_down or floor")
             if not 0 <= body.level <= 3:
                 raise HTTPException(422, "level must be 0..3")
-            cubes = find(None, size * body.level + size / 2, body.view)
+            if not abs(body.pan_deg) <= 60:
+                raise HTTPException(422, "pan_deg must be -60..60")
+            cubes = find(None, size * body.level + size / 2, body.view, body.pan_deg)
             self._audit("arm_find_cubes", "done", {"cubes": cubes})
             return {"cubes": cubes}
 

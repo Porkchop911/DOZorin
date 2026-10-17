@@ -34,6 +34,10 @@ def find_color_blobs(bgr: np.ndarray, ranges: dict, min_area: float = 150.0,
             if area / max(hull, 1.0) < 0.75 or max(width, height) > 2.2 * max(min(width, height), 1.0):
                 continue
             x, y, w, h = cv2.boundingRect(contour)
+            # Touching the image top: wall/background beyond the floor (live: a bluish wall corner
+            # read blue in the floor view), or a cut-off cube whose centre would be wrong anyway.
+            if y == 0:
+                continue
             moments = cv2.moments(contour)
             # The camera rides on the gripper: jaws + plate always fill the bottom ~60 px and read
             # blue/green-ish (2026-10-17). A cube that low is under the jaws anyway.

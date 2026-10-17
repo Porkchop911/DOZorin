@@ -1,3 +1,4 @@
+import math
 import importlib.util
 import json
 import pathlib
@@ -451,17 +452,32 @@ def test_stack_cubes_searches_around_for_cubes_out_of_view():
     skills.turn = lambda degrees: turns.append(degrees)
     seen = {"n": 0}
 
-    def view(payload):  # only red in front; green + blue show up in the floor view after 2 turns
+    def view(payload):  # only red in front; green + blue show up in the floor view after 1 turn
         if payload["view"] == "floor":
             seen["n"] += 1
-            return [c for c in CUBES if c["color"] != "red"] if seen["n"] >= 3 else []
+            return [c for c in CUBES if c["color"] != "red"] if seen["n"] >= 4 else []
         return [CUBES[0]]
 
     fake = FakeArm(skills, view, [{"outcome": "holding", "pitch_deg": -80}] * 2, [{"outcome": "placed"}] * 2,
                    final=[{"color": "green", "x": 0.3, "y": 0.0}])
     result = skills.stack_cubes()
-    assert turns[:2] == [60, 60] and result["outcome"] == "stacked"
-    assert ("/arm/find_cubes", {"view": "floor"}) in fake.calls
+    assert turns == [120] and result["outcome"] == "stacked"
+    floor = [p.get("pan_deg", 0) for path, p in fake.calls if path == "/arm/find_cubes" and p["view"] == "floor"]
+    assert floor == [0, 50, -50] * 2  # the arm sweeps before the body turns
+
+
+def test_look_around_swings_the_arm_and_stops_when_the_target_is_seen(monkeypatch):
+    monkeypatch.setattr("hwr_agent.skills.time.sleep", lambda s: None)
+    skills = GatewaySkills(token="t")
+    aims, poses = [], []
+    skills.arm_aim = lambda bearing, elevation=0.0: aims.append(round(math.degrees(bearing)))
+    skills.arm_pose = poses.append
+    skills.drive = skills.turn = skills.move = lambda *a, **k: pytest.fail("the body moved")
+    frames = [[], [{"class": "bottle", "bearing_deg": -10.0}]]
+    skills._get = lambda path: {"objects": frames.pop(0)}
+    result = skills.look_around("bottle")
+    assert aims == [0, 50] and poses == ["forward"]
+    assert result["target_seen"] and result["found"][0]["bearing_deg"] == 40.0
 
 
 def test_stack_cubes_looks_up_before_turning():

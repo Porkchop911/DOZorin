@@ -36,3 +36,14 @@ def test_live_frames_two_lamps():
         blobs = find_color_blobs(cv2.imread(str(root / f"evidence/phase14/{name}.jpg")), ranges)
         assert sorted(b["class"] for b in blobs) == (
             ["blue_cube", "green_cube", "red_cube"] if expected else []), name
+
+
+def test_wall_at_the_image_top_is_not_a_cube():
+    # Floor view 2026-10-17 evening: the bluish wall corner (top left) read as a 5000 px blue cube.
+    import pathlib
+    import cv2
+    import yaml
+    root = pathlib.Path(__file__).resolve().parents[2]
+    ranges = yaml.safe_load((root / "ros2_ws/src/hwr_arm/config/poses.yaml").read_text())["cubes"]
+    blobs = find_color_blobs(cv2.imread(str(root / "evidence/phase14/wall_blue1.jpg")), ranges)
+    assert sorted(b["class"] for b in blobs) == ["green_cube", "red_cube"]

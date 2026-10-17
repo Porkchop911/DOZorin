@@ -467,11 +467,44 @@ class GatewaySkills:
 
     CUBE_COLORS = ("red", "green", "blue")
 
-    def find_cubes(self, view: str = "look_down", level: int = 0):
+    def find_cubes(self, view: str = "look_down", level: int = 0, pan_deg: float = 0.0):
         if view not in ("look_down", "floor"):
             raise ValueError("view must be look_down or floor")
-        payload = {"view": view, **({"level": int(level)} if level else {})}
-        return self._motion("look for cubes", "/arm/find_cubes", payload, 10.0)
+        if not abs(float(pan_deg)) <= 60:
+            raise ValueError("pan_deg must be -60..60")
+        payload = {"view": view, **({"level": int(level)} if level else {}),
+                   **({"pan_deg": float(pan_deg)} if pan_deg else {})}
+        return self._motion("look for cubes", "/arm/find_cubes", payload, 12.0)
+
+    def look_around(self, target: str | None = None, view: str = "floor", pans=(0, 50, -50)):
+        """Search by swinging the arm (camera) left/right; the body stays put. Cubes come back in
+        the base frame (first sighting per colour); any other target is matched against the
+        YOLO classes with bearing = arm pan + bearing in the image. Stops early once `target`
+        is seen, then re-centres the arm."""
+        if self.dry_run:
+            return {"dry_run": True, "would": f"look around for {target or 'cubes'}"}
+        cube = target is None or target in self.CUBE_COLORS
+        found = {}
+        for pan in pans:
+            if cube:
+                for c in self.find_cubes(view, pan_deg=pan).get("cubes", []):
+                    found.setdefault(c["color"], {**c, "pan_deg": pan})
+            else:
+                self.arm_aim(math.radians(pan))
+                time.sleep(1.2)  # fresh detections after the swing
+                try:
+                    objects = self._get("/vision/objects")["objects"]
+                except RuntimeError:
+                    objects = []
+                for o in objects:
+                    if o["class"] == target:
+                        found.setdefault(target, {**o, "bearing_deg": pan + (o.get("bearing_deg") or 0.0),
+                                                  "pan_deg": pan})
+            if target in found or len(found) == len(self.CUBE_COLORS):
+                break
+        if pan:
+            self.arm_pose("forward")
+        return {"found": list(found.values()), "target_seen": None if target is None else target in found}
 
     def pick(self, color: str, level: int = 0):
         if color not in self.CUBE_COLORS:
@@ -630,13 +663,13 @@ class GatewaySkills:
 
         stack = []
         pose = look()
-        for i in range(7):  # search: floor view (~1 m out) here first, then in 60 deg turns
+        for i in range(3):  # search: the arm sweeps the floor view (~1 m out, +-80 deg) here, then the body turns
             if set(order or self.CUBE_COLORS) <= set(world):
                 break
             if i:
-                self.turn(60)
+                self.turn(120)
                 pose = self._pose()
-            for cube in self.find_cubes("floor").get("cubes", []):
+            for cube in self.look_around()["found"]:
                 world.setdefault(cube["color"], self._to_world(pose, cube))
         wanted = order or sorted(world)
         if len(wanted) < 2 or not set(wanted) <= set(world):
@@ -831,7 +864,7 @@ class GatewaySkills:
                    "drive", "arm_aim", "arm_reach", "gripper",
                    "say", "seen_objects", "wander", "turn", "move",
                    "approach", "roam_step", "map_room", "use_map", "list_maps",
-                   "find_cubes", "pick", "place", "follow", "stack_cubes",
+                   "find_cubes", "look_around", "pick", "place", "follow", "stack_cubes",
                    "unstack_cubes", "mark_place", "list_places"}
         if name not in allowed:
             raise ValueError(f"unknown skill {name!r}")

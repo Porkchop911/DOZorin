@@ -141,7 +141,7 @@ class CameraAim:
 
     def __init__(self, pan_center: int = 500, tilt_forward: int = 300,
                  max_bearing: float = math.radians(60.0),
-                 min_elevation: float = math.radians(-50.0),
+                 min_elevation: float = math.radians(-61.0),  # look_down tilt (pulse 50) is -60
                  max_elevation: float = math.radians(48.0)):
         self.pan_center = pan_center
         self.tilt_forward = tilt_forward
