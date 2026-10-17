@@ -466,8 +466,10 @@ class GatewaySkills:
 
     CUBE_COLORS = ("red", "green", "blue")
 
-    def find_cubes(self):
-        return self._motion("look down for cubes", "/arm/find_cubes", {}, 10.0)
+    def find_cubes(self, view: str = "look_down"):
+        if view not in ("look_down", "floor"):
+            raise ValueError("view must be look_down or floor")
+        return self._motion("look for cubes", "/arm/find_cubes", {"view": view}, 10.0)
 
     def pick(self, color: str, level: int = 0):
         if color not in self.CUBE_COLORS:
@@ -598,9 +600,17 @@ class GatewaySkills:
 
         stack = []
         pose = look()
+        for _ in range(6):  # search: turn in 60 deg steps looking ~1 m out
+            if set(order or self.CUBE_COLORS) <= set(world):
+                break
+            self.turn(60)
+            pose = self._pose()
+            for cube in self.find_cubes("floor").get("cubes", []):
+                world.setdefault(cube["color"], self._to_world(pose, cube))
         wanted = order or sorted(world)
-        if not set(wanted) <= set(world):
-            return {"outcome": f"cubes not seen: {sorted(set(wanted) - set(world))}", "log": log}
+        if len(wanted) < 2 or not set(wanted) <= set(world):
+            return {"outcome": f"cubes not seen: {sorted(set(order or self.CUBE_COLORS) - set(world))}",
+                    "log": log}
         base = order[0] if order else min(wanted, key=lambda c: math.hypot(
             self._to_base(pose, world[c])["x"] - 0.22, self._to_base(pose, world[c])["y"]))
         stack, stack_xy = [base], world.pop(base)
@@ -613,8 +623,9 @@ class GatewaySkills:
             color = todo[0] if order else min(
                 todo, key=lambda c: math.hypot(*self._to_base(pose, world[c]).values()))
             picked = self.pick(color)
-            if picked.get("outcome") == "not seen" and color in world:
-                self._into_reach(self._to_base(pose, world[color]), reach_x=0.22)
+            for _ in range(4):  # far (found by the search): creep up in capped steps
+                if picked.get("outcome") != "not seen" or color not in world or                         not self._into_reach(self._to_base(self._pose(), world[color]), reach_x=0.22):
+                    break
                 picked = self.pick(color)
             log.append({"pick": color, **picked})
             if picked.get("outcome") != "holding":

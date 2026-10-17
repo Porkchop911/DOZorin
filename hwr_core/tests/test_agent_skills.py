@@ -321,7 +321,8 @@ class FakeArm:
     def motion(self, description, path, payload, seconds):
         self.calls.append((path, payload))
         if path == "/arm/find_cubes":
-            return {"cubes": [dict(c) for c in self.cubes]}
+            cubes = self.cubes(payload) if callable(self.cubes) else self.cubes
+            return {"cubes": [dict(c) for c in cubes]}
         if path == "/arm/pick":
             return dict(self.picks.pop(0))
         if path == "/arm/place":
@@ -434,3 +435,21 @@ def test_into_reach_strafes_around_a_cube_in_the_way(monkeypatch):
     assert calls == [("move", 0.16, "left"), ("drive", 0.22)]
     assert skills_mod._detour({"x": 0.36, "y": 0.0}, [{"x": 0.2, "y": 0.0}]) == 0.16
     assert skills_mod._detour({"x": 0.36, "y": 0.0}, [{"x": 0.2, "y": 0.1}, {"x": 0.2, "y": -0.1}]) is None
+
+
+def test_stack_cubes_searches_around_for_cubes_out_of_view():
+    skills = GatewaySkills(token="t")
+    turns = []
+    skills.turn = lambda degrees: turns.append(degrees)
+    seen = {"n": 0}
+
+    def view(payload):  # only red in front; green + blue show up in the floor view after 2 turns
+        if payload["view"] == "floor":
+            seen["n"] += 1
+            return [c for c in CUBES if c["color"] != "red"] if seen["n"] >= 2 else []
+        return [CUBES[0]]
+
+    fake = FakeArm(skills, view, [{"outcome": "holding", "pitch_deg": -80}] * 2, [{"outcome": "placed"}] * 2)
+    result = skills.stack_cubes()
+    assert turns[:2] == [60, 60] and result["outcome"] == "stacked"
+    assert ("/arm/find_cubes", {"view": "floor"}) in fake.calls

@@ -115,6 +115,10 @@ class ApproachRequest(BaseModel):
     timeout_s: float = 30.0
 
 
+class FindRequest(BaseModel):
+    view: str = "look_down"    # "floor" sees ~1 m out (coarser): for searching, not grasping
+
+
 class PickRequest(BaseModel):
     color: str
     level: int = 0             # cubes under it (0 = on the floor, 2 = top of a 3-stack)
@@ -1110,9 +1114,9 @@ class GatewayNode(Node):
                 time.sleep(0.1)
             raise HTTPException(503, "vision stale")
 
-        def find(color, plane_z: float) -> list:
-            """look_down, settle, then base-frame cubes (largest blob per colour first)."""
-            pose("look_down", 2.0)
+        def find(color, plane_z: float, view: str = "look_down") -> list:
+            """look_down (or floor), settle, then base-frame cubes (largest blob per colour first)."""
+            pose(view, 2.0)
             blobs, k = fresh_cubes(time.time())
             joints = pulses_to_joints(arm_pulses())
             out = []
@@ -1126,8 +1130,10 @@ class GatewayNode(Node):
             return out
 
         @app.post("/arm/find_cubes", dependencies=[Depends(auth)])
-        def arm_find_cubes():
-            cubes = find(None, size / 2)
+        def arm_find_cubes(body: FindRequest = FindRequest()):
+            if body.view not in ("look_down", "floor"):
+                raise HTTPException(422, "view must be look_down or floor")
+            cubes = find(None, size / 2, body.view)
             self._audit("arm_find_cubes", "done", {"cubes": cubes})
             return {"cubes": cubes}
 
