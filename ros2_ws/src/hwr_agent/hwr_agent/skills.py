@@ -637,21 +637,18 @@ class GatewaySkills:
         elif at - 0.20 > 0.03:
             self.move(at - 0.20)
 
-    def _to_base(self, point):
-        x, y, yaw = self._get("/status")["pose"]
-        dx, dy = point[0] - x, point[1] - y
-        return (dx * math.cos(yaw) + dy * math.sin(yaw), -dx * math.sin(yaw) + dy * math.cos(yaw))
-
     def _drive_near(self, point, stop_at: float):
         """Face a map point and drive until it is ~stop_at ahead, as far as the costmap allows.
         Returns the remaining base-frame distance."""
-        x, y = self._to_base(point)
+        # Map pose, not _pose() (odometry): the truck point is a map-frame place.
+        here = lambda: tuple(self._to_base(self._get("/status")["pose"], point).values())  # noqa: E731
+        x, y = here()
         if abs(math.degrees(math.atan2(y, x))) >= 5.0:
             self.turn(math.degrees(math.atan2(y, x)))
-        distance = math.hypot(*self._to_base(point))
+        distance = math.hypot(*here())
         if distance - stop_at > 0.03:
             self._advance(distance - stop_at, distance)
-        return self._to_base(point)
+        return here()
 
     def sockmark(self, max_socks: int = 6, truck: str = "toy truck"):
         """Put the socks in the toy truck (plan/19). The truck is found first, with nothing held:
