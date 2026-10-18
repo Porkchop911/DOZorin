@@ -539,12 +539,13 @@ class GatewaySkills:
     # (pan, elevation) deg: floor ahead first (0.2-0.6 m), then the room (plan/19).
     SEARCH_VIEWS = ((0, -40), (50, -40), (-50, -40), (0, 0), (50, 0), (-50, 0))
 
-    def find_on_floor(self, label: str = "sock", views=((0, -40),), plane_z: float = 0.0):
+    def find_on_floor(self, label: str = "sock", views=((0, -40),), plane_z: float = 0.0,
+                      tries: int = 1):
         """VLM-grounded search (no YOLO class for socks): each view -> boxes -> points on the
         plane z = plane_z (base and map frame). Stops at the first view with a hit."""
         if self.dry_run:
             return {"dry_run": True, "would": f"find {label} on the floor"}
-        for pan, elevation in views:
+        for (pan, elevation), _ in ((view, n) for view in views for n in range(tries)):
             self.arm_aim(math.radians(pan), math.radians(elevation))
             time.sleep(1.5)
             image = self._get("/snapshot", binary=True)
@@ -587,7 +588,7 @@ class GatewaySkills:
                     self.back(min(0.15, reach_x + 0.02 - distance))
                 except RuntimeError:
                     return None
-                found = keep(self.find_on_floor(label, near, plane_z))
+                found = keep(self.find_on_floor(label, near, plane_z, tries=2))
                 if not found:
                     return None
                 continue
@@ -600,7 +601,7 @@ class GatewaySkills:
             step = distance - reach_x - (0.10 if distance > reach_x + 0.15 else 0.0)
             if step > 0.02:
                 self._advance(min(step, 1.5), distance)
-            found = keep(self.find_on_floor(label, near + self.SEARCH_VIEWS[1:3], plane_z))
+            found = keep(self.find_on_floor(label, near + self.SEARCH_VIEWS[1:3], plane_z, tries=2))
             if not found:
                 return None
         return None
