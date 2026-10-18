@@ -698,7 +698,8 @@ def test_sockmark_finds_the_truck_first_then_carries_each_lifted_sock_to_it(monk
     monkeypatch.setattr(skills, "_act", lambda d, path, payload=None: calls.append(path) or {})
     monkeypatch.setattr(skills, "_motion", lambda d, path, payload, s: calls.append(path) or (
         {"outcome": "lifted"} if path == "/arm/pick_at" else {"outcome": "placed"}))
-    still = iter([[], [{"base": [0.21, 0.02]}]])  # 1st sock gone after the pick, 2nd still there
+    # 1st: only the held sock in view (hanging, z 0.18) = a good pick; 2nd: still on the floor
+    still = iter([[{"base": [0.2, 0.0], "z": 0.18}], [{"base": [0.21, 0.02], "z": 0.0}]])
     monkeypatch.setattr(skills, "find_on_floor", lambda label="sock", views=None, plane_z=0.0: next(still))
     monkeypatch.setattr(skills, "_drive_near", lambda point, stop_at: (0.26, 0.0))
     monkeypatch.setattr(skills, "gripper", lambda c: None)

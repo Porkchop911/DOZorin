@@ -985,15 +985,17 @@ class GatewayNode(Node):
                 below = None if depth is None else depth_below(depth, u, v, color_shape)
                 if below is not None:
                     v, distance = below
-                    bx, by, _ = self.kin.pixel_to_point(u, v, tuple(frame["k"]), joints, distance)
+                    bx, by, bz = self.kin.pixel_to_point(u, v, tuple(frame["k"]), joints, distance)
                     hit, source = (bx, by), "depth"
                 else:
                     hit = self.kin.pixel_to_plane(u, v, tuple(frame["k"]), joints, body.plane_z)
-                    source = "plane"
+                    source, bz = "plane", body.plane_z
                 if hit is None:
                     points.append(None)
                     continue
-                point = {"base": [round(hit[0], 3), round(hit[1], 3)], "source": source}
+                # z tells a held (hanging) sock from one on the floor (plan/19).
+                point = {"base": [round(hit[0], 3), round(hit[1], 3)], "z": round(bz, 3),
+                         "source": source}
                 if pose is not None:
                     c, s_ = math.cos(pose[2]), math.sin(pose[2])
                     point["map"] = [round(pose[0] + hit[0] * c - hit[1] * s_, 3),

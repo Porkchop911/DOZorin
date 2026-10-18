@@ -677,7 +677,9 @@ class GatewaySkills:
             if pick.get("outcome") != "lifted":
                 misses += 1
                 continue
-            left = [f for f in self.find_on_floor("sock") if math.hypot(
+            # Only socks on the floor: the held one hangs in view, and counting it as "left" opened
+            # the jaws on 3 good picks (readback 648-651 = held, live 2026-10-18).
+            left = [f for f in self.find_on_floor("sock") if f.get("z", 0.0) < 0.04 and math.hypot(
                 f["base"][0] - sock["x"], f["base"][1] - sock["y"]) < 0.06]
             if left:
                 entry["pick"], misses = "missed", misses + 1
