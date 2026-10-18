@@ -698,8 +698,10 @@ class GatewaySkills:
         self._drive_near(truck_map, stop_at=0.36)
         # Beside the path, not in front: 4 creeps (~0.25 m) drove over a sock set down at 0.27 m ahead
         # (live 2026-10-18). Total creep stays within what keeps it >= 0.19 m out for the re-pick.
-        aside = (0.25, 0.17)
-        self._motion("set the sock down", "/arm/place", {"x": aside[0], "y": aside[1], "z": 0.03}, 20.0)
+        aside = (0.23, 0.15)  # (0.25, 0.17) is out of reach at z 0.03 (live 2026-10-18)
+        down = self._motion("set the sock down", "/arm/place", {"x": aside[0], "y": aside[1], "z": 0.03}, 20.0)
+        if down.get("outcome") != "placed":
+            return {"placed": False, "why": f"set-down {down.get('outcome')} (still holding the sock)"}
         budget = aside[0] - math.sqrt(max(0.19 ** 2 - aside[1] ** 2, 0.0)) - 0.01
         centre, crept, rounds = None, 0.0, []
         for _ in range(4):
