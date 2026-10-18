@@ -688,19 +688,38 @@ def test_anchor_places_looks_up_then_restores_forward(monkeypatch):
     assert calls == [("/arm/pose", "ceiling"), ("/places/anchor", None), ("/arm/pose", "forward")]
 
 
-def test_sockmark_places_a_lifted_sock_and_counts_a_sock_left_behind_as_missed(monkeypatch):
+def test_sockmark_finds_the_truck_first_then_carries_each_lifted_sock_to_it(monkeypatch):
     skills = GatewaySkills(token="test")
+    monkeypatch.setattr("time.sleep", lambda s: None)
+    monkeypatch.setattr(skills, "_find_anywhere", lambda label, plane_z=0.0: {"map": [1.0, 2.0]})
     socks = iter([{"x": 0.2, "y": 0.0}, {"x": 0.21, "y": 0.01}, None])
-    monkeypatch.setattr(skills, "_approach", lambda label, plane_z=0.0, reach_x=0.205:
-                        next(socks) if label == "sock" else {"x": 0.21, "y": 0.0})
+    monkeypatch.setattr(skills, "_approach", lambda label, plane_z=0.0, reach_x=0.205: next(socks))
     calls = []
+    monkeypatch.setattr(skills, "_act", lambda d, path, payload=None: calls.append(path) or {})
     monkeypatch.setattr(skills, "_motion", lambda d, path, payload, s: calls.append(path) or (
         {"outcome": "lifted"} if path == "/arm/pick_at" else {"outcome": "placed"}))
     still = iter([[], [{"base": [0.21, 0.02]}]])  # 1st sock gone after the pick, 2nd still there
     monkeypatch.setattr(skills, "find_on_floor", lambda label="sock", views=None, plane_z=0.0: next(still))
+    monkeypatch.setattr(skills, "_drive_near", lambda point, stop_at: (0.26, 0.0))
     monkeypatch.setattr(skills, "gripper", lambda c: None)
-    monkeypatch.setattr(skills, "arm_pose", lambda n: None)
+    poses = []
+    monkeypatch.setattr(skills, "arm_pose", lambda n: poses.append(n))
     result = skills.sockmark()
     assert result["placed"] == 1 and result["attempts"] == 2
     assert [e["pick"] for e in result["log"]] == ["lifted", "missed"]
-    assert calls == ["/arm/pick_at", "/arm/place", "/arm/pick_at"]
+    assert calls == ["/places/anchor", "/arm/pick_at", "/arm/place", "/arm/pick_at"]
+    assert poses == ["carry", "forward"]  # carried raised, then back to forward
+
+
+def test_sockmark_stops_holding_when_the_truck_is_out_of_reach(monkeypatch):
+    skills = GatewaySkills(token="test")
+    monkeypatch.setattr("time.sleep", lambda s: None)
+    monkeypatch.setattr(skills, "_find_anywhere", lambda label, plane_z=0.0: {"map": [1.0, 2.0]})
+    monkeypatch.setattr(skills, "_approach", lambda label, plane_z=0.0, reach_x=0.205: {"x": 0.2, "y": 0.0})
+    monkeypatch.setattr(skills, "_act", lambda d, path, payload=None: {})
+    monkeypatch.setattr(skills, "_motion", lambda d, path, payload, s: {"outcome": "lifted"})
+    monkeypatch.setattr(skills, "find_on_floor", lambda label="sock", views=None, plane_z=0.0: [])
+    monkeypatch.setattr(skills, "_drive_near", lambda point, stop_at: (0.45, 0.0))
+    monkeypatch.setattr(skills, "arm_pose", lambda n: None)
+    result = skills.sockmark()
+    assert result["placed"] == 0 and "out of reach" in result["stopped"]

@@ -31,8 +31,8 @@ def parse_grounding(text: str, width: int, height: int, bottom: float = 0.07) ->
     """VLM grounding reply ([{"label", "point_2d" or "bbox_2d": 0-1000}], ``` fences allowed) ->
     pixel `center` (the point, or the box centre) and `box` when given.
 
-    Hits in the bottom `bottom` of the image are dropped: the gripper fingertips sit there and read
-    as a sock (live 2026-10-18)."""
+    Hits centred on the fingertips (bottom-centre strip) are dropped: they read as a sock (live
+    2026-10-18)."""
     start, end = text.find("["), text.rfind("]")
     if start < 0 or end < start:
         return []
@@ -56,7 +56,11 @@ def parse_grounding(text: str, width: int, height: int, bottom: float = 0.07) ->
         if numbers(item.get("point_2d"), 2):
             hit["center"] = [round(item["point_2d"][0] * width / 1000),
                              round(item["point_2d"][1] * height / 1000)]
-        if "center" not in hit or (hit.get("box", hit["center"])[-1] >= height * (1 - bottom)):
+        if "center" not in hit:
+            continue
+        cx, cy = hit["center"]
+        # Only the fingertips' patch (bottom centre): a truck at the bottom edge is real (2026-10-18).
+        if cy >= height * (1 - bottom) * 0.97 and 0.4 * width <= cx <= 0.75 * width:
             continue
         found.append(hit)
     return found

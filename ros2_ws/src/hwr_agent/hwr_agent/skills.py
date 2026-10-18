@@ -593,15 +593,57 @@ class GatewaySkills:
                 return None
         return None
 
+    def _find_anywhere(self, label: str, plane_z: float = 0.0):
+        """Arm sweep, then up to 3 body turns of 120 deg; nearest hit or None."""
+        for turns in range(4):
+            found = self.find_on_floor(label, self.SEARCH_VIEWS, plane_z)
+            if found:
+                return found[0]
+            if turns < 3:
+                self._arm_clear()
+                self.turn(120)
+        return None
+
+    def _to_base(self, point):
+        x, y, yaw = self._get("/status")["pose"]
+        dx, dy = point[0] - x, point[1] - y
+        return (dx * math.cos(yaw) + dy * math.sin(yaw), -dx * math.sin(yaw) + dy * math.cos(yaw))
+
+    def _drive_near(self, point, stop_at: float):
+        """Face a map point and drive until it is ~stop_at ahead, as far as the costmap allows.
+        Returns the remaining base-frame distance."""
+        x, y = self._to_base(point)
+        if abs(math.degrees(math.atan2(y, x))) >= 5.0:
+            self.turn(math.degrees(math.atan2(y, x)))
+        step = math.hypot(*self._to_base(point)) - stop_at
+        if step > 0.03:
+            try:
+                self.move(min(step, 2.0))
+            except RuntimeError as exc:
+                blocked = re.search(r"blocked in costmap at ([0-9.]+) m", str(exc))
+                if not blocked:
+                    raise
+                # shortcut: 0.20 m guesses the gateway's move clearance; read it if this stops short.
+                if float(blocked.group(1)) - 0.20 > 0.03:
+                    self.move(float(blocked.group(1)) - 0.20)
+        return self._to_base(point)
+
     def sockmark(self, max_socks: int = 6, truck: str = "toy truck"):
-        """Find the socks, pick each one and drop it in the toy truck (plan/19). A pick counts when
-        the sock is gone from its spot afterwards (soft: the gripper readback can't tell)."""
+        """Put the socks in the toy truck (plan/19). The truck is found first, with nothing held:
+        a held sock covers the bottom of the image where the truck would be (live 2026-10-18).
+        Socks are carried in the raised `carry` pose (the low arm dragged them)."""
         if self.dry_run:
             return {"dry_run": True, "would": f"put up to {max_socks} socks in the {truck}"}
-        log, misses = [], 0
+        seen = self._find_anywhere(truck, plane_z=0.05)
+        if seen is None or "map" not in seen:
+            return {"placed": 0, "attempts": 0, "log": [], "stopped": f"{truck} not found"}
+        truck_map = seen["map"]
+        self._act(f"remember the {truck}", "/places/anchor", {"cls": truck, "point": truck_map})
+        log, misses, stopped = [], 0, None
         while len([e for e in log if e.get("placed")]) < max_socks and misses < 3:
             sock = self._approach("sock")
             if sock is None:
+                stopped = "no more socks found"
                 break
             pick = self._motion("pick the sock", "/arm/pick_at",
                                 {"x": sock["x"], "y": sock["y"], "z": 0.0}, 20.0)
@@ -616,16 +658,20 @@ class GatewaySkills:
                 entry["pick"], misses = "missed", misses + 1
                 self.gripper("open")
                 continue
-            target = self._approach(truck, plane_z=0.05, reach_x=0.21)
-            if target is None:
-                entry["truck"] = "not found"
+            self.arm_pose("carry")
+            time.sleep(2.0)
+            x, y = self._drive_near(truck_map, stop_at=0.26)
+            entry["truck_base"] = [round(x, 3), round(y, 3)]
+            if math.hypot(x, y) > 0.30:  # drop reach at z 0.14 (-45 deg window) is ~0.305 m
+                stopped = f"{truck} out of reach at {math.hypot(x, y):.2f} m (holding the sock)"
                 break
             place = self._motion("drop the sock in the truck", "/arm/place",
-                                 {"x": target["x"], "y": target["y"], "z": 0.14}, 20.0)
+                                 {"x": x, "y": y, "z": 0.14}, 20.0)
             entry["placed"] = place.get("outcome") == "placed"
             self.arm_pose("forward")
+            time.sleep(2.0)
         placed = sum(1 for e in log if e.get("placed"))
-        return {"placed": placed, "attempts": len(log), "log": log}
+        return {"placed": placed, "attempts": len(log), "log": log, "stopped": stopped}
 
     def pick(self, color: str, level: int = 0):
         if color not in self.CUBE_COLORS:
