@@ -91,3 +91,22 @@ lift check (`_lift_to`) caught it this time and nothing drove. Guards: `pick_at`
 hover after the grasp, else opens at once and returns `pinned`; `_approach` backs off 0.10 m when any
 part of the target is within 0.17 m (under the bumper) before picking.
 Picks this session: 9 held / 11 attempts. Deliveries: 1 (hand-guided last metre).
+
+## Status at end of 2026-10-18 and next session
+
+| Item | State |
+|---|---|
+| Socks in the truck | 1 (last metre hand-guided); 0 by the loop end to end |
+| Sock picks | 9 held / 11 (all holds since `squeeze` 680 + z >= 8 mm) |
+| Truck sightings (4B) | real ones locate to ~7-19 cm; but it invents trucks (sock pile, dark objects at the image edge) ~1 in 4 searches. A crop yes/no check rejected 2/3 real trucks: not usable |
+| Localization | relocalize sometimes flips/shifts (heading -18 vs -143 deg; 0.9 m jumps after restarts): map points from before a restart are not trusted |
+| Truck place | deleted (stale frame); truck now in front of the window, open floor |
+
+Next, in order:
+1. **Truck sighting you can trust.** Options: user confirms the photo once per session (works today);
+   or require 2 sightings from different views within 0.15 m before anchoring.
+2. **Relocalize once at start, never mid-run;** re-find the truck after every stack restart.
+3. **One end-to-end delivery by the loop** with the truck on open floor: carry -> drive near (0.36 m)
+   -> set down beside (0.23, 0.15) -> steep look -> creep (<= budget) -> re-pick -> drop (z 0.12).
+4. Then the acceptance run: all socks in view of the room centre into the truck, counted by the user.
+5. Calibrate the carry-pose camera (read ~0.18 m long) if the drop needs it.
