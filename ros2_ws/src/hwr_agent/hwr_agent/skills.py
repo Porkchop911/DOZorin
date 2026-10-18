@@ -528,11 +528,14 @@ class GatewaySkills:
     # A point on the thing beats a box centre: a diagonal sock's box centre is bare floor (live 2026-10-18).
     # A point on the thing beats a box centre: a diagonal sock's box centre is bare floor; and the
     # 4B VLM called the gripper fingertips socks until told (live 2026-10-18).
-    GROUND_PROMPT = ('Find every {label} in the image. The two dark rounded shapes at the very bottom '
-                     "edge are the robot's own gripper fingertips, not a {label}: ignore them. For each "
-                     '{label}, give one point on the {label} itself, at its widest part, as JSON only: '
-                     '[{{"label": "{label}", "point_2d": [x, y]}}] with coordinates normalised 0-1000. '
-                     'Return [] if there is none.')
+    # Both kinds in one ask, filtered by label: asked for a truck alone with none in view, it named the
+    # sock "toy truck" (live 2026-10-18).
+    GROUND_LABELS = ("sock", "toy truck")
+    GROUND_PROMPT = ('Find every {labels} in the image. The two dark rounded shapes at the very bottom '
+                     "edge are the robot's own gripper fingertips: ignore them. For each object, give "
+                     'its label (one of: {labels}) and one point on the object itself, at its widest '
+                     'part, as JSON only: [{{"label": "...", "point_2d": [x, y]}}] with coordinates '
+                     'normalised 0-1000. Return [] if there is none.')
     # (pan, elevation) deg: floor ahead first (0.2-0.6 m), then the room (plan/19).
     SEARCH_VIEWS = ((0, -40), (50, -40), (-50, -40), (0, 0), (50, 0), (-50, 0))
 
@@ -546,8 +549,10 @@ class GatewaySkills:
             time.sleep(1.5)
             image = self._get("/snapshot", binary=True)
             width, height = Image.open(io.BytesIO(image)).size
-            boxes = parse_grounding(self._ask_vlm(image, self.GROUND_PROMPT.format(label=label)),
-                                    width, height)[:20]  # /vision/locate takes <= 20 (a pile listed more)
+            labels = tuple(dict.fromkeys(self.GROUND_LABELS + (label,)))
+            boxes = [b for b in parse_grounding(self._ask_vlm(
+                image, self.GROUND_PROMPT.format(labels=", ".join(labels))), width, height)
+                if b["label"] == label][:20]  # /vision/locate takes <= 20 (a pile listed more)
             if not boxes:
                 continue
             points = self._act(f"locate {label}", "/vision/locate",
