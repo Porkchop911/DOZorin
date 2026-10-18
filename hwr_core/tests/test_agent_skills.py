@@ -727,7 +727,7 @@ def test_deliver_sets_down_looks_creeps_repicks_and_drops_in_the_bed(monkeypatch
     monkeypatch.setattr(skills, "_arm_clear", lambda: None)
     monkeypatch.setattr(skills, "_drive_near", lambda point, stop_at: (0.5, 0.0))
     sides = iter([[{"base": [0.36, 0.0], "source": "depth"}], [{"base": [0.27, 0.0], "source": "depth"}]])
-    monkeypatch.setattr(skills, "find_on_floor", lambda label, views=None, plane_z=0.0: (
+    monkeypatch.setattr(skills, "find_on_floor", lambda label, views=None, plane_z=0.0, tries=1: (
         next(sides) if label == "toy truck" else [{"base": [0.2, 0.0]}]))
     crept, calls = [], []
     monkeypatch.setattr(skills, "drive", lambda vx, seconds: crept.append(round(vx * seconds, 3)))
@@ -746,7 +746,7 @@ def test_deliver_gives_up_holding_nothing_when_the_truck_is_not_seen_up_close(mo
     monkeypatch.setattr(skills, "_lift_to", lambda pose, seconds=3.0: True)
     monkeypatch.setattr(skills, "_drive_near", lambda point, stop_at: (0.5, 0.0))
     monkeypatch.setattr(skills, "_motion", lambda d, path, payload, s: {"outcome": "placed"})
-    monkeypatch.setattr(skills, "find_on_floor", lambda label, views=None, plane_z=0.0: [])
+    monkeypatch.setattr(skills, "find_on_floor", lambda label, views=None, plane_z=0.0, tries=1: [])
     assert skills._deliver([1.0, 2.0]) == {"placed": False, "why": "toy truck not seen up close"}
 
 
@@ -776,3 +776,21 @@ def test_deliver_never_drives_when_the_arm_did_not_lift(monkeypatch):
     monkeypatch.setattr(skills, "_get", lambda path, binary=False: {"reached": False})
     monkeypatch.setattr(skills, "_drive_near", lambda *a, **k: (_ for _ in ()).throw(AssertionError("drove")))
     assert skills._deliver([1.0, 2.0])["why"].startswith("arm did not reach carry")
+
+
+
+def test_deliver_creeps_only_half_the_gap_on_a_plane_fix(monkeypatch):
+    skills = GatewaySkills(token="test")
+    monkeypatch.setattr("time.sleep", lambda s: None)
+    monkeypatch.setattr(skills, "_lift_to", lambda pose, seconds=3.0: True)
+    monkeypatch.setattr(skills, "_arm_clear", lambda: None)
+    monkeypatch.setattr(skills, "_drive_near", lambda point, stop_at: (0.5, 0.0))
+    sides = iter([[{"base": [0.40, 0.0], "source": "plane"}], [{"base": [0.27, 0.0], "source": "depth"}]])
+    monkeypatch.setattr(skills, "find_on_floor", lambda label, views=None, plane_z=0.0, tries=1: (
+        next(sides) if label == "toy truck" else [{"base": [0.2, 0.0]}]))
+    crept = []
+    monkeypatch.setattr(skills, "drive", lambda vx, seconds: crept.append(round(vx * seconds, 3)))
+    monkeypatch.setattr(skills, "_motion", lambda d, path, payload, s: (
+        {"outcome": "holding"} if path == "/arm/pick_at" else {"outcome": "placed"}))
+    assert skills._deliver([1.0, 2.0])["placed"] is True
+    assert crept == [0.068]  # plane: half of (0.445 - 0.32 + 0.01)

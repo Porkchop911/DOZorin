@@ -693,20 +693,24 @@ class GatewaySkills:
         reach, re-pick and drop it in. The first sock went in exactly this way (2026-10-18)."""
         if not self._lift_to("carry"):
             return {"placed": False, "why": "arm did not reach carry (servo limp or blocked?)"}
-        self._drive_near(truck_map, stop_at=0.55)
+        # 0.36 m: at 0.55 the truck sat at the top of the steep view, outside the depth image, and was
+        # too far to creep to past the set-down sock (live 2026-10-18).
+        self._drive_near(truck_map, stop_at=0.36)
         self._motion("set the sock down", "/arm/place", {"x": 0.27, "y": 0.0, "z": 0.03}, 20.0)
         centre = None
         for _ in range(4):
-            side = [f for f in self.find_on_floor(truck, ((0, -60), (0, -40)), 0.03)
-                    if f.get("source") == "depth"]
-            if not side:
+            seen = self.find_on_floor(truck, ((0, -60), (0, -40)), 0.03, tries=2)
+            if not seen:
                 return {"placed": False, "why": f"{truck} not seen up close"}
+            # Depth = the floor at its near side; a plane fix of a point on its top reads long.
+            side = [f for f in seen if f.get("source") == "depth"] or seen
+            plane = side[0].get("source") != "depth"
             x, y = side[0]["base"]
             distance = math.hypot(x, y)
             # shortcut: assumes the truck sideways (bed across); use its box/heading if it is turned.
             centre = (x * (distance + self.BED_PAST_SIDE) / distance,
                       y * (distance + self.BED_PAST_SIDE) / distance)
-            if math.hypot(*centre) <= self.DROP_REACH:
+            if math.hypot(*centre) <= self.DROP_REACH and not plane:
                 break
             if abs(math.degrees(math.atan2(y, x))) >= 8.0:
                 self._arm_clear()
@@ -714,7 +718,8 @@ class GatewaySkills:
                 continue
             # <= 0.10 m: the sock was set down 0.27 m out and must stay >= 0.19 m to be picked.
             self._arm_clear()
-            self.drive(vx=0.05, seconds=min(math.hypot(*centre) - self.DROP_REACH + 0.01, 0.10) / 0.05)
+            gap = math.hypot(*centre) - self.DROP_REACH + 0.01
+            self.drive(vx=0.05, seconds=max(0.02, min(gap / 2 if plane else gap, 0.10)) / 0.05)
         else:
             return {"placed": False, "why": f"{truck} still out of reach"}
         sock = self.find_on_floor("sock", ((0, -60),))
