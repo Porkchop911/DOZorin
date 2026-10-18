@@ -659,11 +659,16 @@ class GatewaySkills:
         Socks are carried in the raised `carry` pose (the low arm dragged them)."""
         if self.dry_run:
             return {"dry_run": True, "would": f"put up to {max_socks} socks in the {truck}"}
-        seen = self._find_anywhere(truck, plane_z=0.05)
-        if seen is None or "map" not in seen:
-            return {"placed": 0, "attempts": 0, "log": [], "stopped": f"{truck} not found"}
-        truck_map = seen["map"]
-        self._act(f"remember the {truck}", "/places/anchor", {"cls": truck, "point": truck_map})
+        # A remembered truck beats a new sighting: the VLM twice called the sock pile a truck.
+        place = self._get("/places")["places"].get(truck.replace(" ", "_"))
+        if place and "object_x" in place:
+            truck_map = [place["object_x"], place["object_y"]]
+        else:
+            seen = self._find_anywhere(truck, plane_z=0.05)
+            if seen is None or "map" not in seen:
+                return {"placed": 0, "attempts": 0, "log": [], "stopped": f"{truck} not found"}
+            truck_map = seen["map"]
+            self._act(f"remember the {truck}", "/places/anchor", {"cls": truck, "point": truck_map})
         log, misses, stopped = [], 0, None
         while len([e for e in log if e.get("placed")]) < max_socks and misses < 3:
             sock = self._approach("sock")
@@ -674,16 +679,10 @@ class GatewaySkills:
                                 {"x": sock["x"], "y": sock["y"], "z": 0.0}, 20.0)
             entry = {"sock": sock, "pick": pick.get("outcome")}
             log.append(entry)
-            if pick.get("outcome") != "lifted":
+            # The gateway judges by the jaw readback: looking again saw the held sock hanging in view
+            # and dropped 4 good picks (live 2026-10-18).
+            if pick.get("outcome") != "holding":
                 misses += 1
-                continue
-            # Only socks on the floor: the held one hangs in view, and counting it as "left" opened
-            # the jaws on 3 good picks (readback 648-651 = held, live 2026-10-18).
-            left = [f for f in self.find_on_floor("sock") if f.get("z", 0.0) < 0.04 and math.hypot(
-                f["base"][0] - sock["x"], f["base"][1] - sock["y"]) < 0.06]
-            if left:
-                entry["pick"], misses = "missed", misses + 1
-                self.gripper("open")
                 continue
             self.arm_pose("carry")
             time.sleep(2.0)

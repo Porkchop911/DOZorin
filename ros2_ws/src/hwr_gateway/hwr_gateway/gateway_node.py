@@ -885,7 +885,8 @@ class GatewayNode(Node):
             path = active_places_file()
             return {"map": path.name.removesuffix(".places.yaml"),
                     "places": {name: {k: place.get(k) for k in ("kind", "x", "y", "yaw_deg", "verified",
-                                                               "auto", "sightings") if k in place}
+                                                               "auto", "sightings", "object_x",
+                                                               "object_y") if k in place}
                                for name, place in load_places(path).items()}}
 
         @app.post("/places/mark", dependencies=[Depends(auth)])
@@ -1521,9 +1522,13 @@ class GatewayNode(Node):
                 reach(grasp, 800, 1.0)
                 grip("squeeze")
                 reach(hover, 800, 1.0)
-                result = {"outcome": "lifted", "x": body.x, "y": body.y,
-                          "pitch_deg": round(math.degrees(pitch)),
-                          "gripper_readback": arm_pulses().get(10)}
+                closed = arm_pulses().get(10)
+                # Live 2026-10-18 at squeeze 680: empty jaws read 667-668, a held sock 648-651.
+                held = closed is not None and closed < int(arm_config["gripper"]["squeeze"]) - 20
+                result = {"outcome": "holding" if held else "missed", "x": body.x, "y": body.y,
+                          "pitch_deg": round(math.degrees(pitch)), "gripper_readback": closed}
+                if not held:
+                    grip("open")
             self._audit("arm_pick_at", result["outcome"], result)
             return result
 
