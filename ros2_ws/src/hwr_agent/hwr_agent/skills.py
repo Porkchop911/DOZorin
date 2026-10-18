@@ -526,9 +526,13 @@ class GatewaySkills:
         return {"found": list(found.values()), "target_seen": None if target is None else target in found}
 
     # A point on the thing beats a box centre: a diagonal sock's box centre is bare floor (live 2026-10-18).
-    GROUND_PROMPT = ('Find every {label} in the image. For each, give one point on the {label} itself, '
-                     'at its widest part, as JSON only: [{{"label": "{label}", "point_2d": [x, y]}}] '
-                     'with coordinates normalised 0-1000. Return [] if there is none.')
+    # A point on the thing beats a box centre: a diagonal sock's box centre is bare floor; and the
+    # 4B VLM called the gripper fingertips socks until told (live 2026-10-18).
+    GROUND_PROMPT = ('Find every {label} in the image. The two dark rounded shapes at the very bottom '
+                     "edge are the robot's own gripper fingertips, not a {label}: ignore them. For each "
+                     '{label}, give one point on the {label} itself, at its widest part, as JSON only: '
+                     '[{{"label": "{label}", "point_2d": [x, y]}}] with coordinates normalised 0-1000. '
+                     'Return [] if there is none.')
     # (pan, elevation) deg: floor ahead first (0.2-0.6 m), then the room (plan/19).
     SEARCH_VIEWS = ((0, -40), (50, -40), (-50, -40), (0, 0), (50, 0), (-50, 0))
 
