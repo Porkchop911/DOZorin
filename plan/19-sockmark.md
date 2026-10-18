@@ -73,3 +73,12 @@ Last metre by hand, then built into `_deliver`:
 - worked: crept 9.5 cm, re-picked the sock from the rug (held, readback 606), dropped at (0.32, 0.02)
   from z 0.12 at -50 deg -> in the bed. Drops now allow -30 deg (reach 0.32 m at z 0.12).
 - Picks this session: 5 held / 7 (2 early misses before `squeeze` and z = 0).
+
+### Shoulder went limp (2026-10-18)
+
+After a held pick the shoulder servo (2) lost torque: readback 322 vs `carry` 500, the robot turned
+-142 deg with the arm low and stood on a sock; the carry gate then refused the move. User found the arm
+limp and lifted it; torque came back by itself. Servo 2 at 51 C (others 38-48), 11.1 V: likely stall
+protection from the jaws pressing the floor at z ~3 mm. Fixes: grasp z >= 8 mm; `GET /arm/state?pose=`
+and `_lift_to("carry")` must confirm the readback (<= 30 pulses) before any turn or drive (user: "lift
+into driving height BEFORE turning").

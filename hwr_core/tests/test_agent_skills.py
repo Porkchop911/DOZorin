@@ -723,6 +723,7 @@ def test_deliver_sets_down_looks_creeps_repicks_and_drops_in_the_bed(monkeypatch
     skills = GatewaySkills(token="test")
     monkeypatch.setattr("time.sleep", lambda s: None)
     monkeypatch.setattr(skills, "arm_pose", lambda n: None)
+    monkeypatch.setattr(skills, "_lift_to", lambda pose, seconds=3.0: True)
     monkeypatch.setattr(skills, "_arm_clear", lambda: None)
     monkeypatch.setattr(skills, "_drive_near", lambda point, stop_at: (0.5, 0.0))
     sides = iter([[{"base": [0.36, 0.0], "source": "depth"}], [{"base": [0.27, 0.0], "source": "depth"}]])
@@ -742,6 +743,7 @@ def test_deliver_gives_up_holding_nothing_when_the_truck_is_not_seen_up_close(mo
     skills = GatewaySkills(token="test")
     monkeypatch.setattr("time.sleep", lambda s: None)
     monkeypatch.setattr(skills, "arm_pose", lambda n: None)
+    monkeypatch.setattr(skills, "_lift_to", lambda pose, seconds=3.0: True)
     monkeypatch.setattr(skills, "_drive_near", lambda point, stop_at: (0.5, 0.0))
     monkeypatch.setattr(skills, "_motion", lambda d, path, payload, s: {"outcome": "placed"})
     monkeypatch.setattr(skills, "find_on_floor", lambda label, views=None, plane_z=0.0: [])
@@ -764,3 +766,13 @@ def test_advance_creeps_through_a_block_at_the_target_and_stops_before_a_real_ob
     calls.clear()
     skills._advance(0.50, 1.20)  # block at 0.64 with the target at 1.2 m -> stop 0.20 before it
     assert calls == [("move", 0.5), ("move", 0.44)]
+
+
+
+def test_deliver_never_drives_when_the_arm_did_not_lift(monkeypatch):
+    skills = GatewaySkills(token="test")
+    monkeypatch.setattr("time.sleep", lambda s: None)
+    monkeypatch.setattr(skills, "arm_pose", lambda n: None)
+    monkeypatch.setattr(skills, "_get", lambda path, binary=False: {"reached": False})
+    monkeypatch.setattr(skills, "_drive_near", lambda *a, **k: (_ for _ in ()).throw(AssertionError("drove")))
+    assert skills._deliver([1.0, 2.0])["why"].startswith("arm did not reach carry")

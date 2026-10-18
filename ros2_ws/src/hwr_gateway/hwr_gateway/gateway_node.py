@@ -1503,6 +1503,21 @@ class GatewayNode(Node):
             self._audit("arm_place", result["outcome"], result)
             return result
 
+        @app.get("/arm/state", dependencies=[Depends(auth)])
+        def arm_state(pose: str | None = None):
+            """Servo readback; with `pose`, whether servos 1-5 are within 30 pulses of it. A servo that
+            went limp kept reading where it fell (shoulder 322 vs 500, live 2026-10-18)."""
+            pulses = arm_pulses()
+            result = {"pulses": pulses}
+            if pose is not None:
+                target = arm_config["poses"].get(pose)
+                if target is None:
+                    raise HTTPException(404, f"unknown pose {pose!r}")
+                off = {int(sid): pulses.get(int(sid), 10_000) - int(p) for sid, p in target.items()}
+                result.update({"pose": pose, "off": off,
+                               "reached": all(abs(v) <= 30 for v in off.values())})
+            return result
+
         @app.post("/arm/pick_at", dependencies=[Depends(auth)])
         def arm_pick_at(body: PickAtRequest):
             """Pick a soft object (sock) at a base-frame floor point (plan/19): steep, any yaw (cloth
@@ -1513,8 +1528,9 @@ class GatewayNode(Node):
                 return {"outcome": "out of reach", "x": body.x, "y": body.y}
             # Down to -75 deg: steep-only is a cube rule (tilted jaws shoved them); cloth doesn't
             # slide away, and z = 0 at -85 reaches only ~0.21 m (2026-10-18).
-            # >= 3 mm: at z = 0 the pulse rounding dips below the floor and the arm IK refuses.
-            plan = plan_grasp(self.kin, body.x, body.y, max(body.z, 0.003), 0.0, hover=0.08,
+            # >= 8 mm: at z = 0 the pulse rounding dips below the floor (IK refuses), and at ~3 mm the
+            # jaw tips pressed the floor until the shoulder servo went limp (live 2026-10-18).
+            plan = plan_grasp(self.kin, body.x, body.y, max(body.z, 0.008), 0.0, hover=0.08,
                               roll_sign=roll_sign, flattest=-math.radians(75))
             if plan is None:
                 result = {"outcome": "out of reach", "x": body.x, "y": body.y}

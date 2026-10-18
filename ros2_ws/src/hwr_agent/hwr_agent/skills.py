@@ -662,12 +662,24 @@ class GatewaySkills:
     BED_PAST_SIDE = 0.045
     DROP_REACH = 0.32
 
+    def _lift_to(self, pose: str, seconds: float = 3.0) -> bool:
+        """Command an arm pose and wait until the readback is there. Live 2026-10-18 the shoulder went
+        limp after a pick and the robot turned with the arm low, onto a sock (user: lift BEFORE turning)."""
+        self.arm_pose(pose)
+        deadline = time.monotonic() + seconds
+        while True:
+            time.sleep(0.5)
+            if self._get(f"/arm/state?pose={pose}").get("reached"):
+                return True
+            if time.monotonic() > deadline:
+                return False
+
     def _deliver(self, truck_map, truck: str = "toy truck") -> dict:
         """Holding a sock: carry it near the truck, set it down in front, look steeply (the held sock
         hides the truck, and the carry-pose camera read ~0.18 m long), creep until the bed is within
         reach, re-pick and drop it in. The first sock went in exactly this way (2026-10-18)."""
-        self.arm_pose("carry")
-        time.sleep(2.0)
+        if not self._lift_to("carry"):
+            return {"placed": False, "why": "arm did not reach carry (servo limp or blocked?)"}
         self._drive_near(truck_map, stop_at=0.55)
         self._motion("set the sock down", "/arm/place", {"x": 0.27, "y": 0.0, "z": 0.03}, 20.0)
         centre = None
