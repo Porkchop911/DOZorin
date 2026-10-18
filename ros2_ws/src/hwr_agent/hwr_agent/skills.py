@@ -591,6 +591,17 @@ class GatewaySkills:
         for _ in range(8):
             x, y = best(found)["base"]
             distance, bearing = math.hypot(x, y), math.degrees(math.atan2(y, x))
+            # Part of it under the bumper/wheels: a pick there was pinned and stalled the arm until it
+            # went limp (live 2026-10-18). Back off it first.
+            if min(math.hypot(*f["base"]) for f in found) < 0.17 and distance < 0.30:
+                try:
+                    self.back(0.10)
+                except RuntimeError:
+                    return None
+                found = keep(self.find_on_floor(label, near, plane_z, tries=2, spread=True))
+                if not found:
+                    return None
+                continue
             if distance < 0.19:
                 # Overshot onto it (live 2026-10-18): retrace backwards, then look again.
                 try:
@@ -778,7 +789,7 @@ class GatewaySkills:
             entry = {"sock": sock, "pick": pick.get("outcome")}
             log.append(entry)
             # The gateway judges by the jaw readback: looking again saw the held sock hanging in view
-            # and dropped 4 good picks (live 2026-10-18).
+            # and dropped 4 good picks (live 2026-10-18). "pinned" = let go, part of it under a wheel.
             if pick.get("outcome") != "holding":
                 misses += 1
                 continue

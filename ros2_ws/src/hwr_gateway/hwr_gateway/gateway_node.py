@@ -1541,7 +1541,16 @@ class GatewayNode(Node):
                 reach(grasp, 800, 1.0)
                 grip("squeeze")
                 reach(hover, 800, 1.0)
-                closed = arm_pulses().get(10)
+                now = arm_pulses()
+                # A sock pinned under a wheel holds the arm down: the shoulder stalled and went limp
+                # twice (live 2026-10-18). Not at hover = let go now, before the servos give up.
+                if any(abs(now.get(sid, 10_000) - hover[sid]) > 40 for sid in (2, 3, 4)):
+                    grip("open")
+                    result = {"outcome": "pinned", "x": body.x, "y": body.y,
+                              "off": {sid: now.get(sid, 10_000) - hover[sid] for sid in (2, 3, 4)}}
+                    self._audit("arm_pick_at", result["outcome"], result)
+                    return result
+                closed = now.get(10)
                 # Live 2026-10-18 at squeeze 680: empty jaws read 667-668, a held sock 648-651.
                 held = closed is not None and closed < int(arm_config["gripper"]["squeeze"]) - 20
                 result = {"outcome": "holding" if held else "missed", "x": body.x, "y": body.y,

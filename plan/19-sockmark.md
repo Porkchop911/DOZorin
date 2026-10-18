@@ -82,3 +82,12 @@ limp and lifted it; torque came back by itself. Servo 2 at 51 C (others 38-48), 
 protection from the jaws pressing the floor at z ~3 mm. Fixes: grasp z >= 8 mm; `GET /arm/state?pose=`
 and `_lift_to("carry")` must confirm the readback (<= 30 pulses) before any turn or drive (user: "lift
 into driving height BEFORE turning").
+
+### Root cause of the limp arm (2026-10-18, user photo)
+
+The robot stood with a front wheel on one end of the sock it had grasped: lifting fought the robot's
+weight, the arm stalled and the servos gave up (shoulder 296, elbow 131, wrist 304 vs carry). The
+lift check (`_lift_to`) caught it this time and nothing drove. Guards: `pick_at` checks the arm reached
+hover after the grasp, else opens at once and returns `pinned`; `_approach` backs off 0.10 m when any
+part of the target is within 0.17 m (under the bumper) before picking.
+Picks this session: 9 held / 11 attempts. Deliveries: 1 (hand-guided last metre).
