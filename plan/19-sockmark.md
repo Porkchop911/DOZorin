@@ -60,3 +60,16 @@ user-confirmed counts.
 
 Next: re-pick, carry, and drop with the truck 10-15 cm off the front edge (user estimate) -> place at
 x ~0.27 m, z 0.14. Fix the bottom-strip filter (drop only hits under the gripper, not the whole strip).
+
+### First sock delivered (2026-10-18, user-confirmed "in the bed")
+
+Last metre by hand, then built into `_deliver`:
+- carry pose + map drive stopped at 0.82 m (costmap inflation between throne legs and rack); mid-move
+  "blocked" came back as an outcome, so the creep fallback never ran (fixed);
+- held sock hides the truck; tilting the wrist barely helps (at its limit); panning the camera 34 deg
+  showed it; carry-pose locate read ~0.18 m long against the user's estimate;
+- first drop at 0.28 m landed on the rug in front: the bed centre was 0.39 m (top view), beyond the
+  0.305 m drop reach at -45 deg;
+- worked: crept 9.5 cm, re-picked the sock from the rug (held, readback 606), dropped at (0.32, 0.02)
+  from z 0.12 at -50 deg -> in the bed. Drops now allow -30 deg (reach 0.32 m at z 0.12).
+- Picks this session: 5 held / 7 (2 early misses before `squeeze` and z = 0).

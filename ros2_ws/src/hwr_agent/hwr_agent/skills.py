@@ -562,11 +562,14 @@ class GatewaySkills:
                 return sorted(found, key=lambda f: math.hypot(*f["base"]))
         return []
 
-    def _approach(self, label: str, plane_z: float = 0.0, reach_x: float = 0.205):
+    def _approach(self, label: str, plane_z: float = 0.0, reach_x: float = 0.205, avoid=None):
         """Search (arm sweep, then body turns) and drive until the nearest `label` sits ~reach_x
-        ahead; return its base-frame point, or None. Forward only: too close -> None."""
+        ahead; return its base-frame point, or None. Forward only: too close -> None. Hits within
+        0.15 m of the map point `avoid` are skipped (socks already in the truck)."""
+        keep = lambda found: [f for f in found if avoid is None or "map" not in f  # noqa: E731
+                              or math.hypot(f["map"][0] - avoid[0], f["map"][1] - avoid[1]) > 0.15]
         for turns in range(4):
-            found = self.find_on_floor(label, self.SEARCH_VIEWS, plane_z)
+            found = keep(self.find_on_floor(label, self.SEARCH_VIEWS, plane_z))
             if found:
                 break
             if turns < 3:
@@ -584,7 +587,7 @@ class GatewaySkills:
                     self.back(min(0.15, reach_x + 0.02 - distance))
                 except RuntimeError:
                     return None
-                found = self.find_on_floor(label, near, plane_z)
+                found = keep(self.find_on_floor(label, near, plane_z))
                 if not found:
                     return None
                 continue
@@ -597,7 +600,7 @@ class GatewaySkills:
             step = distance - reach_x - (0.10 if distance > reach_x + 0.15 else 0.0)
             if step > 0.02:
                 self._advance(min(step, 1.5), distance)
-            found = self.find_on_floor(label, near + self.SEARCH_VIEWS[1:3], plane_z)
+            found = keep(self.find_on_floor(label, near + self.SEARCH_VIEWS[1:3], plane_z))
             if not found:
                 return None
         return None
@@ -624,13 +627,16 @@ class GatewaySkills:
         are > 5 cm tall, live 2026-10-18), so a block at the target is crept through with /drive
         (<= 0.30 m, like the cube creep); a block well short of it is a real obstacle: stop before it."""
         try:
-            self.move(min(step, 2.0))
-            return
+            # A block found mid-move comes back as the outcome, not an error (live 2026-10-18).
+            outcome = str(self.move(min(step, 2.0)).get("outcome", "done"))
+            blocked = re.search(r"blocked at ([0-9.]+) m", outcome)
+            if not blocked:
+                return
         except RuntimeError as exc:
             blocked = re.search(r"blocked in costmap at ([0-9.]+) m", str(exc))
             if not blocked:
                 raise
-            at = float(blocked.group(1))
+        at = float(blocked.group(1))
         # shortcut: 0.20 m guesses the gateway's move clearance; read it if this stops short.
         if at >= target_m - 0.30:
             self.drive(vx=0.1, seconds=min(step, 0.30) / 0.1)
@@ -650,6 +656,53 @@ class GatewaySkills:
             self._advance(distance - stop_at, distance)
         return here()
 
+    # Live 2026-10-18: the truck's bed centre is ~4.5 cm past its near side (truck sideways, bed ~9 cm
+    # across); a drop from 0.12 m reaches 0.32 m at -30 deg (0.14 m reaches only 0.31).
+    BED_PAST_SIDE = 0.045
+    DROP_REACH = 0.32
+
+    def _deliver(self, truck_map, truck: str = "toy truck") -> dict:
+        """Holding a sock: carry it near the truck, set it down in front, look steeply (the held sock
+        hides the truck, and the carry-pose camera read ~0.18 m long), creep until the bed is within
+        reach, re-pick and drop it in. The first sock went in exactly this way (2026-10-18)."""
+        self.arm_pose("carry")
+        time.sleep(2.0)
+        self._drive_near(truck_map, stop_at=0.55)
+        self._motion("set the sock down", "/arm/place", {"x": 0.27, "y": 0.0, "z": 0.03}, 20.0)
+        centre = None
+        for _ in range(4):
+            side = [f for f in self.find_on_floor(truck, ((0, -60), (0, -40)), 0.03)
+                    if f.get("source") == "depth"]
+            if not side:
+                return {"placed": False, "why": f"{truck} not seen up close"}
+            x, y = side[0]["base"]
+            distance = math.hypot(x, y)
+            # shortcut: assumes the truck sideways (bed across); use its box/heading if it is turned.
+            centre = (x * (distance + self.BED_PAST_SIDE) / distance,
+                      y * (distance + self.BED_PAST_SIDE) / distance)
+            if math.hypot(*centre) <= self.DROP_REACH:
+                break
+            if abs(math.degrees(math.atan2(y, x))) >= 8.0:
+                self._arm_clear()
+                self.turn(math.degrees(math.atan2(y, x)))
+                continue
+            # <= 0.10 m: the sock was set down 0.27 m out and must stay >= 0.19 m to be picked.
+            self._arm_clear()
+            self.drive(vx=0.05, seconds=min(math.hypot(*centre) - self.DROP_REACH + 0.01, 0.10) / 0.05)
+        else:
+            return {"placed": False, "why": f"{truck} still out of reach"}
+        sock = self.find_on_floor("sock", ((0, -60),))
+        if not sock:
+            return {"placed": False, "why": "set-down sock not seen"}
+        pick = self._motion("pick the sock again", "/arm/pick_at",
+                            {"x": sock[0]["base"][0], "y": sock[0]["base"][1], "z": 0.0}, 20.0)
+        if pick.get("outcome") != "holding":
+            return {"placed": False, "why": "re-pick missed"}
+        place = self._motion("drop the sock in the truck", "/arm/place",
+                             {"x": centre[0], "y": centre[1], "z": 0.12}, 20.0)
+        return {"placed": place.get("outcome") == "placed", "drop": [round(v, 3) for v in centre],
+                "why": None if place.get("outcome") == "placed" else f"drop {place.get('outcome')}"}
+
     def sockmark(self, max_socks: int = 6, truck: str = "toy truck"):
         """Put the socks in the toy truck (plan/19). The truck is found first, with nothing held:
         a held sock covers the bottom of the image where the truck would be (live 2026-10-18).
@@ -668,7 +721,7 @@ class GatewaySkills:
             self._act(f"remember the {truck}", "/places/anchor", {"cls": truck, "point": truck_map})
         log, misses, stopped = [], 0, None
         while len([e for e in log if e.get("placed")]) < max_socks and misses < 3:
-            sock = self._approach("sock")
+            sock = self._approach("sock", avoid=truck_map)
             if sock is None:
                 stopped = "no more socks found"
                 break
@@ -681,18 +734,12 @@ class GatewaySkills:
             if pick.get("outcome") != "holding":
                 misses += 1
                 continue
-            self.arm_pose("carry")
-            time.sleep(2.0)
-            x, y = self._drive_near(truck_map, stop_at=0.26)
-            entry["truck_base"] = [round(x, 3), round(y, 3)]
-            if math.hypot(x, y) > 0.30:  # drop reach at z 0.14 (-45 deg window) is ~0.305 m
-                stopped = f"{truck} out of reach at {math.hypot(x, y):.2f} m (holding the sock)"
-                break
-            place = self._motion("drop the sock in the truck", "/arm/place",
-                                 {"x": x, "y": y, "z": 0.14}, 20.0)
-            entry["placed"] = place.get("outcome") == "placed"
+            entry.update(self._deliver(truck_map, truck))
             self.arm_pose("forward")
             time.sleep(2.0)
+            if not entry.get("placed"):
+                stopped = entry.get("why")
+                break
         placed = sum(1 for e in log if e.get("placed"))
         return {"placed": placed, "attempts": len(log), "log": log, "stopped": stopped}
 

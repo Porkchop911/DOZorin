@@ -1466,6 +1466,9 @@ class GatewayNode(Node):
             # The floor can't topple a cube: no pitch window there (unstack spot was unreachable at
             # the pick pitch, 2026-10-16), steep enough not to drag the jaw across the floor.
             steepest, flattest = -math.pi / 2, -math.radians(70 if body.on else 45)
+            if body.z is not None and not body.on:
+                # A drop (sock into the truck, plan/19): tilt doesn't matter, reach does (0.33 m at -30).
+                flattest = -math.radians(30)
             if body.pitch_deg is not None and body.on:
                 steepest = max(-math.pi / 2, math.radians(body.pitch_deg - 10))
                 flattest = min(-math.radians(60), math.radians(body.pitch_deg + 10))
