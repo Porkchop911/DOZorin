@@ -262,8 +262,8 @@ class GatewayNode(Node):
                                  callback_group=self.group)
         self.create_subscription(JointState, "joint_states", self._joint_state, 10,
                                  callback_group=self.group)
-        self.create_subscription(LaserScan, "depth_ranges_full", self._rear_fan, 1,
-                                 callback_group=self.group)
+        self.create_subscription(LaserScan, "depth_ranges_full", self._rear_fan, QoSProfile(
+            depth=1, reliability=QoSReliabilityPolicy.BEST_EFFORT), callback_group=self.group)
         self.reverse_pub = self.create_publisher(Twist, "cmd_vel_reverse", 10)
         self.create_timer(0.05, self._drive_tick, callback_group=self.group)
         self.app = self._make_app()
