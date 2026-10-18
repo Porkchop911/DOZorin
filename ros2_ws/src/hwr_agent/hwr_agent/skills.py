@@ -604,6 +604,10 @@ class GatewaySkills:
             found = keep(self.find_on_floor(label, near + self.SEARCH_VIEWS[1:3], plane_z, tries=2))
             if not found:
                 return None
+        # The last creep can land it in reach: check once more (live 2026-10-18 it ended at 0.211 m).
+        x, y = found[0]["base"]
+        if 0.19 <= math.hypot(x, y) <= reach_x + 0.02 and abs(math.degrees(math.atan2(y, x))) < 8.0:
+            return {"x": x, "y": y, "map": found[0].get("map")}
         return None
 
     def _find_anywhere(self, label: str, plane_z: float = 0.0):
