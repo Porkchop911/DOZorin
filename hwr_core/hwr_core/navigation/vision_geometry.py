@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+from collections import deque
 import math
 
 import numpy as np
@@ -77,3 +78,30 @@ def depth_below(depth: np.ndarray, u: float, v: float, color_shape: tuple[int, i
         if r is not None:
             return v + dv, r
     return None
+
+
+def region_samples(rgb: np.ndarray, seed: tuple[int, int], tol: float = 40.0, n: int = 12,
+                   step: int = 4) -> list[tuple[int, int]]:
+    """Up to n pixels spread over the connected region of seed-like colour around `seed` (u, v).
+
+    A long sock lying from under the bumper to 0.35 m out has its one VLM point at the far end; the
+    pick wants the part ~0.2 m out (live 2026-10-18). Flood fill on a `step`-downsampled image."""
+    small = rgb[::step, ::step].astype(float)
+    h, w = small.shape[:2]
+    sv, su = min(seed[1] // step, h - 1), min(seed[0] // step, w - 1)
+    ref = small[sv, su]
+    seen = np.zeros((h, w), bool)
+    seen[sv, su] = True
+    queue, cells = deque([(sv, su)]), []
+    while queue:
+        v, u = queue.popleft()
+        cells.append((v, u))
+        for dv, du in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            nv, nu = v + dv, u + du
+            if 0 <= nv < h and 0 <= nu < w and not seen[nv, nu] \
+                    and np.linalg.norm(small[nv, nu] - ref) <= tol:
+                seen[nv, nu] = True
+                queue.append((nv, nu))
+    cells.sort()  # top to bottom: the samples run along the object in the image
+    pick = cells[::max(1, len(cells) // n)][:n]
+    return [(u * step + step // 2, v * step + step // 2) for v, u in pick]

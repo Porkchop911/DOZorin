@@ -2,7 +2,8 @@ import math
 
 import numpy as np
 
-from hwr_core.navigation.vision_geometry import bearing, depth_below, object_range, parse_grounding
+from hwr_core.navigation.vision_geometry import (bearing, depth_below, object_range, parse_grounding,
+                                                 region_samples)
 
 
 def test_bearing_left_positive():
@@ -45,3 +46,12 @@ def test_depth_below_skips_the_hole_on_a_dark_object_to_the_floor_in_front():
     depth[268:, :] = 0.95  # floor in front of the truck; the truck itself (rows < 268) has no return
     assert depth_below(depth, 329, 248, (400, 640)) == (264, 0.95)  # first window that reaches the floor
     assert depth_below(np.zeros((400, 640)), 329, 248, (400, 640)) is None
+
+
+def test_region_samples_spread_over_the_sock_not_the_floor():
+    rgb = np.full((400, 640, 3), 200, np.uint8)  # light floor
+    rgb[100:400, 300:340] = 40                   # dark sock from the image top half to the bottom edge
+    samples = region_samples(rgb, (320, 120))
+    assert len(samples) == 12
+    assert all(300 <= u < 340 and 100 <= v < 400 for u, v in samples)
+    assert max(v for _, v in samples) - min(v for _, v in samples) > 200  # spread along it

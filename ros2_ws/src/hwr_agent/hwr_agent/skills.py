@@ -13,7 +13,9 @@ from pathlib import Path
 import requests
 from PIL import Image
 
-from hwr_core.navigation.vision_geometry import parse_grounding
+import numpy as np
+
+from hwr_core.navigation.vision_geometry import parse_grounding, region_samples
 
 
 def _detour(target: dict, blockers: list, clear: float = 0.15, side: float = 0.17) -> float | None:
@@ -540,7 +542,7 @@ class GatewaySkills:
     SEARCH_VIEWS = ((0, -40), (50, -40), (-50, -40), (0, 0), (50, 0), (-50, 0))
 
     def find_on_floor(self, label: str = "sock", views=((0, -40),), plane_z: float = 0.0,
-                      tries: int = 1):
+                      tries: int = 1, spread: bool = False):
         """VLM-grounded search (no YOLO class for socks): each view -> boxes -> points on the
         plane z = plane_z (base and map frame). Stops at the first view with a hit."""
         if self.dry_run:
@@ -556,6 +558,10 @@ class GatewaySkills:
                 if b["label"] == label][:20]  # /vision/locate takes <= 20 (a pile listed more)
             if not boxes:
                 continue
+            if spread:  # points across each object, not just its one VLM point (long socks)
+                rgb = np.asarray(Image.open(io.BytesIO(image)).convert("RGB"))
+                boxes = [{**b, "center": list(px)} for b in boxes
+                         for px in [tuple(b["center"])] + region_samples(rgb, b["center"], n=8)][:20]
             points = self._act(f"locate {label}", "/vision/locate",
                                {"pixels": [b["center"] for b in boxes], "plane_z": plane_z})["points"]
             found = [{**b, **p, "view": [pan, elevation]} for b, p in zip(boxes, points) if p]
@@ -579,8 +585,11 @@ class GatewaySkills:
         else:
             return None
         near = ((0, -60), (0, -40))  # -40 sees nothing closer than ~0.2 m (live 2026-10-18)
+        # Of the points on it, the one nearest the reach spot (but outside the 0.19 m wheel guard).
+        best = lambda found: min([f for f in found if math.hypot(*f["base"]) >= 0.19] or found,  # noqa: E731
+                                 key=lambda f: abs(math.hypot(*f["base"]) - reach_x))
         for _ in range(5):
-            x, y = found[0]["base"]
+            x, y = best(found)["base"]
             distance, bearing = math.hypot(x, y), math.degrees(math.atan2(y, x))
             if distance < 0.19:
                 # Overshot onto it (live 2026-10-18): retrace backwards, then look again.
@@ -588,12 +597,12 @@ class GatewaySkills:
                     self.back(min(0.15, reach_x + 0.02 - distance))
                 except RuntimeError:
                     return None
-                found = keep(self.find_on_floor(label, near, plane_z, tries=2))
+                found = keep(self.find_on_floor(label, near, plane_z, tries=2, spread=True))
                 if not found:
                     return None
                 continue
             if abs(bearing) < 8.0 and distance <= reach_x + 0.02:
-                return {"x": x, "y": y, "map": found[0].get("map")}
+                return {"x": x, "y": y, "map": best(found).get("map")}
             self._arm_clear()
             if abs(bearing) >= 8.0:
                 self.turn(bearing)
@@ -601,13 +610,13 @@ class GatewaySkills:
             step = distance - reach_x - (0.10 if distance > reach_x + 0.15 else 0.0)
             if step > 0.02:
                 self._advance(min(step, 1.5), distance)
-            found = keep(self.find_on_floor(label, near + self.SEARCH_VIEWS[1:3], plane_z, tries=2))
+            found = keep(self.find_on_floor(label, near + self.SEARCH_VIEWS[1:3], plane_z, tries=2, spread=True))
             if not found:
                 return None
         # The last creep can land it in reach: check once more (live 2026-10-18 it ended at 0.211 m).
-        x, y = found[0]["base"]
+        x, y = best(found)["base"]
         if 0.19 <= math.hypot(x, y) <= reach_x + 0.02 and abs(math.degrees(math.atan2(y, x))) < 8.0:
-            return {"x": x, "y": y, "map": found[0].get("map")}
+            return {"x": x, "y": y, "map": best(found).get("map")}
         return None
 
     def _find_anywhere(self, label: str, plane_z: float = 0.0):
