@@ -1510,7 +1510,11 @@ class GatewayNode(Node):
                     with self.lock:
                         fan = self.rear_fan
                     if fan is not None and fan[0] > after:
-                        return rear_blocked(fan[1], fan[2], body.meters), True
+                        # No return behind = not looked at, never "clear" (live 2026-10-18: the depth
+                        # camera is body-fixed forward, so this always refuses until a rear sensor exists).
+                        seen = any(math.isfinite(r) and abs(a) > math.pi / 2
+                                   for a, r in zip(fan[1], fan[2]))
+                        return rear_blocked(fan[1], fan[2], body.meters), seen
                     time.sleep(0.05)
                 return None, False
 
@@ -1520,7 +1524,7 @@ class GatewayNode(Node):
                 if not fresh or hit:
                     pose("forward", 0.0)
                     raise HTTPException(409, f"{side}: " + (f"something at {hit} (base frame, m)"
-                                                            if fresh else "rear depth view stale"))
+                                                            if fresh else "no rear depth view (stale or nothing behind in view)"))
             start = self._motion_start()
             travelled = [0.0]
 
@@ -1530,7 +1534,7 @@ class GatewayNode(Node):
                     return None
                 hit, fresh = rear_hit(time.monotonic() - 0.6)
                 if not fresh:
-                    return "rear depth view stale"
+                    return "no rear depth view"
                 if hit:
                     return f"rear blocked at {hit}"
                 return (-0.05, 0.0, 0.0)

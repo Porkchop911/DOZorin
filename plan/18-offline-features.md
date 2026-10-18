@@ -7,7 +7,7 @@ Built while the robot was off. Nothing in this file has run on the robot yet.
 | 18.1 landmarks | `55c97c0` | code + tests; also fixed `/places/mark` (its request model was shadowed, would 500 live) |
 | 18.2 follow v2 | `69c20ee` | code + tests of the pure helpers; the gateway loop is untested |
 | 18.3 mapping | `eac5c35` | code + tests; explore node change untested |
-| 18.4 reverse | `17097c5` | code + tests; base/gateway/depth wiring untested. Needs a stack restart (poses.yaml, base, depth node) |
+| 18.4 reverse | `17097c5` | live 2026-10-18: retrace 0.15 → 0.159 m (map 0.140) ✓; turn 30° then back → refused ✓; box test skipped (user). Fixes: QoS mismatch, rear poses re-taught, empty rear view now refuses |
 The rule for every item: the logic is a pure function in `hwr_core` with unit tests, and the ROS
 nodes and gateway only wire it in. Each item ends with the live acceptance test to run next session.
 
@@ -95,6 +95,13 @@ nodes and gateway only wire it in. Each item ends with the live acceptance test 
 - **Agent.** `back(meters)` skill and tool. Voice "go back" stays a refusal: plan/17 Q5 is still
   open.
 - **plan/91 rule 3** changes from "no reverse ever" to "reverse only via `/motion/back`".
+- **Live 2026-10-18.**
+  - The forward-arm rear poses stuck out past the chassis (user). Re-taught by hand (torque off):
+    compact fold `{2: 904, 3: 142, 4: 43}`, pan 25/975. User-checked inside. Pan 25 = left.
+  - Live coverage: 76–149° each side (wall seen at 0.40 m). The corridor is mostly in the blind
+    strip behind; a box directly behind would not be seen.
+  - Bugs found: gateway `depth_ranges_full` sub was reliable vs a best-effort publisher (got
+    nothing), and an empty rear fan counted as clear. Both fixed: no return behind now refuses.
 - **Live test.**
   - Drive 0.3 m forward, then `back(0.15)`: travelled ≥ 0.13 m.
   - Turn 30°, then `back`: refused (budget 0).
