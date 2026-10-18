@@ -696,8 +696,12 @@ class GatewaySkills:
         # 0.36 m: at 0.55 the truck sat at the top of the steep view, outside the depth image, and was
         # too far to creep to past the set-down sock (live 2026-10-18).
         self._drive_near(truck_map, stop_at=0.36)
-        self._motion("set the sock down", "/arm/place", {"x": 0.27, "y": 0.0, "z": 0.03}, 20.0)
-        centre = None
+        # Beside the path, not in front: 4 creeps (~0.25 m) drove over a sock set down at 0.27 m ahead
+        # (live 2026-10-18). Total creep stays within what keeps it >= 0.19 m out for the re-pick.
+        aside = (0.25, 0.17)
+        self._motion("set the sock down", "/arm/place", {"x": aside[0], "y": aside[1], "z": 0.03}, 20.0)
+        budget = aside[0] - math.sqrt(max(0.19 ** 2 - aside[1] ** 2, 0.0)) - 0.01
+        centre, crept, rounds = None, 0.0, []
         for _ in range(4):
             seen = self.find_on_floor(truck, ((0, -60), (0, -40)), 0.03, tries=2)
             if not seen:
@@ -707,6 +711,7 @@ class GatewaySkills:
             plane = side[0].get("source") != "depth"
             x, y = side[0]["base"]
             distance = math.hypot(x, y)
+            rounds.append([round(x, 3), round(y, 3), side[0].get("source")])
             # shortcut: assumes the truck sideways (bed across); use its box/heading if it is turned.
             centre = (x * (distance + self.BED_PAST_SIDE) / distance,
                       y * (distance + self.BED_PAST_SIDE) / distance)
@@ -719,10 +724,15 @@ class GatewaySkills:
             # <= 0.10 m: the sock was set down 0.27 m out and must stay >= 0.19 m to be picked.
             self._arm_clear()
             gap = math.hypot(*centre) - self.DROP_REACH + 0.01
-            self.drive(vx=0.05, seconds=max(0.02, min(gap / 2 if plane else gap, 0.10)) / 0.05)
+            step = min(max(0.02, min(gap / 2 if plane else gap, 0.10)), budget - crept)
+            if step < 0.01:
+                return {"placed": False, "why": f"{truck} out of reach within the creep budget",
+                        "rounds": rounds}
+            self.drive(vx=0.05, seconds=step / 0.05)
+            crept += step
         else:
-            return {"placed": False, "why": f"{truck} still out of reach"}
-        sock = self.find_on_floor("sock", ((0, -60),))
+            return {"placed": False, "why": f"{truck} still out of reach", "rounds": rounds}
+        sock = self.find_on_floor("sock", ((-30, -60), (0, -60), (-45, -40)), tries=2)
         if not sock:
             return {"placed": False, "why": "set-down sock not seen"}
         pick = self._motion("pick the sock again", "/arm/pick_at",
@@ -732,6 +742,7 @@ class GatewaySkills:
         place = self._motion("drop the sock in the truck", "/arm/place",
                              {"x": centre[0], "y": centre[1], "z": 0.12}, 20.0)
         return {"placed": place.get("outcome") == "placed", "drop": [round(v, 3) for v in centre],
+                "rounds": rounds,
                 "why": None if place.get("outcome") == "placed" else f"drop {place.get('outcome')}"}
 
     def sockmark(self, max_socks: int = 6, truck: str = "toy truck"):

@@ -734,7 +734,7 @@ def test_deliver_sets_down_looks_creeps_repicks_and_drops_in_the_bed(monkeypatch
     monkeypatch.setattr(skills, "_motion", lambda d, path, payload, s: calls.append((path, payload)) or (
         {"outcome": "holding"} if path == "/arm/pick_at" else {"outcome": "placed"}))
     result = skills._deliver([1.0, 2.0])
-    assert result["placed"] is True and crept == [0.095]  # bed centre 0.405 -> creep to 0.32 (+1 cm)
+    assert result["placed"] is True and crept == [0.095]  # bed centre 0.405 -> 0.32 (+1 cm), within budget
     assert [p for p, _ in calls] == ["/arm/place", "/arm/pick_at", "/arm/place"]
     assert calls[-1][1]["x"] == pytest.approx(0.315) and calls[-1][1]["z"] == 0.12
 
@@ -793,4 +793,4 @@ def test_deliver_creeps_only_half_the_gap_on_a_plane_fix(monkeypatch):
     monkeypatch.setattr(skills, "_motion", lambda d, path, payload, s: (
         {"outcome": "holding"} if path == "/arm/pick_at" else {"outcome": "placed"}))
     assert skills._deliver([1.0, 2.0])["placed"] is True
-    assert crept == [0.068]  # plane: half of (0.445 - 0.32 + 0.01)
+    assert crept == [0.068]  # plane: half of (0.445 - 0.32 + 0.01), within the 0.155 m budget
