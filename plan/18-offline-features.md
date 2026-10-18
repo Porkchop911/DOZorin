@@ -4,7 +4,7 @@ Built while the robot was off. Nothing in this file has run on the robot yet.
 
 | Item | Commit | Status |
 |---|---|---|
-| 18.1 landmarks | `55c97c0` | code + tests; also fixed `/places/mark` (its request model was shadowed, would 500 live) |
+| 18.1 landmarks | `55c97c0` | live 2026-10-18: chair anchored, `goto_place("chair")` arrived 0.41 m, user-confirmed (1/1). Fixes below |
 | 18.2 follow v2 | `69c20ee` | code + tests of the pure helpers; the gateway loop is untested |
 | 18.3 mapping | `eac5c35` | code + tests; explore node change untested |
 | 18.4 reverse | `17097c5` | live 2026-10-18: retrace 0.15 → 0.159 m (map 0.140) ✓; turn 30° then back → refused ✓; box test skipped (user). Fixes: QoS mismatch, rear poses re-taught, empty rear view now refuses |
@@ -30,6 +30,16 @@ nodes and gateway only wire it in. Each item ends with the live acceptance test 
   - Object position = pan axis + range along (pan + image bearing).
 - **Agent.** `roam_step` calls it each tick and reports what it anchored. `goto_place("chair")`
   then works through the existing object-place path (0.50 m reach check).
+- **Live 2026-10-18.**
+  - YOLO found no chair in 10 frames from the forward pose (camera 20 cm up, sees the base only).
+    Tilted up (`ceiling`), conf 0.67–0.78. `anchor_places` now looks up, anchors, returns forward.
+  - Range read 2.34 m for a chair at ~0.8 m: the median depth was the wall seen through it.
+    `object_range` now takes the 20th percentile (0.79 m).
+  - Anchoring now projects the box centre at its depth through the live camera pose
+    (`ArmKinematics.pixel_to_point`), any arm pose. First try mirrored the point behind the robot:
+    joint_states are raw servo angles, not URDF convention (convert via pulses).
+  - `/goto` refused unverified places. User decision: auto places allowed; arrival reach check judges.
+  - Roam ticks not run yet.
 - **Live test.** 2 roam ticks in the room. Check that `list_places` shows the couch/chair within
   ~0.3 m of where they are, and that `goto_place("<class>")` reaches it.
 

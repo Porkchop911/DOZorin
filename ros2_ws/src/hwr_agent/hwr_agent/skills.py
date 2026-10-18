@@ -874,8 +874,15 @@ class GatewaySkills:
         return self._act(f"mark the current pose as place {name}", "/places/mark", {"name": name})
 
     def anchor_places(self):
-        """Remember where the static objects in view are (auto object places, plan/18.1)."""
-        return self._act("anchor the objects in view as places", "/places/anchor")
+        """Remember where the static objects in view are (auto object places, plan/18.1). Looks
+        with the camera tilted up: live 2026-10-18 YOLO missed the chair from the forward view."""
+        self.arm_pose("ceiling")
+        try:
+            if not self.dry_run:
+                time.sleep(2.5)  # arm settles (1.5 s move) and vision publishes a fresh frame
+            return self._act("anchor the objects in view as places", "/places/anchor")
+        finally:
+            self.arm_pose("forward")
 
     def list_places(self):
         if self.dry_run:

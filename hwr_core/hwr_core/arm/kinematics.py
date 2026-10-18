@@ -165,6 +165,14 @@ class ArmKinematics:
         hit = origin + t * ray
         return float(hit[0]), float(hit[1])
 
+    def pixel_to_point(self, u: float, v: float, k: tuple, joints: JointSolution,
+                       depth: float) -> tuple[float, float, float]:
+        """Base-frame (x, y, z) of a pixel at optical-axis depth `depth` (m), any arm pose."""
+        fx, fy, cx, cy = k
+        rotation, origin = self.camera_pose(joints)
+        point = origin + rotation @ (depth * np.array([(u - cx) / fx, (v - cy) / fy, 1.0]))
+        return float(point[0]), float(point[1]), float(point[2])
+
 
 class CameraAim:
     """Conservative camera bearing/elevation to bus-servo pulse mapping."""

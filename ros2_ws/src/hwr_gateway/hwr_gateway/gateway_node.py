@@ -870,31 +870,37 @@ class GatewayNode(Node):
 
         @app.post("/places/anchor", dependencies=[Depends(auth)])
         def place_anchor():
-            """Remember where the seen static objects are (plan/18.1). Camera forward only: the
-            object point uses the pan axis, the arm pan and the image bearing, flat on the map."""
+            """Remember where the seen static objects are (plan/18.1). Any arm pose: the box centre
+            at its depth goes through the live camera pose (live 2026-10-18: YOLO misses furniture
+            from the low forward view, finds the chair with the camera tilted up)."""
             now = time.monotonic()
             with self.lock:
                 healthy = self._localization_state_locked(now)["healthy"]
-                forward = self._camera_forward_locked(now)
+                joints_fresh = now - self.joint_stamp <= float(
+                    self.get_parameter("joint_state_timeout").value)
+                q = dict(self.joint_positions)
                 pose = None if self.pose is None else list(self.pose)
                 frame = self.vision
             if not healthy or pose is None:
                 raise HTTPException(409, "localization is unhealthy; relocalize before anchoring")
-            if not forward:
-                raise HTTPException(409, "anchoring needs the camera in the forward pose")
+            if not joints_fresh or not all(f"joint{i}" in q for i in range(1, 6)):
+                raise HTTPException(503, "arm joint states unavailable or stale")
             if frame is None or time.time() - frame["stamp"] > 2.0:
                 raise HTTPException(503, "vision unavailable or stale")
+            # joint_states are raw servo angles, (pulse - 500) * 0.24 deg, not the URDF convention.
+            joints = pulses_to_joints({i: 500 + q[f"joint{i}"] / math.radians(0.24) for i in range(1, 6)})
             path = active_places_file()
             places, anchored = load_places(path), []
-            px = pose[0] + self.kin.pan_x * math.cos(pose[2])
-            py = pose[1] + self.kin.pan_x * math.sin(pose[2])
+            c, s_ = math.cos(pose[2]), math.sin(pose[2])
             for item in frame["objects"]:
-                distance, bearing_deg = item.get("range_m"), item.get("bearing_deg")
+                distance = item.get("range_m")
                 # shortcut: one frame, conf >= 0.5, range 0.3-4 m; add multi-frame voting if anchors jitter.
-                if distance is None or bearing_deg is None or item.get("conf", 0) < 0.5                         or not 0.3 <= distance <= 4.0:
+                if distance is None or item.get("conf", 0) < 0.5 or not 0.3 <= distance <= 4.0:
                     continue
-                heading = pose[2] + math.radians(bearing_deg)  # forward pose: pan 0
-                spot = (px + distance * math.cos(heading), py + distance * math.sin(heading))
+                x1, y1, x2, y2 = item["box"]
+                bx, by, _ = self.kin.pixel_to_point((x1 + x2) / 2, (y1 + y2) / 2, tuple(frame["k"]),
+                                                    joints, distance)
+                spot = (pose[0] + bx * c - by * s_, pose[1] + bx * s_ + by * c)
                 name = anchor_object(places, item["class"], spot, pose[:2])
                 if name:
                     anchored.append({"name": name, "class": item["class"],
@@ -1048,7 +1054,8 @@ class GatewayNode(Node):
                 place = load_places(active_places_file()).get(body.place)
                 if place is None:
                     raise HTTPException(404, "unknown place on the loaded map (list_places)")
-                if not place.get("verified", False):
+                # Auto anchors (plan/18.1) are allowed too: user 2026-10-18; the arrival reach check still judges them.
+                if not (place.get("verified", False) or place.get("auto", False)):
                     raise HTTPException(409, "place is not verified on the current HWR map")
                 try:
                     place = normalize_place_definition(body.place, place)

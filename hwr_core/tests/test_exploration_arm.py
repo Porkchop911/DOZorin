@@ -169,3 +169,16 @@ def test_camera_aim_and_sweep_are_bounded():
     assert sweep[0][0] < 500 < sweep[-1][0]
     with pytest.raises(ValueError):
         aim.pulses(math.pi, 0.0)
+
+
+def test_pixel_to_point_matches_the_floor_hit_at_that_depth():
+    arm = ArmKinematics()
+    k = (500.0, 500.0, 320.0, 200.0)
+    joints = pulses_to_joints(FLOOR)
+    rotation, origin = arm.camera_pose(joints)
+    depth = -origin[2] / rotation[2, 2]  # optical-axis depth where the centre ray meets the floor
+    x, y, z = arm.pixel_to_point(320, 200, k, joints, depth)
+    assert (x, y) == pytest.approx(arm.pixel_to_plane(320, 200, k, joints), abs=1e-6)
+    assert z == pytest.approx(0.0, abs=1e-6)
+    up = arm.pixel_to_point(320, 200, k, pulses_to_joints({**FORWARD, 4: 500}), 1.0)
+    assert up[2] > origin[2] and 0.4 < up[0] < 1.0  # tilted up: the point is above and ahead

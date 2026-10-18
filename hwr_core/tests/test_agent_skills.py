@@ -676,3 +676,13 @@ def test_back_is_capped_and_goes_through_the_gateway_check():
             skills.back(bad)
     skills.back(0.1)
     assert calls == [("/motion/back", {"meters": 0.1})]
+
+
+def test_anchor_places_looks_up_then_restores_forward(monkeypatch):
+    skills = GatewaySkills(token="test")
+    calls = []
+    monkeypatch.setattr("time.sleep", lambda s: None)
+    monkeypatch.setattr(skills, "_act", lambda d, path, payload=None: calls.append(
+        (path, (payload or {}).get("name"))) or {"anchored": []})
+    assert skills.anchor_places() == {"anchored": []}
+    assert calls == [("/arm/pose", "ceiling"), ("/places/anchor", None), ("/arm/pose", "forward")]
