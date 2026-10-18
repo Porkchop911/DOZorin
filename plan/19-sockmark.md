@@ -43,3 +43,20 @@ Pure logic in `hwr_core` with tests; gateway does geometry and arm; the agent (P
 
 Sock picks: >= 3/5 held. Full run: all socks in view of the room centre end up in the truck, with
 user-confirmed counts.
+
+## Live 2026-10-18 (first run, interrupted by a reboot)
+
+| Step | Result |
+|---|---|
+| Find socks (VLM point_2d, ~1 s warm) | works; box centres missed diagonal socks -> `point_2d` |
+| Approach | -40 deg view is blind < 0.2 m: overshot onto a sock. Two-stage creep + steep (-60) re-find + `back()` |
+| Pick | 1 held / 3. z 0.01 closed above; `grip` 600 pinched then slipped; held with `squeeze` 680 at -75 deg |
+| Jaw travel (empty readback) | 550->551, 600->596, 650->643, 700->664: jaws shut ~660 (not 598) |
+| Arm IK at z = 0 | pulse rounding dips below the floor -> refused; grasp z clamped >= 3 mm |
+| Carry | user: the low forward arm dragged the sock ("asking for trouble"). `carry` = raised {2: 500, 3: 500, 4: 85}; translation allows it |
+| Truck while holding | the held sock covers the bottom-centre of the image, where the truck is. Panned further: found, landmarked `toy_truck` (`/places/anchor {cls, point}`) |
+| Truck distance | locate said 0.65 m from centre, user saw ~0.35-0.5: camera model is off in the carry pose (calibrate). Costmap blocked at 0.43 m (throne legs); last 0.1 m crept via `/drive` |
+| Localization | heading flips between two solutions (~-18 vs ~-143 deg) on relocalize: map drops not trusted |
+
+Next: re-pick, carry, and drop with the truck 10-15 cm off the front edge (user estimate) -> place at
+x ~0.27 m, z 0.14. Fix the bottom-strip filter (drop only hits under the gripper, not the whole strip).

@@ -1,11 +1,12 @@
-# forward is live-verified. The view variants retain its safe arm geometry and
-# only move camera tilt; carry/tucked remain conservative aliases until their
-# physical clearance gates are accepted.
+# forward is live-verified. The view variants retain its safe arm geometry and only move camera
+# tilt; tucked remains a conservative alias. carry is the raised sock pose (plan/19).
 poses:
   forward: {1: 500, 2: 701, 3: 120, 4: 300, 5: 500}
   floor: {1: 500, 2: 701, 3: 120, 4: 130, 5: 500}  # 88 cut cubes ~0.6 m out at the image top (2026-10-17)
   ceiling: {1: 500, 2: 701, 3: 120, 4: 500, 5: 500}
-  carry: {1: 500, 2: 701, 3: 120, 4: 300, 5: 500}
+  # Holding a sock (plan/19, 2026-10-18): raised so it hangs clear of the floor (user: the low
+  # forward arm dragged it), camera -10 deg. Tip 0.18 m ahead, 0.34 m up. Translation allows it.
+  carry: {1: 500, 2: 500, 3: 500, 4: 85, 5: 500}
   tucked: {1: 500, 2: 701, 3: 120, 4: 300, 5: 500}
   # FK: camera ~61 deg below horizontal, image centre on the floor ~0.30 m ahead (plan/16, tune in 14.7).
   look_down: {1: 500, 2: 701, 3: 120, 4: 50, 5: 500}
@@ -19,6 +20,9 @@ gripper:
   close: 500
   # Holding a 3 cm kit cube; readback short of `grip` by more than grasp_margin = something in the jaws.
   grip: 600  # live 2026-10-16: empty reads ~598, a held kit cube stalls at ~486
+  # Cloth (plan/19): a sock pinched at `grip` slipped out on the lift (2026-10-18). Empty readback
+  # 550->551, 600->596, 650->643, 700->664 (jaws shut ~660); user picked 680 = shut + a light press.
+  squeeze: 680
 grasp_margin: 40
 # Wrist roll direction vs cube yaw: live 2026-10-16 green (34 deg roll) met the cube rotated wrong with +1.
 roll_sign: -1

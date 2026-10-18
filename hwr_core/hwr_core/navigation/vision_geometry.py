@@ -1,6 +1,7 @@
 """Image-to-robot geometry for detector boxes (colour camera + depth image)."""
 from __future__ import annotations
 
+import json
 import math
 
 import numpy as np
@@ -24,3 +25,38 @@ def object_range(depth: np.ndarray, box: tuple[float, float, float, float],
 def bearing(u: float, fx: float, cx: float) -> float:
     """Horizontal angle of image column u, left of the optical axis positive (rad)."""
     return -math.atan2(u - cx, fx)
+
+
+def parse_grounding(text: str, width: int, height: int, bottom: float = 0.07) -> list[dict]:
+    """VLM grounding reply ([{"label", "point_2d" or "bbox_2d": 0-1000}], ``` fences allowed) ->
+    pixel `center` (the point, or the box centre) and `box` when given.
+
+    Hits in the bottom `bottom` of the image are dropped: the gripper fingertips sit there and read
+    as a sock (live 2026-10-18)."""
+    start, end = text.find("["), text.rfind("]")
+    if start < 0 or end < start:
+        return []
+    try:
+        items = json.loads(text[start:end + 1])
+    except json.JSONDecodeError:
+        return []
+    numbers = lambda v, n: (isinstance(v, list) and len(v) == n  # noqa: E731
+                            and all(isinstance(x, (int, float)) for x in v))
+    found = []
+    for item in items if isinstance(items, list) else []:
+        if not isinstance(item, dict):
+            continue
+        hit = {"label": str(item.get("label", ""))}
+        if numbers(item.get("bbox_2d"), 4):
+            x1, y1, x2, y2 = (v * size / 1000 for v, size in zip(item["bbox_2d"], (width, height) * 2))
+            if x2 <= x1 or y2 <= y1:
+                continue
+            hit["box"] = [round(x1), round(y1), round(x2), round(y2)]
+            hit["center"] = [round((x1 + x2) / 2), round((y1 + y2) / 2)]
+        if numbers(item.get("point_2d"), 2):
+            hit["center"] = [round(item["point_2d"][0] * width / 1000),
+                             round(item["point_2d"][1] * height / 1000)]
+        if "center" not in hit or (hit.get("box", hit["center"])[-1] >= height * (1 - bottom)):
+            continue
+        found.append(hit)
+    return found

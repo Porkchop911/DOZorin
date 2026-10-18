@@ -2,7 +2,7 @@ import math
 
 import numpy as np
 
-from hwr_core.navigation.vision_geometry import bearing, object_range
+from hwr_core.navigation.vision_geometry import bearing, object_range, parse_grounding
 
 
 def test_bearing_left_positive():
@@ -23,3 +23,15 @@ def test_object_range_prefers_the_object_over_the_background_seen_through_it():
     depth = np.full((240, 320), 2.3)
     depth[::3, :] = 0.9  # chair frame covers a third of the patch, the wall shows through the rest
     assert object_range(depth, (0, 0, 640, 480), (480, 640)) == 0.9
+
+
+def test_parse_grounding_scales_boxes_and_drops_the_gripper_at_the_bottom_edge():
+    reply = ('```json\n[{"label": "sock", "bbox_2d": [0, 312, 494, 630]},\n'
+             ' {"label": "sock", "bbox_2d": [657, 938, 744, 1000]}]\n```')
+    found = parse_grounding(reply, 640, 400)
+    assert found == [{"label": "sock", "box": [0, 125, 316, 252], "center": [158, 188]}]
+    assert parse_grounding("no socks here", 640, 400) == []
+    assert parse_grounding('[{"label": "sock", "bbox_2d": [1, 2]}]', 640, 400) == []
+    points = parse_grounding('[{"label": "sock", "point_2d": [349, 378]},'
+                             ' {"label": "sock", "point_2d": [700, 960]}]', 640, 400)
+    assert points == [{"label": "sock", "center": [223, 151]}]  # 2nd: the gripper strip

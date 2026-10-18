@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import base64
+import io
 import json
 import math
 import os
@@ -10,6 +11,9 @@ import time
 from pathlib import Path
 
 import requests
+from PIL import Image
+
+from hwr_core.navigation.vision_geometry import parse_grounding
 
 
 def _detour(target: dict, blockers: list, clear: float = 0.15, side: float = 0.17) -> float | None:
@@ -521,6 +525,108 @@ class GatewaySkills:
             self.arm_pose("forward")
         return {"found": list(found.values()), "target_seen": None if target is None else target in found}
 
+    # A point on the thing beats a box centre: a diagonal sock's box centre is bare floor (live 2026-10-18).
+    GROUND_PROMPT = ('Find every {label} in the image. For each, give one point on the {label} itself, '
+                     'at its widest part, as JSON only: [{{"label": "{label}", "point_2d": [x, y]}}] '
+                     'with coordinates normalised 0-1000. Return [] if there is none.')
+    # (pan, elevation) deg: floor ahead first (0.2-0.6 m), then the room (plan/19).
+    SEARCH_VIEWS = ((0, -40), (50, -40), (-50, -40), (0, 0), (50, 0), (-50, 0))
+
+    def find_on_floor(self, label: str = "sock", views=((0, -40),), plane_z: float = 0.0):
+        """VLM-grounded search (no YOLO class for socks): each view -> boxes -> points on the
+        plane z = plane_z (base and map frame). Stops at the first view with a hit."""
+        if self.dry_run:
+            return {"dry_run": True, "would": f"find {label} on the floor"}
+        for pan, elevation in views:
+            self.arm_aim(math.radians(pan), math.radians(elevation))
+            time.sleep(1.5)
+            image = self._get("/snapshot", binary=True)
+            width, height = Image.open(io.BytesIO(image)).size
+            boxes = parse_grounding(self._ask_vlm(image, self.GROUND_PROMPT.format(label=label)),
+                                    width, height)
+            if not boxes:
+                continue
+            points = self._act(f"locate {label}", "/vision/locate",
+                               {"pixels": [b["center"] for b in boxes], "plane_z": plane_z})["points"]
+            found = [{**b, **p, "view": [pan, elevation]} for b, p in zip(boxes, points) if p]
+            if found:
+                return sorted(found, key=lambda f: math.hypot(*f["base"]))
+        return []
+
+    def _approach(self, label: str, plane_z: float = 0.0, reach_x: float = 0.205):
+        """Search (arm sweep, then body turns) and drive until the nearest `label` sits ~reach_x
+        ahead; return its base-frame point, or None. Forward only: too close -> None."""
+        for turns in range(4):
+            found = self.find_on_floor(label, self.SEARCH_VIEWS, plane_z)
+            if found:
+                break
+            if turns < 3:
+                self._arm_clear()
+                self.turn(120)
+        else:
+            return None
+        near = ((0, -60), (0, -40))  # -40 sees nothing closer than ~0.2 m (live 2026-10-18)
+        for _ in range(5):
+            x, y = found[0]["base"]
+            distance, bearing = math.hypot(x, y), math.degrees(math.atan2(y, x))
+            if distance < 0.19:
+                # Overshot onto it (live 2026-10-18): retrace backwards, then look again.
+                try:
+                    self.back(min(0.15, reach_x + 0.02 - distance))
+                except RuntimeError:
+                    return None
+                found = self.find_on_floor(label, near, plane_z)
+                if not found:
+                    return None
+                continue
+            if abs(bearing) < 8.0 and distance <= reach_x + 0.02:
+                return {"x": x, "y": y, "map": found[0].get("map")}
+            self._arm_clear()
+            if abs(bearing) >= 8.0:
+                self.turn(bearing)
+            # Two stages: stop 0.10 m short, then re-find from the steep view for the last bit.
+            step = distance - reach_x - (0.10 if distance > reach_x + 0.15 else 0.0)
+            if step > 0.02:
+                self.move(min(step, 1.5))
+            found = self.find_on_floor(label, near + self.SEARCH_VIEWS[1:3], plane_z)
+            if not found:
+                return None
+        return None
+
+    def sockmark(self, max_socks: int = 6, truck: str = "toy truck"):
+        """Find the socks, pick each one and drop it in the toy truck (plan/19). A pick counts when
+        the sock is gone from its spot afterwards (soft: the gripper readback can't tell)."""
+        if self.dry_run:
+            return {"dry_run": True, "would": f"put up to {max_socks} socks in the {truck}"}
+        log, misses = [], 0
+        while len([e for e in log if e.get("placed")]) < max_socks and misses < 3:
+            sock = self._approach("sock")
+            if sock is None:
+                break
+            pick = self._motion("pick the sock", "/arm/pick_at",
+                                {"x": sock["x"], "y": sock["y"], "z": 0.0}, 20.0)
+            entry = {"sock": sock, "pick": pick.get("outcome")}
+            log.append(entry)
+            if pick.get("outcome") != "lifted":
+                misses += 1
+                continue
+            left = [f for f in self.find_on_floor("sock") if math.hypot(
+                f["base"][0] - sock["x"], f["base"][1] - sock["y"]) < 0.06]
+            if left:
+                entry["pick"], misses = "missed", misses + 1
+                self.gripper("open")
+                continue
+            target = self._approach(truck, plane_z=0.05, reach_x=0.21)
+            if target is None:
+                entry["truck"] = "not found"
+                break
+            place = self._motion("drop the sock in the truck", "/arm/place",
+                                 {"x": target["x"], "y": target["y"], "z": 0.14}, 20.0)
+            entry["placed"] = place.get("outcome") == "placed"
+            self.arm_pose("forward")
+        placed = sum(1 for e in log if e.get("placed"))
+        return {"placed": placed, "attempts": len(log), "log": log}
+
     def pick(self, color: str, level: int = 0):
         if color not in self.CUBE_COLORS:
             raise ValueError(f"color must be one of {self.CUBE_COLORS}")
@@ -904,7 +1010,8 @@ class GatewaySkills:
                    "say", "seen_objects", "wander", "turn", "move", "back",
                    "approach", "roam_step", "map_room", "use_map", "list_maps",
                    "find_cubes", "look_around", "pick", "place", "follow", "stack_cubes",
-                   "unstack_cubes", "mark_place", "list_places", "anchor_places"}
+                   "unstack_cubes", "mark_place", "list_places", "anchor_places",
+                   "sockmark", "find_on_floor"}
         if name not in allowed:
             raise ValueError(f"unknown skill {name!r}")
         return getattr(self, name)(**arguments)

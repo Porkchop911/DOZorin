@@ -53,6 +53,11 @@ from std_srvs.srv import SetBool, Trigger
 from .voice import Voice
 
 
+def raw_to_joints(q: dict):
+    """joint_states are raw servo angles, (pulse - 500) * 0.24 deg, not the URDF convention."""
+    return pulses_to_joints({i: 500 + q[f"joint{i}"] / math.radians(0.24) for i in range(1, 6)})
+
+
 class DriveRequest(BaseModel):
     vx: float = 0.0
     vy: float = 0.0
@@ -141,6 +146,23 @@ class PlaceRequest(BaseModel):
     level: int = 1             # stack height under the held cube (1 = on one cube)
     x: float | None = None     # or a floor point in base_link
     y: float | None = None
+    z: float | None = None     # release height for the x,y case (default: a cube resting on the floor)
+
+
+class AnchorRequest(BaseModel):
+    cls: str                   # anchor one located thing (e.g. a VLM find) instead of the YOLO frame
+    point: list[float]         # map-frame [x, y] of the object
+
+
+class LocateRequest(BaseModel):
+    pixels: list[list[float]]  # [[u, v], ...] in the colour image
+    plane_z: float = 0.0       # height of the horizontal plane the pixels lie on (m)
+
+
+class PickAtRequest(BaseModel):
+    x: float                   # soft object on the floor, base_link (plan/19)
+    y: float
+    z: float = 0.01
 
 
 class FollowRequest(BaseModel):
@@ -218,14 +240,15 @@ class GatewayNode(Node):
         self.audit_path = audit
         arm_path = Path(get_package_share_directory("hwr_arm")) / "config/poses.yaml"
         arm_config = yaml.safe_load(arm_path.read_text(encoding="utf-8"))
-        forward_pulses = arm_config["poses"]["forward"]
         radians_per_pulse = math.radians(240.0 / 1000.0)
         self.arm_config = arm_config
         self.kin = ArmKinematics()
-        self.camera_forward_target = {
+        # Translation needs the camera looking ahead: forward, or carry (raised, holding a sock
+        # clear of the floor, camera -10 deg; plan/19).
+        self.camera_forward_targets = [{
             f"joint{int(sid)}": (int(pulse) - 500) * radians_per_pulse
-            for sid, pulse in forward_pulses.items() if int(sid) in range(1, 6)
-        }
+            for sid, pulse in arm_config["poses"][name].items() if int(sid) in range(1, 6)
+        } for name in ("forward", "carry")]
 
         self.drive_pub = self.create_publisher(Twist, "cmd_vel_agent", 10)
         self.beep_pub = self.create_publisher(UInt16, "beep", 10)
@@ -404,11 +427,11 @@ class GatewayNode(Node):
         tolerance = float(self.get_parameter("camera_pose_tolerance_rad").value)
         if now - self.joint_stamp > timeout:
             return False
-        return all(
+        return any(all(
             name in self.joint_positions
             and abs(self.joint_positions[name] - target) <= tolerance
-            for name, target in self.camera_forward_target.items()
-        )
+            for name, target in pose.items()
+        ) for pose in self.camera_forward_targets)
 
     def _drive_tick(self) -> None:
         with self.lock:
@@ -869,7 +892,7 @@ class GatewayNode(Node):
             return {"name": body.name, "map": path.name.removesuffix(".places.yaml"), **place}
 
         @app.post("/places/anchor", dependencies=[Depends(auth)])
-        def place_anchor():
+        def place_anchor(body: AnchorRequest | None = None):
             """Remember where the seen static objects are (plan/18.1). Any arm pose: the box centre
             at its depth goes through the live camera pose (live 2026-10-18: YOLO misses furniture
             from the low forward view, finds the chair with the camera tilted up)."""
@@ -885,12 +908,22 @@ class GatewayNode(Node):
                 raise HTTPException(409, "localization is unhealthy; relocalize before anchoring")
             if not joints_fresh or not all(f"joint{i}" in q for i in range(1, 6)):
                 raise HTTPException(503, "arm joint states unavailable or stale")
-            if frame is None or time.time() - frame["stamp"] > 2.0:
-                raise HTTPException(503, "vision unavailable or stale")
-            # joint_states are raw servo angles, (pulse - 500) * 0.24 deg, not the URDF convention.
-            joints = pulses_to_joints({i: 500 + q[f"joint{i}"] / math.radians(0.24) for i in range(1, 6)})
             path = active_places_file()
             places, anchored = load_places(path), []
+            if body is not None:  # plan/19: the toy truck is found by the VLM, not YOLO
+                if len(body.point) != 2 or not all(math.isfinite(v) for v in body.point):
+                    raise HTTPException(422, "point must be a finite map [x, y]")
+                name = anchor_object(places, body.cls, body.point, pose[:2])
+                if name is None:
+                    raise HTTPException(422, f"{body.cls!r} is not a landmark class")
+                save_places(path, places)
+                result = {"name": name, "class": body.cls, "object": [round(v, 2) for v in body.point],
+                          "sightings": places[name]["sightings"]}
+                self._audit("place_anchor", "done", {"anchored": [result]})
+                return {"map": path.name.removesuffix(".places.yaml"), "anchored": [result]}
+            if frame is None or time.time() - frame["stamp"] > 2.0:
+                raise HTTPException(503, "vision unavailable or stale")
+            joints = raw_to_joints(q)
             c, s_ = math.cos(pose[2]), math.sin(pose[2])
             for item in frame["objects"]:
                 distance = item.get("range_m")
@@ -910,6 +943,39 @@ class GatewayNode(Node):
                 save_places(path, places)
             self._audit("place_anchor", "done", {"anchored": anchored})
             return {"map": path.name.removesuffix(".places.yaml"), "anchored": anchored}
+
+        @app.post("/vision/locate", dependencies=[Depends(auth)])
+        def vision_locate(body: LocateRequest):
+            """Colour-image pixels -> points on the plane z = plane_z, base and map frames (plan/19)."""
+            if not 1 <= len(body.pixels) <= 20 or any(len(p) != 2 for p in body.pixels):
+                raise HTTPException(422, "pixels must be 1..20 [u, v] pairs")
+            if not -0.1 <= body.plane_z <= 0.5:
+                raise HTTPException(422, "plane_z must be -0.1..0.5 m")
+            now = time.monotonic()
+            with self.lock:
+                joints_fresh = now - self.joint_stamp <= float(
+                    self.get_parameter("joint_state_timeout").value)
+                q = dict(self.joint_positions)
+                pose = None if self.pose is None else list(self.pose)
+                frame = self.vision
+            if not joints_fresh or not all(f"joint{i}" in q for i in range(1, 6)):
+                raise HTTPException(503, "arm joint states unavailable or stale")
+            if frame is None:
+                raise HTTPException(503, "camera intrinsics unavailable")
+            joints = raw_to_joints(q)
+            points = []
+            for u, v in body.pixels:
+                hit = self.kin.pixel_to_plane(u, v, tuple(frame["k"]), joints, body.plane_z)
+                if hit is None:
+                    points.append(None)
+                    continue
+                point = {"base": [round(hit[0], 3), round(hit[1], 3)]}
+                if pose is not None:
+                    c, s_ = math.cos(pose[2]), math.sin(pose[2])
+                    point["map"] = [round(pose[0] + hit[0] * c - hit[1] * s_, 3),
+                                    round(pose[1] + hit[0] * s_ + hit[1] * c, 3)]
+                points.append(point)
+            return {"points": points, "pose": pose}
 
         @app.get("/maps", dependencies=[Depends(auth)])
         def maps():
@@ -1360,7 +1426,10 @@ class GatewayNode(Node):
                     return result
                 spot, z = seen[0], size * body.level + size / 2 + clearance
             elif body.x is not None and body.y is not None:
-                spot, z = {"x": body.x, "y": body.y, "yaw": 0.0}, size / 2 + clearance
+                spot = {"x": body.x, "y": body.y, "yaw": 0.0}
+                z = size / 2 + clearance if body.z is None else body.z
+                if not 0.0 <= z <= 0.25:
+                    raise HTTPException(422, "z must be 0..0.25 m")
             else:
                 raise HTTPException(422, "give on=<color> or x,y")
             # Live B2 #3 placed at -85/-80 deg and stood; #4 at -60/-55 and fell: place steep only.
@@ -1402,6 +1471,34 @@ class GatewayNode(Node):
                 if body.color:
                     result["error_radial_side"] = error
             self._audit("arm_place", result["outcome"], result)
+            return result
+
+        @app.post("/arm/pick_at", dependencies=[Depends(auth)])
+        def arm_pick_at(body: PickAtRequest):
+            """Pick a soft object (sock) at a base-frame floor point (plan/19): steep, any yaw (cloth
+            gathers between the jaws), lift. The caller judges the pick by looking again."""
+            if not 0.0 <= body.z <= 0.05:
+                raise HTTPException(422, "z must be 0..0.05 m")
+            if math.hypot(body.x, body.y) < 0.19:  # jaw meets the front wheel (S5 #2 2026-10-17)
+                return {"outcome": "out of reach", "x": body.x, "y": body.y}
+            # Down to -75 deg: steep-only is a cube rule (tilted jaws shoved them); cloth doesn't
+            # slide away, and z = 0 at -85 reaches only ~0.21 m (2026-10-18).
+            # >= 3 mm: at z = 0 the pulse rounding dips below the floor and the arm IK refuses.
+            plan = plan_grasp(self.kin, body.x, body.y, max(body.z, 0.003), 0.0, hover=0.08,
+                              roll_sign=roll_sign, flattest=-math.radians(75))
+            if plan is None:
+                result = {"outcome": "out of reach", "x": body.x, "y": body.y}
+            else:
+                hover, grasp, pitch = plan
+                grip("open")
+                reach(hover, 1200, 1.4)
+                reach(grasp, 800, 1.0)
+                grip("squeeze")
+                reach(hover, 800, 1.0)
+                result = {"outcome": "lifted", "x": body.x, "y": body.y,
+                          "pitch_deg": round(math.degrees(pitch)),
+                          "gripper_readback": arm_pulses().get(10)}
+            self._audit("arm_pick_at", result["outcome"], result)
             return result
 
         @app.post("/arm/follow", dependencies=[Depends(auth)])
