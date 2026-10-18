@@ -723,3 +723,21 @@ def test_sockmark_stops_holding_when_the_truck_is_out_of_reach(monkeypatch):
     monkeypatch.setattr(skills, "arm_pose", lambda n: None)
     result = skills.sockmark()
     assert result["placed"] == 0 and "out of reach" in result["stopped"]
+
+
+def test_advance_creeps_through_a_block_at_the_target_and_stops_before_a_real_obstacle(monkeypatch):
+    skills = GatewaySkills(token="test")
+    calls = []
+
+    def move(meters, direction="forward"):
+        calls.append(("move", round(meters, 2)))
+        if len(calls) == 1:
+            raise RuntimeError("gateway HTTP 409: path blocked in costmap at 0.64 m (cost 99)")
+
+    monkeypatch.setattr(skills, "move", move)
+    monkeypatch.setattr(skills, "drive", lambda vx, seconds: calls.append(("drive", round(vx * seconds, 2))))
+    skills._advance(0.50, 0.70)  # the sock itself at 0.70 m blocks at 0.64 -> creep
+    assert calls == [("move", 0.5), ("drive", 0.3)]
+    calls.clear()
+    skills._advance(0.50, 1.20)  # block at 0.64 with the target at 1.2 m -> stop 0.20 before it
+    assert calls == [("move", 0.5), ("move", 0.44)]

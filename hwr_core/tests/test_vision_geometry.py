@@ -2,7 +2,7 @@ import math
 
 import numpy as np
 
-from hwr_core.navigation.vision_geometry import bearing, object_range, parse_grounding
+from hwr_core.navigation.vision_geometry import bearing, depth_below, object_range, parse_grounding
 
 
 def test_bearing_left_positive():
@@ -37,3 +37,10 @@ def test_parse_grounding_scales_boxes_and_drops_the_gripper_at_the_bottom_edge()
     assert points == [{"label": "sock", "center": [223, 151]}]  # 2nd: the gripper strip
     truck = parse_grounding('[{"label": "toy truck", "bbox_2d": [640, 825, 880, 1000]}]', 640, 400)
     assert truck and truck[0]["center"] == [486, 365]  # bottom edge but right of the fingertips
+
+
+def test_depth_below_skips_the_hole_on_a_dark_object_to_the_floor_in_front():
+    depth = np.zeros((400, 640))
+    depth[268:, :] = 0.95  # floor in front of the truck; the truck itself (rows < 268) has no return
+    assert depth_below(depth, 329, 248, (400, 640)) == (264, 0.95)  # first window that reaches the floor
+    assert depth_below(np.zeros((400, 640)), 329, 248, (400, 640)) is None

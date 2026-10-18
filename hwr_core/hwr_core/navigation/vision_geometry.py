@@ -64,3 +64,16 @@ def parse_grounding(text: str, width: int, height: int, bottom: float = 0.07) ->
             continue
         found.append(hit)
     return found
+
+
+def depth_below(depth: np.ndarray, u: float, v: float, color_shape: tuple[int, int],
+                max_px: int = 80, step: int = 4) -> tuple[float, float] | None:
+    """(v, range) of the first valid depth at or below colour pixel (u, v), within max_px.
+
+    Dark metal (the toy truck) leaves holes in the depth; the floor just below it is where the
+    object stands, so its range is the object's near edge (live 2026-10-18)."""
+    for dv in range(0, max_px + 1, step):
+        r = object_range(depth, (u - 15, v + dv - 15, u + 15, v + dv + 15), color_shape)
+        if r is not None:
+            return v + dv, r
+    return None

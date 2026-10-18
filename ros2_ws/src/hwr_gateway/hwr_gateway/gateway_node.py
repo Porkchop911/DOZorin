@@ -50,6 +50,9 @@ from sensor_msgs.msg import BatteryState, Image, JointState, LaserScan
 from std_msgs.msg import Bool, String, UInt16
 from std_srvs.srv import SetBool, Trigger
 
+from hwr_core.navigation.vision_geometry import depth_below
+from hwr_sensors.depth_to_ranges_node import _depth_metres
+
 from .voice import Voice
 
 
@@ -223,6 +226,8 @@ class GatewayNode(Node):
         self.costmap = None
         self.costmap_meta = None
         self.jpeg = None
+        self.color_shape = None   # (height, width) of the colour image, for depth lookups
+        self.depth_msg = None     # latest depth Image, converted only when /vision/locate asks
         self.vision = None
         self.estop_latched = None
         self.last_jpeg = 0.0
@@ -283,6 +288,8 @@ class GatewayNode(Node):
             durability=DurabilityPolicy.TRANSIENT_LOCAL))
         self.create_subscription(Image, "camera/color/image_raw", self._image, 1,
                                  callback_group=self.group)
+        self.create_subscription(Image, "camera/depth/image_raw", self._depth, QoSProfile(
+            depth=1, reliability=QoSReliabilityPolicy.BEST_EFFORT), callback_group=self.group)
         self.create_subscription(JointState, "joint_states", self._joint_state, 10,
                                  callback_group=self.group)
         self.create_subscription(LaserScan, "depth_ranges_full", self._rear_fan, QoSProfile(
@@ -409,6 +416,11 @@ class GatewayNode(Node):
         if ok:
             with self.lock:
                 self.jpeg, self.last_jpeg = encoded.tobytes(), now
+                self.color_shape = (msg.height, msg.width)
+
+    def _depth(self, msg: Image) -> None:
+        with self.lock:
+            self.depth_msg = msg
 
     def _joint_state(self, msg: JointState) -> None:
         if len(msg.name) != len(msg.position):
@@ -963,13 +975,25 @@ class GatewayNode(Node):
             if frame is None:
                 raise HTTPException(503, "camera intrinsics unavailable")
             joints = raw_to_joints(q)
+            with self.lock:
+                depth_msg, color_shape = self.depth_msg, self.color_shape
+            depth = _depth_metres(depth_msg) if depth_msg is not None and color_shape else None
             points = []
             for u, v in body.pixels:
-                hit = self.kin.pixel_to_plane(u, v, tuple(frame["k"]), joints, body.plane_z)
+                # Depth first: the plane hit is metres off near the horizon (truck read 2.9 m, was
+                # < 1 m, 2026-10-18). Plane only where the depth has no return.
+                below = None if depth is None else depth_below(depth, u, v, color_shape)
+                if below is not None:
+                    v, distance = below
+                    bx, by, _ = self.kin.pixel_to_point(u, v, tuple(frame["k"]), joints, distance)
+                    hit, source = (bx, by), "depth"
+                else:
+                    hit = self.kin.pixel_to_plane(u, v, tuple(frame["k"]), joints, body.plane_z)
+                    source = "plane"
                 if hit is None:
                     points.append(None)
                     continue
-                point = {"base": [round(hit[0], 3), round(hit[1], 3)]}
+                point = {"base": [round(hit[0], 3), round(hit[1], 3)], "source": source}
                 if pose is not None:
                     c, s_ = math.cos(pose[2]), math.sin(pose[2])
                     point["map"] = [round(pose[0] + hit[0] * c - hit[1] * s_, 3),

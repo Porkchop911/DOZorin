@@ -543,7 +543,7 @@ class GatewaySkills:
             image = self._get("/snapshot", binary=True)
             width, height = Image.open(io.BytesIO(image)).size
             boxes = parse_grounding(self._ask_vlm(image, self.GROUND_PROMPT.format(label=label)),
-                                    width, height)
+                                    width, height)[:20]  # /vision/locate takes <= 20 (a pile listed more)
             if not boxes:
                 continue
             points = self._act(f"locate {label}", "/vision/locate",
@@ -587,7 +587,7 @@ class GatewaySkills:
             # Two stages: stop 0.10 m short, then re-find from the steep view for the last bit.
             step = distance - reach_x - (0.10 if distance > reach_x + 0.15 else 0.0)
             if step > 0.02:
-                self.move(min(step, 1.5))
+                self._advance(min(step, 1.5), distance)
             found = self.find_on_floor(label, near + self.SEARCH_VIEWS[1:3], plane_z)
             if not found:
                 return None
@@ -597,12 +597,36 @@ class GatewaySkills:
         """Arm sweep, then up to 3 body turns of 120 deg; nearest hit or None."""
         for turns in range(4):
             found = self.find_on_floor(label, self.SEARCH_VIEWS, plane_z)
+            if found and found[0].get("source") == "plane":
+                # No depth at the image edge (narrower depth FOV): centre it and look again.
+                x, y = found[0]["base"]
+                view = (round(math.degrees(math.atan2(y, x))), found[0]["view"][1])
+                if abs(view[0]) <= 110:
+                    found = self.find_on_floor(label, (view,), plane_z) or found
             if found:
                 return found[0]
             if turns < 3:
                 self._arm_clear()
                 self.turn(120)
         return None
+
+    def _advance(self, step: float, target_m: float):
+        """Forward `step` toward a target `target_m` ahead. The costmap marks the target itself (socks
+        are > 5 cm tall, live 2026-10-18), so a block at the target is crept through with /drive
+        (<= 0.30 m, like the cube creep); a block well short of it is a real obstacle: stop before it."""
+        try:
+            self.move(min(step, 2.0))
+            return
+        except RuntimeError as exc:
+            blocked = re.search(r"blocked in costmap at ([0-9.]+) m", str(exc))
+            if not blocked:
+                raise
+            at = float(blocked.group(1))
+        # shortcut: 0.20 m guesses the gateway's move clearance; read it if this stops short.
+        if at >= target_m - 0.30:
+            self.drive(vx=0.1, seconds=min(step, 0.30) / 0.1)
+        elif at - 0.20 > 0.03:
+            self.move(at - 0.20)
 
     def _to_base(self, point):
         x, y, yaw = self._get("/status")["pose"]
@@ -615,17 +639,9 @@ class GatewaySkills:
         x, y = self._to_base(point)
         if abs(math.degrees(math.atan2(y, x))) >= 5.0:
             self.turn(math.degrees(math.atan2(y, x)))
-        step = math.hypot(*self._to_base(point)) - stop_at
-        if step > 0.03:
-            try:
-                self.move(min(step, 2.0))
-            except RuntimeError as exc:
-                blocked = re.search(r"blocked in costmap at ([0-9.]+) m", str(exc))
-                if not blocked:
-                    raise
-                # shortcut: 0.20 m guesses the gateway's move clearance; read it if this stops short.
-                if float(blocked.group(1)) - 0.20 > 0.03:
-                    self.move(float(blocked.group(1)) - 0.20)
+        distance = math.hypot(*self._to_base(point))
+        if distance - stop_at > 0.03:
+            self._advance(distance - stop_at, distance)
         return self._to_base(point)
 
     def sockmark(self, max_socks: int = 6, truck: str = "toy truck"):
