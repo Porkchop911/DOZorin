@@ -588,7 +588,7 @@ class GatewaySkills:
         # Of the points on it, the one nearest the reach spot (but outside the 0.19 m wheel guard).
         best = lambda found: min([f for f in found if math.hypot(*f["base"]) >= 0.19] or found,  # noqa: E731
                                  key=lambda f: abs(math.hypot(*f["base"]) - reach_x))
-        for _ in range(5):
+        for _ in range(8):
             x, y = best(found)["base"]
             distance, bearing = math.hypot(x, y), math.degrees(math.atan2(y, x))
             if distance < 0.19:
@@ -612,7 +612,10 @@ class GatewaySkills:
                 self._advance(min(step, 1.5), distance)
             found = keep(self.find_on_floor(label, near + self.SEARCH_VIEWS[1:3], plane_z, tries=2, spread=True))
             if not found:
-                return None
+                # Lost this one: any other in view will do (user: "so many socks, just pick one").
+                found = keep(self.find_on_floor(label, self.SEARCH_VIEWS, plane_z))
+                if not found:
+                    return None
         # The last creep can land it in reach: check once more (live 2026-10-18 it ended at 0.211 m).
         x, y = best(found)["base"]
         if 0.19 <= math.hypot(x, y) <= reach_x + 0.02 and abs(math.degrees(math.atan2(y, x))) < 8.0:
@@ -653,7 +656,8 @@ class GatewaySkills:
         at = float(blocked.group(1))
         # shortcut: 0.20 m guesses the gateway's move clearance; read it if this stops short.
         if at >= target_m - 0.30:
-            self.drive(vx=0.1, seconds=min(step, 0.30) / 0.1)
+            # <= 0.15 m blind, then look again: 0.30 m creeps overshot onto socks (live 2026-10-18).
+            self.drive(vx=0.1, seconds=min(step, 0.15) / 0.1)
         elif at - 0.20 > 0.03:
             self.move(at - 0.20)
 

@@ -761,8 +761,8 @@ def test_advance_creeps_through_a_block_at_the_target_and_stops_before_a_real_ob
 
     monkeypatch.setattr(skills, "move", move)
     monkeypatch.setattr(skills, "drive", lambda vx, seconds: calls.append(("drive", round(vx * seconds, 2))))
-    skills._advance(0.50, 0.70)  # the sock itself at 0.70 m blocks at 0.64 -> creep
-    assert calls == [("move", 0.5), ("drive", 0.3)]
+    skills._advance(0.50, 0.70)  # the sock itself at 0.70 m blocks at 0.64 -> creep (<= 0.15 blind)
+    assert calls == [("move", 0.5), ("drive", 0.15)]
     calls.clear()
     skills._advance(0.50, 1.20)  # block at 0.64 with the target at 1.2 m -> stop 0.20 before it
     assert calls == [("move", 0.5), ("move", 0.44)]
