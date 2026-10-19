@@ -756,11 +756,11 @@ class GatewaySkills:
                 return {"placed": False, "why": "set-down failed (still holding the sock)", "rounds": rounds}
             crept, centre = 0.0, None
             while True:
-                # < 0.20 m would be under the bumper: a bogus hit (read 0.13 m, live 2026-10-19).
-                # Near views first; -20 ones for a truck still ~0.7 m out (missed there, 2026-10-19).
+                # A plane fix < 0.20 m was bogus (0.13 m, live 2026-10-19); a depth fix that close is the
+                # truck right at the bumper (0.14 m, same day). Near views first, -20 for ~0.7 m out.
                 seen = [f for f in self.find_on_floor(truck, ((0, -60), (0, -40), (35, -40), (-35, -40),
                                                               (0, -20), (30, -20), (-30, -20)), 0.03, tries=2)
-                        if math.hypot(*f["base"]) >= 0.20]
+                        if f.get("source") == "depth" or math.hypot(*f["base"]) >= 0.20]
                 if not seen:
                     return {"placed": False, "why": f"{truck} not seen up close", "rounds": rounds}
                 # Depth = the floor at its near side; a plane fix of a point on its top reads long.
