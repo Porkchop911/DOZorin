@@ -165,3 +165,26 @@ user's help ("at the window") + a depth pixel; the 4B named the robot's own grip
 
 Next: re-anchor the truck from <= 0.8 m, rerun `sockmark(max_socks=1)`; then check the odometry drive and
 the drop land in the bed (user confirms).
+
+## Live 2026-10-19 evening: first sock in the truck (hand-finished last metre)
+
+Setup that worked: relocalize (0.79) -> **delete stale `toy_truck` from `~/hwr/maps/room_20261015.places.yaml`
+on the robot first** (`/places/anchor` averages with old entries: stale + new gave y=1.01 vs true 1.26)
+-> `find_on_floor("toy truck", SEARCH_VIEWS, 0.05)` from ~0.65 m -> `/places/anchor {cls, point}` with the
+hit's map point (-0.44, 1.26) -> `sockmark(max_socks=1)`.
+
+| Run | Got to | Stopped by | Fix |
+|---|---|---|---|
+| 1-2 | - | "no more socks found" (1st: VLM miss; averaged truck anchor) | delete stale place, re-anchor |
+| 3 | pick held, set-down | re-pick out of reach | - |
+| 4 | re-pick held | bed centre 0.62 m: costmap move gave up at once, odometry drive capped at 0.25 m | cap 0.45 m |
+| 5 | re-pick held, drove | bed centre 0.37 m: drive undershot (0.25 asked, ~0.15 done) | re-measure + correct, up to 3 passes (not yet run live) |
+
+Manual finish (sock still in the gripper, robot 0.33 m from the anchor, truck 95 deg left), all from the
+gateway pose and the anchor, no new look:
+1. `rel()` = anchor in the base frame from `/status` pose; `turn(atan2(y, x))` to face it (twice: 95 deg, then the ~9 deg residual).
+2. Bed centre = anchor + 0.045 m along the ray (`BED_PAST_SIDE`); `drive(vx=0.1, seconds=(d - 0.27) / 0.1)`.
+3. Recompute `rel()` x 1.0 + 0.045 along the ray -> (0.289, 0.009); within `DROP_REACH` 0.32 -> `/arm/place {x, y, z: 0.12}` -> `placed`.
+
+Lesson: the odometry-frame centre plus a measure-drive-measure loop is enough; one open-loop drive is not.
+User-confirmed: sock in the truck (1). Loop end to end: still 0.

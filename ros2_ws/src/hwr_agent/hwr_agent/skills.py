@@ -820,8 +820,10 @@ class GatewaySkills:
                         pass
         # The inflated truck stops costmap moves ~0.4 m short of the drop spot (blocked at 0.7 m with
         # the centre 1.13 m out, live 2026-10-19). The centre is known in odometry: drive the rest.
-        rest = math.hypot(*here()) - self.FINAL
-        if 0.02 < rest <= 0.25:
+        for _ in range(3):  # the drive undershot 0.25 -> 0.15 m live: re-measure and correct
+            rest = math.hypot(*here()) - self.FINAL
+            if not 0.02 < rest <= 0.45:
+                break
             self.drive(vx=0.1, seconds=rest / 0.1)
         x, y = here()
         if math.hypot(x, y) > self.DROP_REACH:
