@@ -755,6 +755,11 @@ def _deliver_rig(monkeypatch, truck_hits, move_to=None):
         pose[0] += meters if move_to is None else move_to
         return {"outcome": "done"}
     monkeypatch.setattr(skills, "move", move)
+
+    def drive(vx=0.0, seconds=0.0, **_):
+        calls.append(("drive", round(vx * seconds, 3)))
+        pose[0] += 0.0 if move_to is not None else vx * seconds
+    monkeypatch.setattr(skills, "drive", drive)
     monkeypatch.setattr(skills, "find_on_floor", lambda label, views=None, plane_z=0.0, tries=1: (
         truck_hits if label == "toy truck" else [{"base": [0.23, 0.15]}]))
     monkeypatch.setattr(skills, "_motion", lambda d, path, payload, s: calls.append((path, payload)) or (
@@ -783,6 +788,21 @@ def test_deliver_navigates_to_the_standoff_when_the_straight_carry_is_blocked(mo
     monkeypatch.setattr(skills, "goto", lambda x, y, yaw: goals.append((x, y, yaw)))
     assert skills._deliver([2.0, 0.0])["placed"] is True
     assert goals == [pytest.approx((1.4, 0.0, 0.0))]  # 0.6 m short of the truck, facing it
+
+
+def test_deliver_moves_up_to_the_costmap_block_then_drives_the_rest_by_odometry(monkeypatch):
+    skills, calls = _deliver_rig(monkeypatch, [{"base": [1.085, 0.0], "source": "depth"}])
+    real_move = skills.move
+
+    def move(meters, direction="forward"):
+        if meters > 0.7:
+            raise RuntimeError("gateway HTTP 409: path blocked in costmap at 0.7 m (cost 99)")
+        return real_move(meters)
+    monkeypatch.setattr(skills, "move", move)
+    result = skills._deliver([1.0, 2.0])
+    assert result["placed"] is True
+    assert ("move", 0.65) in calls and ("drive", 0.21) in calls  # 1.13 - 0.65 - 0.27
+    assert result["drop"][0] == pytest.approx(0.27, abs=1e-6)
 
 
 def test_deliver_stops_with_the_sock_down_when_no_depth_fix_of_the_truck(monkeypatch):

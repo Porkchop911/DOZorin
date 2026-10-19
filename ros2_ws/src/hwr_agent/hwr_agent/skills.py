@@ -806,9 +806,19 @@ class GatewaySkills:
         step = math.hypot(*here()) - self.FINAL
         if step > 0.02:
             try:
-                self.move(min(step, 0.6))
-            except RuntimeError:
-                pass  # costmap-refused: drop from where it is if that is in reach
+                self.move(min(step, 1.0))
+            except RuntimeError as exc:
+                blocked = re.search(r"blocked in costmap at ([0-9.]+) m", str(exc))
+                if blocked and float(blocked.group(1)) > 0.07:
+                    try:
+                        self.move(float(blocked.group(1)) - 0.05)
+                    except RuntimeError:
+                        pass
+        # The inflated truck stops costmap moves ~0.4 m short of the drop spot (blocked at 0.7 m with
+        # the centre 1.13 m out, live 2026-10-19). The centre is known in odometry: drive the rest.
+        rest = math.hypot(*here()) - self.FINAL
+        if 0.02 < rest <= 0.25:
+            self.drive(vx=0.1, seconds=rest / 0.1)
         x, y = here()
         if math.hypot(x, y) > self.DROP_REACH:
             return {"placed": False, "why": f"bed centre {math.hypot(x, y):.2f} m away, out of reach"}
