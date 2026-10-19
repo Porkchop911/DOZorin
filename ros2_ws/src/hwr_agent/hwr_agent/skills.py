@@ -654,7 +654,7 @@ class GatewaySkills:
                 self.turn(120)
         return None
 
-    def _advance(self, step: float, target_m: float):
+    def _advance(self, step: float, target_m: float, creep: bool = True):
         """Forward `step` toward a target `target_m` ahead. The costmap marks the target itself (socks
         are > 5 cm tall, live 2026-10-18), so a block at the target is crept through with /drive
         (<= 0.30 m, like the cube creep); a block well short of it is a real obstacle: stop before it."""
@@ -671,6 +671,8 @@ class GatewaySkills:
         at = float(blocked.group(1))
         # shortcut: 0.20 m guesses the gateway's move clearance; read it if this stops short.
         if at >= target_m - 0.30:
+            if not creep:
+                return  # blind creeps drove into the truck (its estimate was off; live 2026-10-19)
             # <= 0.15 m blind, then look again: 0.30 m creeps overshot onto socks (live 2026-10-18).
             self.drive(vx=0.1, seconds=min(step, 0.15) / 0.1)
         elif at - 0.20 > 0.03:
@@ -679,7 +681,7 @@ class GatewaySkills:
             except RuntimeError:
                 pass  # the costmap moved meanwhile (blocked at 0.3 m, live 2026-10-19): stay put
 
-    def _drive_near(self, point, stop_at: float):
+    def _drive_near(self, point, stop_at: float, creep: bool = True):
         """Face a map point and drive until it is ~stop_at ahead, as far as the costmap allows.
         Returns the remaining base-frame distance."""
         # Map pose, not _pose() (odometry): the truck point is a map-frame place.
@@ -692,7 +694,7 @@ class GatewaySkills:
             distance = math.hypot(*here())
             if distance - stop_at <= 0.05:
                 break
-            self._advance(distance - stop_at, distance)
+            self._advance(distance - stop_at, distance, creep)
         return here()
 
     # Live 2026-10-18: the truck's bed centre is ~4.5 cm past its near side (truck sideways, bed ~9 cm
@@ -712,67 +714,77 @@ class GatewaySkills:
             if time.monotonic() > deadline:
                 return False
 
+    ASIDE = (0.23, 0.15)  # set-down spot beside the path; (0.25, 0.17) is out of reach at z 0.03
+
     def _deliver(self, truck_map, truck: str = "toy truck") -> dict:
-        """Holding a sock: carry it near the truck, set it down in front, look steeply (the held sock
-        hides the truck, and the carry-pose camera read ~0.18 m long), creep until the bed is within
-        reach, re-pick and drop it in. The first sock went in exactly this way (2026-10-18)."""
+        """Holding a sock: carry it toward the truck (costmap-checked moves only), set it down beside
+        the path, then finish by sight (`_finish_drop`). The held sock hides the truck and the
+        carry-pose camera read ~0.18 m long, so the last part is always done with the sock down."""
         if not self._lift_to("carry"):
             return {"placed": False, "why": "arm did not reach carry (servo limp or blocked?)"}
-        # 0.36 m: at 0.55 the truck sat at the top of the steep view, outside the depth image, and was
-        # too far to creep to past the set-down sock (live 2026-10-18).
-        self._drive_near(truck_map, stop_at=0.36)
-        # Beside the path, not in front: 4 creeps (~0.25 m) drove over a sock set down at 0.27 m ahead
-        # (live 2026-10-18). Total creep stays within what keeps it >= 0.19 m out for the re-pick.
-        aside = (0.23, 0.15)  # (0.25, 0.17) is out of reach at z 0.03 (live 2026-10-18)
-        down = self._motion("set the sock down", "/arm/place", {"x": aside[0], "y": aside[1], "z": 0.03}, 20.0)
-        if down.get("outcome") != "placed":
-            return {"placed": False, "why": f"set-down {down.get('outcome')} (still holding the sock)"}
-        budget = aside[0] - math.sqrt(max(0.19 ** 2 - aside[1] ** 2, 0.0)) - 0.01
-        centre, crept, rounds = None, 0.0, []
-        for _ in range(4):
-            # < 0.20 m would be under the bumper: a bogus hit (read 0.13 m, live 2026-10-19).
-            seen = [f for f in self.find_on_floor(truck, ((0, -60), (0, -40)), 0.03, tries=2)
-                    if math.hypot(*f["base"]) >= 0.20]
-            if not seen:
-                return {"placed": False, "why": f"{truck} not seen up close"}
-            # Depth = the floor at its near side; a plane fix of a point on its top reads long.
-            side = [f for f in seen if f.get("source") == "depth"] or seen
-            plane = side[0].get("source") != "depth"
-            x, y = side[0]["base"]
-            distance = math.hypot(x, y)
-            rounds.append([round(x, 3), round(y, 3), side[0].get("source")])
-            # shortcut: assumes the truck sideways (bed across); use its box/heading if it is turned.
-            centre = (x * (distance + self.BED_PAST_SIDE) / distance,
-                      y * (distance + self.BED_PAST_SIDE) / distance)
-            if math.hypot(*centre) <= self.DROP_REACH and not plane:
-                break
-            if abs(math.degrees(math.atan2(y, x))) >= 8.0:
+        # 0.36 m: at 0.55 the truck sat outside the depth image (live 2026-10-18); no blind creep:
+        # three of them drove into the truck when its estimate was off (live 2026-10-19).
+        self._drive_near(truck_map, stop_at=0.36, creep=False)
+        return self._finish_drop(truck)
+
+    def _set_aside(self) -> bool:
+        down = self._motion("set the sock down", "/arm/place",
+                            {"x": self.ASIDE[0], "y": self.ASIDE[1], "z": 0.03}, 20.0)
+        return down.get("outcome") == "placed"
+
+    def _finish_drop(self, truck: str = "toy truck", hops: int = 4) -> dict:
+        """Sock in the jaws, truck ahead: set the sock down beside the path, look steeply, creep while
+        the set-down sock stays pickable; out of creep -> re-pick, set down again, go on (leapfrog).
+        In reach -> re-pick and drop in the bed. Every step forward is decided from a fresh look."""
+        # Total creep that keeps the set-down sock >= 0.19 m out for the re-pick.
+        budget = self.ASIDE[0] - math.sqrt(max(0.19 ** 2 - self.ASIDE[1] ** 2, 0.0)) - 0.01
+        rounds = []
+        for hop in range(hops):
+            if not self._set_aside():
+                return {"placed": False, "why": "set-down failed (still holding the sock)", "rounds": rounds}
+            crept, centre = 0.0, None
+            while True:
+                # < 0.20 m would be under the bumper: a bogus hit (read 0.13 m, live 2026-10-19).
+                seen = [f for f in self.find_on_floor(truck, ((0, -60), (0, -40)), 0.03, tries=2)
+                        if math.hypot(*f["base"]) >= 0.20]
+                if not seen:
+                    return {"placed": False, "why": f"{truck} not seen up close", "rounds": rounds}
+                # Depth = the floor at its near side; a plane fix of a point on its top reads long.
+                side = [f for f in seen if f.get("source") == "depth"] or seen
+                plane = side[0].get("source") != "depth"
+                x, y = side[0]["base"]
+                distance = math.hypot(x, y)
+                rounds.append([hop, round(x, 3), round(y, 3), side[0].get("source")])
+                # shortcut: assumes the truck sideways (bed across); use its box/heading if it is turned.
+                centre = (x * (distance + self.BED_PAST_SIDE) / distance,
+                          y * (distance + self.BED_PAST_SIDE) / distance)
+                if math.hypot(*centre) <= self.DROP_REACH and not plane:
+                    break
+                if abs(math.degrees(math.atan2(y, x))) >= 8.0:
+                    self._arm_clear()
+                    self.turn(math.degrees(math.atan2(y, x)))
+                    continue
+                gap = math.hypot(*centre) - self.DROP_REACH + 0.01
+                step = min(max(0.02, min(gap / 2 if plane else gap, 0.10)), budget - crept)
+                if step < 0.01:
+                    break  # out of creep for this hop: take the sock along
                 self._arm_clear()
-                self.turn(math.degrees(math.atan2(y, x)))
-                continue
-            # <= 0.10 m: the sock was set down 0.27 m out and must stay >= 0.19 m to be picked.
-            self._arm_clear()
-            gap = math.hypot(*centre) - self.DROP_REACH + 0.01
-            step = min(max(0.02, min(gap / 2 if plane else gap, 0.10)), budget - crept)
-            if step < 0.01:
-                return {"placed": False, "why": f"{truck} out of reach within the creep budget",
-                        "rounds": rounds}
-            self.drive(vx=0.05, seconds=step / 0.05)
-            crept += step
-        else:
-            return {"placed": False, "why": f"{truck} still out of reach", "rounds": rounds}
-        sock = self.find_on_floor("sock", ((-30, -60), (0, -60), (-45, -40)), tries=2)
-        if not sock:
-            return {"placed": False, "why": "set-down sock not seen"}
-        pick = self._motion("pick the sock again", "/arm/pick_at",
-                            {"x": sock[0]["base"][0], "y": sock[0]["base"][1], "z": 0.0}, 20.0)
-        if pick.get("outcome") != "holding":
-            return {"placed": False, "why": "re-pick missed"}
-        place = self._motion("drop the sock in the truck", "/arm/place",
-                             {"x": centre[0], "y": centre[1], "z": 0.12}, 20.0)
-        return {"placed": place.get("outcome") == "placed", "drop": [round(v, 3) for v in centre],
-                "rounds": rounds,
-                "why": None if place.get("outcome") == "placed" else f"drop {place.get('outcome')}"}
+                self.drive(vx=0.05, seconds=step / 0.05)
+                crept += step
+            sock = self.find_on_floor("sock", ((-30, -60), (0, -60), (-45, -40)), tries=2)
+            if not sock:
+                return {"placed": False, "why": "set-down sock not seen", "rounds": rounds}
+            pick = self._motion("pick the sock again", "/arm/pick_at",
+                                {"x": sock[0]["base"][0], "y": sock[0]["base"][1], "z": 0.0}, 20.0)
+            if pick.get("outcome") != "holding":
+                return {"placed": False, "why": f"re-pick {pick.get('outcome')}", "rounds": rounds}
+            if math.hypot(*centre) <= self.DROP_REACH and rounds[-1][3] == "depth":
+                place = self._motion("drop the sock in the truck", "/arm/place",
+                                     {"x": centre[0], "y": centre[1], "z": 0.12}, 20.0)
+                return {"placed": place.get("outcome") == "placed",
+                        "drop": [round(v, 3) for v in centre], "rounds": rounds,
+                        "why": None if place.get("outcome") == "placed" else f"drop {place.get('outcome')}"}
+        return {"placed": False, "why": f"{truck} still out of reach after {hops} hops", "rounds": rounds}
 
     def sockmark(self, max_socks: int = 6, truck: str = "toy truck"):
         """Put the socks in the toy truck (plan/19). The truck is found first, with nothing held:
