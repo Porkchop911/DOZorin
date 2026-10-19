@@ -159,8 +159,11 @@ class GatewaySkills:
                 {"type": "image_url", "image_url": {"url":
                     "data:image/jpeg;base64," + base64.b64encode(image).decode("ascii")}},
             ]}]}
-        response = requests.post(endpoint + "/chat/completions", json=payload,
-                                 timeout=60.0)
+        try:
+            response = requests.post(endpoint + "/chat/completions", json=payload, timeout=60.0)
+        except requests.Timeout:
+            # LM Studio unloads an idle model (TTL 1 h) and the reload took > 60 s (live 2026-10-19).
+            response = requests.post(endpoint + "/chat/completions", json=payload, timeout=180.0)
         response.raise_for_status()
         return response.json()["choices"][0]["message"]["content"]
 
