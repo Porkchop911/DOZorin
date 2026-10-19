@@ -1539,6 +1539,16 @@ class GatewayNode(Node):
                 grip("open")
                 reach(hover, 1200, 1.4)
                 reach(grasp, 800, 1.0)
+                # Jaws on the floor before the target = the shoulder keeps pushing; it went limp after
+                # picks that otherwise held (live 2026-10-19). Lagging > 25 pulses: re-plan 1 cm up.
+                at = arm_pulses()
+                lag = {sid: at.get(sid, 10_000) - grasp[sid] for sid in (2, 3, 4)}
+                if any(abs(v) > 25 for v in lag.values()):
+                    higher = plan_grasp(self.kin, body.x, body.y, max(body.z, 0.008) + 0.01, 0.0,
+                                        hover=0.08, roll_sign=roll_sign, flattest=-math.radians(75))
+                    if higher is not None:
+                        grasp = higher[1]
+                        reach(grasp, 500, 0.6)
                 grip("squeeze")
                 reach(hover, 800, 1.0)
                 now = arm_pulses()
@@ -1554,7 +1564,8 @@ class GatewayNode(Node):
                 # Live 2026-10-18 at squeeze 680: empty jaws read 667-668, a held sock 648-651.
                 held = closed is not None and closed < int(arm_config["gripper"]["squeeze"]) - 20
                 result = {"outcome": "holding" if held else "missed", "x": body.x, "y": body.y,
-                          "pitch_deg": round(math.degrees(pitch)), "gripper_readback": closed}
+                          "pitch_deg": round(math.degrees(pitch)), "gripper_readback": closed,
+                          "grasp_lag": lag}
                 if not held:
                     grip("open")
             self._audit("arm_pick_at", result["outcome"], result)
