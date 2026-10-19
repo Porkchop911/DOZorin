@@ -28,12 +28,14 @@ def bearing(u: float, fx: float, cx: float) -> float:
     return -math.atan2(u - cx, fx)
 
 
-def parse_grounding(text: str, width: int, height: int, bottom: float = 0.15) -> list[dict]:
+def parse_grounding(text: str, width: int, height: int, bottom: float = 0.15,
+                    strip_labels: tuple[str, ...] = ("sock",)) -> list[dict]:
     """VLM grounding reply ([{"label", "point_2d" or "bbox_2d": 0-1000}], ``` fences allowed) ->
     pixel `center` (the point, or the box centre) and `box` when given.
 
-    Hits in the bottom-centre strip are dropped: the fingertips and the bumper plate read as a sock
-    (live 2026-10-18); a real sock there is inside the 0.19 m pick guard anyway."""
+    Sock hits in the bottom-centre strip are dropped: the fingertips and the bumper plate read as a
+    sock (live 2026-10-18); a real sock there is inside the 0.19 m pick guard anyway. Other labels
+    stay: the truck 0.3 m ahead sits right there in the steep views (live 2026-10-19)."""
     start, end = text.find("["), text.rfind("]")
     if start < 0 or end < start:
         return []
@@ -61,7 +63,7 @@ def parse_grounding(text: str, width: int, height: int, bottom: float = 0.15) ->
             continue
         cx, cy = hit["center"]
         # Only the fingertips' patch (bottom centre): a truck at the bottom edge is real (2026-10-18).
-        if cy >= height * (1 - bottom) and 0.35 * width <= cx <= 0.75 * width:
+        if hit["label"] in strip_labels and cy >= height * (1 - bottom) and 0.35 * width <= cx <= 0.75 * width:
             continue
         found.append(hit)
     return found

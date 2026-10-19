@@ -37,6 +37,7 @@ def test_parse_grounding_scales_boxes_and_drops_the_gripper_at_the_bottom_edge()
                              ' {"label": "sock", "point_2d": [700, 960]}]', 640, 400)
     assert points == [{"label": "sock", "center": [223, 151]}]  # 2nd: the gripper strip
     assert parse_grounding('[{"label": "sock", "point_2d": [500, 900]}]', 640, 400) == []  # bumper plate
+    assert parse_grounding('[{"label": "toy truck", "point_2d": [500, 900]}]', 640, 400)  # a truck stays
     truck = parse_grounding('[{"label": "toy truck", "bbox_2d": [640, 825, 880, 1000]}]', 640, 400)
     assert truck and truck[0]["center"] == [486, 365]  # bottom edge but right of the fingertips
 
