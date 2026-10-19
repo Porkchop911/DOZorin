@@ -575,9 +575,10 @@ class GatewaySkills:
     def _approach(self, label: str, plane_z: float = 0.0, reach_x: float = 0.205, avoid=None):
         """Search (arm sweep, then body turns) and drive until the nearest `label` sits ~reach_x
         ahead; return its base-frame point, or None. Forward only: too close -> None. Hits within
-        0.15 m of the map point `avoid` are skipped (socks already in the truck)."""
+        0.10 m of the map point `avoid` are skipped (socks already in the truck; the bed is ~9 cm across,
+        0.15 skipped the sock set down beside it, live 2026-10-19)."""
         keep = lambda found: [f for f in found if avoid is None or "map" not in f  # noqa: E731
-                              or math.hypot(f["map"][0] - avoid[0], f["map"][1] - avoid[1]) > 0.15]
+                              or math.hypot(f["map"][0] - avoid[0], f["map"][1] - avoid[1]) > 0.10]
         for turns in range(4):
             found = keep(self.find_on_floor(label, self.SEARCH_VIEWS, plane_z))
             if found:
