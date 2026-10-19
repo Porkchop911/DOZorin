@@ -741,8 +741,10 @@ class GatewaySkills:
                 return False
 
     # Set-down spot beside the path. Set at 0.275 m the sock landed 0.29-0.31 m out, past the re-pick
-    # reach ("out of reach", live 2026-10-19): 0.21 m leaves room for the cloth to spread.
-    ASIDE = (0.17, 0.12)
+    # reach ("out of reach", live 2026-10-19); set at 0.21 m it was seen inside the 0.19 m wheel guard.
+    # Picks work 0.19-~0.26 m: aim for the middle.
+    ASIDE = (0.19, 0.12)
+    REPICK_RANGE = 0.225
     STANDOFF = 0.60       # look at the truck from here: whole truck in view, depth below its near side
     FINAL = 0.27          # bed centre this far ahead for the drop (reach 0.32 at z 0.12)
 
@@ -788,11 +790,13 @@ class GatewaySkills:
         centre = (ox + x * scale * math.cos(yaw) - y * scale * math.sin(yaw),
                   oy + x * scale * math.sin(yaw) + y * scale * math.cos(yaw))
         # ASIDE is to the LEFT (+y): look left (the -30/-45 pans looked right, live 2026-10-19).
-        socks = self.find_on_floor("sock", ((30, -60), (0, -60), (45, -40)), tries=2)
+        socks = self.find_on_floor("sock", ((30, -60), (0, -60), (45, -40)), tries=2, spread=True)
         if not socks:
             return {"placed": False, "why": "set-down sock not seen"}
-        sock = min(socks, key=lambda f: math.hypot(f["base"][0] - self.ASIDE[0],
-                                                   f["base"][1] - self.ASIDE[1]))
+        # Of the points across the set-down sock, the one mid pick window (0.19-0.26 m).
+        aside = [f for f in socks if math.hypot(f["base"][0] - self.ASIDE[0],
+                                                f["base"][1] - self.ASIDE[1]) < 0.10] or socks
+        sock = min(aside, key=lambda f: abs(math.hypot(*f["base"]) - self.REPICK_RANGE))
         pick = self._motion("pick the sock again", "/arm/pick_at",
                             {"x": sock["base"][0], "y": sock["base"][1], "z": 0.0}, 20.0)
         if pick.get("outcome") != "holding":

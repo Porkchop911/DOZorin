@@ -760,7 +760,7 @@ def _deliver_rig(monkeypatch, truck_hits, move_to=None):
         calls.append(("drive", round(vx * seconds, 3)))
         pose[0] += 0.0 if move_to is not None else vx * seconds
     monkeypatch.setattr(skills, "drive", drive)
-    monkeypatch.setattr(skills, "find_on_floor", lambda label, views=None, plane_z=0.0, tries=1: (
+    monkeypatch.setattr(skills, "find_on_floor", lambda label, views=None, plane_z=0.0, tries=1, spread=False: (
         truck_hits if label == "toy truck" else [{"base": [0.23, 0.15]}]))
     monkeypatch.setattr(skills, "_motion", lambda d, path, payload, s: calls.append((path, payload)) or (
         {"outcome": "holding"} if path == "/arm/pick_at" else {"outcome": "placed"}))
@@ -815,7 +815,7 @@ def test_deliver_refuses_the_drop_when_still_out_of_reach_after_the_drive(monkey
     skills, calls = _deliver_rig(monkeypatch, [{"base": [0.555, 0.0], "source": "depth"}], move_to=0.20)
     result = skills._deliver([1.0, 2.0])
     assert result["placed"] is False and "out of reach" in result["why"]
-    assert [c for c in calls if c[0] == "/arm/place"] == [("/arm/place", {"x": 0.17, "y": 0.12, "z": 0.03})]
+    assert [c for c in calls if c[0] == "/arm/place"] == [("/arm/place", {"x": 0.19, "y": 0.12, "z": 0.03})]
 
 
 def test_deliver_never_drives_when_the_arm_did_not_lift(monkeypatch):
