@@ -740,7 +740,9 @@ class GatewaySkills:
             if time.monotonic() > deadline:
                 return False
 
-    ASIDE = (0.23, 0.15)  # set-down spot beside the path; (0.25, 0.17) is out of reach at z 0.03
+    # Set-down spot beside the path. Set at 0.275 m the sock landed 0.29-0.31 m out, past the re-pick
+    # reach ("out of reach", live 2026-10-19): 0.21 m leaves room for the cloth to spread.
+    ASIDE = (0.17, 0.12)
     STANDOFF = 0.60       # look at the truck from here: whole truck in view, depth below its near side
     FINAL = 0.27          # bed centre this far ahead for the drop (reach 0.32 at z 0.12)
 

@@ -795,7 +795,7 @@ def test_deliver_refuses_the_drop_when_still_out_of_reach_after_the_drive(monkey
     skills, calls = _deliver_rig(monkeypatch, [{"base": [0.555, 0.0], "source": "depth"}], move_to=0.20)
     result = skills._deliver([1.0, 2.0])
     assert result["placed"] is False and "out of reach" in result["why"]
-    assert [c for c in calls if c[0] == "/arm/place"] == [("/arm/place", {"x": 0.23, "y": 0.15, "z": 0.03})]
+    assert [c for c in calls if c[0] == "/arm/place"] == [("/arm/place", {"x": 0.17, "y": 0.12, "z": 0.03})]
 
 
 def test_deliver_never_drives_when_the_arm_did_not_lift(monkeypatch):
