@@ -43,7 +43,9 @@ class NavNode(Node):
     def __init__(self):
         super().__init__("hwr_nav")
         self.declare_parameter("map_yaml", "")
-        self.declare_parameter("inflation_radius", 0.30)
+        # User 2026-10-19: 0.30 closed real gaps (beside the truck, between throne legs and the rack);
+        # 0.18 = robot half-width ~0.12 + 6 cm. The costmap clamps robot_radius to it (lethal inside).
+        self.declare_parameter("inflation_radius", 0.18)
         self.declare_parameter("allow_forward_recovery", False)
         self.declare_parameter("max_live_replans", 0)
         self.declare_parameter("max_yaw_rate", 0.30)
