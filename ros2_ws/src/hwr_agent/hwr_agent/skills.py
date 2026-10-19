@@ -726,7 +726,9 @@ class GatewaySkills:
         deadline = time.monotonic() + seconds
         while True:
             time.sleep(0.5)
-            if self._get(f"/arm/state?pose={pose}").get("reached"):
+            # carry with a sock sags ~45 pulses at the shoulder (live 2026-10-19); limp reads ~200 off.
+            tol = 60 if pose == "carry" else 30
+            if self._get(f"/arm/state?pose={pose}&tol={tol}").get("reached"):
                 return True
             if time.monotonic() > deadline:
                 return False

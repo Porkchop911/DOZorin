@@ -439,11 +439,14 @@ class GatewayNode(Node):
         tolerance = float(self.get_parameter("camera_pose_tolerance_rad").value)
         if now - self.joint_stamp > timeout:
             return False
+        # carry (holding a sock) sags 45 pulses at the shoulder (live 2026-10-19): 0.10 rad refused every
+        # move while carrying. Moves are costmap-checked; the camera tilt there does not matter.
+        tolerances = (tolerance, max(tolerance, 0.25))
         return any(all(
             name in self.joint_positions
-            and abs(self.joint_positions[name] - target) <= tolerance
+            and abs(self.joint_positions[name] - target) <= tol
             for name, target in pose.items()
-        ) for pose in self.camera_forward_targets)
+        ) for pose, tol in zip(self.camera_forward_targets, tolerances))
 
     def _drive_tick(self) -> None:
         with self.lock:
@@ -1504,7 +1507,7 @@ class GatewayNode(Node):
             return result
 
         @app.get("/arm/state", dependencies=[Depends(auth)])
-        def arm_state(pose: str | None = None):
+        def arm_state(pose: str | None = None, tol: int = 30):
             """Servo readback; with `pose`, whether servos 1-5 are within 30 pulses of it. A servo that
             went limp kept reading where it fell (shoulder 322 vs 500, live 2026-10-18)."""
             pulses = arm_pulses()
@@ -1515,7 +1518,7 @@ class GatewayNode(Node):
                     raise HTTPException(404, f"unknown pose {pose!r}")
                 off = {int(sid): pulses.get(int(sid), 10_000) - int(p) for sid, p in target.items()}
                 result.update({"pose": pose, "off": off,
-                               "reached": all(abs(v) <= 30 for v in off.values())})
+                               "reached": all(abs(v) <= tol for v in off.values())})
             return result
 
         @app.post("/arm/pick_at", dependencies=[Depends(auth)])
