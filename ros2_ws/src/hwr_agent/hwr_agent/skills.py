@@ -759,6 +759,17 @@ class GatewaySkills:
         self.last_refusal = None
         carried = self._drive_near(truck_map, stop_at=self.STANDOFF, creep=False)
         if math.hypot(*carried) > self.STANDOFF + 0.25:
+            # A sock on the straight line blocked the carry 1.23 m out (live 2026-10-19): let the
+            # planner go around it to the standoff, then square up again.
+            x, y, _ = self._get("/status")["pose"]
+            dx, dy = truck_map[0] - x, truck_map[1] - y
+            k = 1.0 - self.STANDOFF / math.hypot(dx, dy)
+            try:
+                self.goto(x + dx * k, y + dy * k, math.atan2(dy, dx))
+            except RuntimeError as exc:
+                self.last_refusal = str(exc)
+            carried = self._drive_near(truck_map, stop_at=self.STANDOFF, creep=False)
+        if math.hypot(*carried) > self.STANDOFF + 0.25:
             return {"placed": False, "why": f"carry stopped {math.hypot(*carried):.2f} m from the truck",
                     "refusal": self.last_refusal}
         if not self._set_aside():

@@ -774,6 +774,17 @@ def test_deliver_looks_once_from_the_standoff_then_drives_by_odometry_and_drops(
     assert picks == [("/arm/pick_at", {"x": 0.23, "y": 0.15, "z": 0.0})]  # the set-down sock
 
 
+def test_deliver_navigates_to_the_standoff_when_the_straight_carry_is_blocked(monkeypatch):
+    skills, calls = _deliver_rig(monkeypatch, [{"base": [0.555, 0.0], "source": "depth"}])
+    stops = iter([(1.23, 0.0), (0.6, 0.0)])  # blocked by a sock, then squared up after the nav goal
+    monkeypatch.setattr(skills, "_drive_near", lambda point, stop_at, creep=True: next(stops))
+    monkeypatch.setattr(skills, "_get", lambda path: {"pose": [0.0, 0.0, 0.0]})
+    goals = []
+    monkeypatch.setattr(skills, "goto", lambda x, y, yaw: goals.append((x, y, yaw)))
+    assert skills._deliver([2.0, 0.0])["placed"] is True
+    assert goals == [pytest.approx((1.4, 0.0, 0.0))]  # 0.6 m short of the truck, facing it
+
+
 def test_deliver_stops_with_the_sock_down_when_no_depth_fix_of_the_truck(monkeypatch):
     skills, calls = _deliver_rig(monkeypatch, [{"base": [0.6, 0.0], "source": "plane"}])
     assert skills._deliver([1.0, 2.0])["why"] == "toy truck not seen from the standoff"
