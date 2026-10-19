@@ -110,3 +110,34 @@ Next, in order:
    -> set down beside (0.23, 0.15) -> steep look -> creep (<= budget) -> re-pick -> drop (z 0.12).
 4. Then the acceptance run: all socks in view of the room centre into the truck, counted by the user.
 5. Calibrate the carry-pose camera (read ~0.18 m long) if the drop needs it.
+
+## 2026-10-19: live patching did not converge -> redesign (user decision)
+
+Session: 0 socks delivered by the loop; picks 15 held / 17; ~30 commits. The single steps work (find,
+pick, carry, set down, see the truck, drop). What failed every time was chaining them at close range
+around the truck:
+
+| Failure | Cause |
+|---|---|
+| Robot drove into the truck | blind `/drive` creeps toward a truck estimate off by decimetres; the dark truck gives no depth |
+| Re-pick impossible | set-down sock ended under the bumper after creeps/turns; reverse refused once it had turned |
+| "Truck not seen" (5x) | each time a different filter or view gap: depth FOV at 0.55 m, label hijack, bottom strip, < 0.20 m filter, robot facing the sock |
+| Arm went limp (3x) | sock pinned under a wheel (1); jaws pushing the floor (2, likely) |
+| Socks skipped | in-truck radius 0.15 caught the set-down sock beside the truck |
+| Costmap blocked every gap | inflation 0.30 (user: now 0.18) |
+
+### New delivery (one look, one drive, one drop)
+
+States, each a small function with its own test; any failure stops with the sock set down in the open:
+
+1. **Pick far from the truck.** Only socks >= 0.5 m from the truck point are picked (no crowding).
+   Socks closer than that are reported, not picked.
+2. **Carry to a standoff** 0.6 m from the truck, facing it (costmap-checked moves only, no creeps).
+3. **Set down beside, look once** from 0.6 m: the whole truck is in the -20/-40 views with depth below
+   its near side. Truck centre = near side + 4.5 cm along the ray, stored in the **odometry** frame.
+4. **Re-pick** the set-down sock (it has not moved, the robot has not moved): `pick_at`, lift, verify.
+5. **Final approach by odometry:** turn to the centre, one costmap-checked move to put it 0.27 m ahead
+   (a block at the truck itself is fine: stop there). Odometry over ~0.33 m is good to ~1 cm.
+6. **Drop** at the odometry centre converted to the base frame (z 0.12, -30 deg allowed). Arm forward.
+
+Removed: leapfrog hops, blind creeps toward the truck, re-looks at close range.
