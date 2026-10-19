@@ -4,9 +4,11 @@ poses:
   forward: {1: 500, 2: 701, 3: 120, 4: 300, 5: 500}
   floor: {1: 500, 2: 701, 3: 120, 4: 130, 5: 500}  # 88 cut cubes ~0.6 m out at the image top (2026-10-17)
   ceiling: {1: 500, 2: 701, 3: 120, 4: 500, 5: 500}
-  # Holding a sock (plan/19, 2026-10-18): raised so it hangs clear of the floor (user: the low
-  # forward arm dragged it), camera -10 deg. Tip 0.18 m ahead, 0.34 m up. Translation allows it.
-  carry: {1: 500, 2: 500, 3: 500, 4: 85, 5: 500}
+  # Holding a sock (plan/19): arm straight up over the shoulder (user 2026-10-19). The bent version
+  # (wrist 85) sagged 45 pulses and stalled the shoulder into protection (limp) with a sock; this one
+  # needs the least shoulder torque, hangs the sock from 0.45 m (clear of the wheels) and points the
+  # camera up, so the hanging sock is not a costmap obstacle. Translation allows it.
+  carry: {1: 500, 2: 500, 3: 500, 4: 300, 5: 500}
   tucked: {1: 500, 2: 701, 3: 120, 4: 300, 5: 500}
   # FK: camera ~61 deg below horizontal, image centre on the floor ~0.30 m ahead (plan/16, tune in 14.7).
   look_down: {1: 500, 2: 701, 3: 120, 4: 50, 5: 500}
