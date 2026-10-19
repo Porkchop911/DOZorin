@@ -141,3 +141,27 @@ States, each a small function with its own test; any failure stops with the sock
 6. **Drop** at the odometry centre converted to the base frame (z 0.12, -30 deg allowed). Arm forward.
 
 Removed: leapfrog hops, blind creeps toward the truck, re-looks at close range.
+
+## Live 2026-10-19 afternoon: redesign first runs (0 delivered, every stage reached once)
+
+Setup each session: relocalize (0.78-0.88), stale truck places deleted, VLM qwen3-vl-4b from the PC
+(robot `hwr.env` model reset to the 4B), `GatewaySkills(max_actions=400)`. Truck found only with the
+user's help ("at the window") + a depth pixel; the 4B named the robot's own gripper (2x) and a sock (1x)
+"toy truck" and never named the real truck at 1.1-1.7 m.
+
+| Run | Got to | Stopped by | Fix |
+|---|---|---|---|
+| 1 | pick held | straight carry blocked by a sock on the line | `633b867` nav goal to the standoff |
+| 2 | standoff, set-down, truck seen | re-pick out of reach (set at 0.275, landed 0.29-0.31) | `a2c3324` |
+| 3 | - | "sock" = the tether cable in view; missed | user moved the cable |
+| 4 | re-pick held (635) | bed 1.13 m: inflated truck blocks costmap moves at 0.7 m | `fe5fed5` costmap move to the block + <= 0.25 m odometry drive |
+| 5 | set-down | re-pick point inside the 0.19 m wheel guard | `2bbfb40` set down at 0.225, point nearest 0.225 m |
+| 6 | pick held, standoff | truck not seen from 1.1 m (VLM) | open: see below |
+
+- Truck anchor from 1.7 m away (depth on its top) was ~0.4 m short: true ~(-0.50, 1.28) map, which matches
+  the pre-reboot place (-0.47, 1.24). The standoff is computed from the anchor, so it looked from 1.1 m.
+- `truck` hits inside the 0.19 m wheel guard are dropped (`c322aec`).
+- Failed deliveries leave set-down socks around the standoff.
+
+Next: re-anchor the truck from <= 0.8 m, rerun `sockmark(max_socks=1)`; then check the odometry drive and
+the drop land in the bed (user confirms).
