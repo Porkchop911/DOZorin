@@ -542,8 +542,8 @@ class GatewaySkills:
                      'part, as JSON only: [{{"label": "...", "point_2d": [x, y]}}] with coordinates '
                      'normalised 0-1000. Return [] if there is none.')
     # (pan, elevation) deg: floor ahead first (0.2-0.6 m), then the room (plan/19).
-    # (0, -60) first: -40 is blind under ~0.2 m, and a sock right ahead was "not found" (2026-10-19).
-    SEARCH_VIEWS = ((0, -60), (0, -40), (50, -40), (-50, -40), (0, 0), (50, 0), (-50, 0))
+    # (0, -50) first (-60 jammed the gripper servo into the arm, user 2026-10-19): -40 is blind under ~0.2 m, and a sock right ahead was "not found" (2026-10-19).
+    SEARCH_VIEWS = ((0, -50), (0, -40), (50, -40), (-50, -40), (0, 0), (50, 0), (-50, 0))
 
     def find_on_floor(self, label: str = "sock", views=((0, -40),), plane_z: float = 0.0,
                       tries: int = 1, spread: bool = False):
@@ -594,7 +594,7 @@ class GatewaySkills:
                 self.turn(120)
         else:
             return None
-        near = ((0, -60), (0, -40))  # -40 sees nothing closer than ~0.2 m (live 2026-10-18)
+        near = ((0, -50), (0, -40))  # -40 sees nothing closer than ~0.2 m (live 2026-10-18)
 
         def refind():
             """Close-up first (twice, points across each); lost it = any other in view will do
@@ -608,12 +608,16 @@ class GatewaySkills:
         best = lambda found: min([f for f in found if math.hypot(*f["base"]) >= 0.19] or found,  # noqa: E731
                                  key=lambda f: abs(math.hypot(*f["base"]) - reach_x))
         skip = []  # map points of socks the robot may be standing on
+        backs = 0  # back-offs so far: backing and re-advancing looped until the 8 passes ran out (live 2026-10-19)
         for _ in range(8):
             x, y = best(found)["base"]
             distance, bearing = math.hypot(x, y), math.degrees(math.atan2(y, x))
             # Part of it under the bumper/wheels: a pick there was pinned and stalled the arm until it
             # went limp (live 2026-10-18). Back off it first.
             if min(math.hypot(*f["base"]) for f in found) < 0.17 and distance < 0.30:
+                backs += 1
+                if backs > 2:
+                    return None
                 try:
                     self.back(0.10)
                 except RuntimeError:
@@ -631,6 +635,9 @@ class GatewaySkills:
                     return None
                 continue
             if distance < 0.19:
+                backs += 1
+                if backs > 2:
+                    return None
                 # Overshot onto it (live 2026-10-18): retrace backwards, then look again.
                 try:
                     self.back(min(0.15, reach_x + 0.02 - distance))
@@ -790,7 +797,7 @@ class GatewaySkills:
         centre = (ox + x * scale * math.cos(yaw) - y * scale * math.sin(yaw),
                   oy + x * scale * math.sin(yaw) + y * scale * math.cos(yaw))
         # ASIDE is to the LEFT (+y): look left (the -30/-45 pans looked right, live 2026-10-19).
-        socks = self.find_on_floor("sock", ((30, -60), (0, -60), (45, -40)), tries=2, spread=True)
+        socks = self.find_on_floor("sock", ((30, -50), (0, -50), (45, -40)), tries=2, spread=True)
         if not socks:
             return {"placed": False, "why": "set-down sock not seen"}
         # Of the points across the set-down sock, the one mid pick window (0.19-0.26 m).
