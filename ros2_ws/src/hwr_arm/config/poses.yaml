@@ -8,7 +8,7 @@ poses:
   # (wrist 85) sagged 45 pulses and stalled the shoulder into protection (limp) with a sock; this one
   # needs the least shoulder torque, hangs the sock from 0.45 m (clear of the wheels) and points the
   # camera up, so the hanging sock is not a costmap obstacle. Translation allows it.
-  carry: {1: 500, 2: 500, 3: 500, 4: 300, 5: 500}
+  carry: {1: 500, 2: 500, 3: 500, 4: 40, 5: 500}  # user: tilt the wrist (not the shoulder) so the camera looks down, -20 deg
   tucked: {1: 500, 2: 701, 3: 120, 4: 300, 5: 500}
   # FK: camera ~61 deg below horizontal, image centre on the floor ~0.30 m ahead (plan/16, tune in 14.7).
   look_down: {1: 500, 2: 701, 3: 120, 4: 50, 5: 500}
