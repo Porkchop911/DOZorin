@@ -607,19 +607,24 @@ class GatewaySkills:
         # turned back and forth as the best point jumped across the sock (live 2026-10-19).
         best = lambda found: min([f for f in found if math.hypot(*f["base"]) >= 0.19] or found,  # noqa: E731
                                  key=lambda f: abs(math.hypot(*f["base"]) - reach_x))
-        guard_off = False
+        skip = []  # map points of socks the robot may be standing on
         for _ in range(8):
             x, y = best(found)["base"]
             distance, bearing = math.hypot(x, y), math.degrees(math.atan2(y, x))
             # Part of it under the bumper/wheels: a pick there was pinned and stalled the arm until it
             # went limp (live 2026-10-18). Back off it first.
-            if min(math.hypot(*f["base"]) for f in found) < 0.17 and distance < 0.30 and not guard_off:
+            if min(math.hypot(*f["base"]) for f in found) < 0.17 and distance < 0.30:
                 try:
                     self.back(0.10)
                 except RuntimeError:
-                    # No straight path to retrace: pick anyway; pick_at lets go if it is pinned
-                    # (ending the approach here left a sock at the bumper forever, 2026-10-19).
-                    guard_off = True
+                    # No straight path to retrace: the robot may be standing on it (user, 2026-10-19:
+                    # picked anyway, the lift pulled it out of the jaws). Leave it; take another.
+                    near_xy = min(found, key=lambda f: math.hypot(*f["base"]))["map"]
+                    skip.append(near_xy)
+                    found = [f for f in refind() if "map" in f and all(
+                        math.hypot(f["map"][0] - p[0], f["map"][1] - p[1]) > 0.25 for p in skip)]
+                    if not found:
+                        return None
                     continue
                 found = refind()
                 if not found:
