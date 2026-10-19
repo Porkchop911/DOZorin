@@ -728,27 +728,37 @@ class GatewaySkills:
         # 0.36 m: at 0.55 the truck sat outside the depth image (live 2026-10-18); no blind creep:
         # three of them drove into the truck when its estimate was off (live 2026-10-19).
         self._drive_near(truck_map, stop_at=0.36, creep=False)
-        return self._finish_drop(truck)
+        return self._finish_drop(truck, truck_map=truck_map)
 
     def _set_aside(self) -> bool:
         down = self._motion("set the sock down", "/arm/place",
                             {"x": self.ASIDE[0], "y": self.ASIDE[1], "z": 0.03}, 20.0)
         return down.get("outcome") == "placed"
 
-    def _finish_drop(self, truck: str = "toy truck", hops: int = 4) -> dict:
+    def _finish_drop(self, truck: str = "toy truck", hops: int = 4, truck_map=None) -> dict:
         """Sock in the jaws, truck ahead: set the sock down beside the path, look steeply, creep while
         the set-down sock stays pickable; out of creep -> re-pick, set down again, go on (leapfrog).
         In reach -> re-pick and drop in the bed. Every step forward is decided from a fresh look."""
         # Total creep that keeps the set-down sock >= 0.19 m out for the re-pick.
         budget = self.ASIDE[0] - math.sqrt(max(0.19 ** 2 - self.ASIDE[1] ** 2, 0.0)) - 0.01
         rounds = []
+        if truck_map is not None:
+            # Face it before looking: after a re-pick the robot faced the sock, the truck was not in
+            # the views ahead (live 2026-10-19). The map point is good enough for a direction.
+            if not self._lift_to("carry"):
+                return {"placed": False, "why": "arm did not reach carry", "rounds": rounds}
+            b = self._to_base(self._get("/status")["pose"], truck_map)
+            bearing = math.degrees(math.atan2(b["y"], b["x"]))
+            if abs(bearing) >= 8.0:
+                self.turn(bearing)
         for hop in range(hops):
             if not self._set_aside():
                 return {"placed": False, "why": "set-down failed (still holding the sock)", "rounds": rounds}
             crept, centre = 0.0, None
             while True:
                 # < 0.20 m would be under the bumper: a bogus hit (read 0.13 m, live 2026-10-19).
-                seen = [f for f in self.find_on_floor(truck, ((0, -60), (0, -40)), 0.03, tries=2)
+                seen = [f for f in self.find_on_floor(truck, ((0, -60), (0, -40), (35, -40), (-35, -40)),
+                                                      0.03, tries=2)
                         if math.hypot(*f["base"]) >= 0.20]
                 if not seen:
                     return {"placed": False, "why": f"{truck} not seen up close", "rounds": rounds}

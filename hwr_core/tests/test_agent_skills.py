@@ -722,6 +722,8 @@ def test_sockmark_uses_the_remembered_truck_instead_of_a_new_sighting(monkeypatc
 def test_deliver_sets_down_looks_creeps_repicks_and_drops_in_the_bed(monkeypatch):
     skills = GatewaySkills(token="test")
     monkeypatch.setattr("time.sleep", lambda s: None)
+    monkeypatch.setattr(skills, "_get", lambda path, binary=False: {"pose": [0.0, 0.0, 0.0]})
+    monkeypatch.setattr(skills, "turn", lambda degrees: None)  # faces the truck first
     monkeypatch.setattr(skills, "arm_pose", lambda n: None)
     monkeypatch.setattr(skills, "_lift_to", lambda pose, seconds=3.0: True)
     monkeypatch.setattr(skills, "_arm_clear", lambda: None)
@@ -742,6 +744,8 @@ def test_deliver_sets_down_looks_creeps_repicks_and_drops_in_the_bed(monkeypatch
 def test_deliver_gives_up_holding_nothing_when_the_truck_is_not_seen_up_close(monkeypatch):
     skills = GatewaySkills(token="test")
     monkeypatch.setattr("time.sleep", lambda s: None)
+    monkeypatch.setattr(skills, "_get", lambda path, binary=False: {"pose": [0.0, 0.0, 0.0]})
+    monkeypatch.setattr(skills, "turn", lambda degrees: None)  # faces the truck first
     monkeypatch.setattr(skills, "arm_pose", lambda n: None)
     monkeypatch.setattr(skills, "_lift_to", lambda pose, seconds=3.0: True)
     monkeypatch.setattr(skills, "_drive_near", lambda point, stop_at, creep=True: (0.5, 0.0))
@@ -782,6 +786,8 @@ def test_deliver_never_drives_when_the_arm_did_not_lift(monkeypatch):
 def test_deliver_creeps_only_half_the_gap_on_a_plane_fix(monkeypatch):
     skills = GatewaySkills(token="test")
     monkeypatch.setattr("time.sleep", lambda s: None)
+    monkeypatch.setattr(skills, "_get", lambda path, binary=False: {"pose": [0.0, 0.0, 0.0]})
+    monkeypatch.setattr(skills, "turn", lambda degrees: None)  # faces the truck first
     monkeypatch.setattr(skills, "_lift_to", lambda pose, seconds=3.0: True)
     monkeypatch.setattr(skills, "_arm_clear", lambda: None)
     monkeypatch.setattr(skills, "_drive_near", lambda point, stop_at, creep=True: (0.5, 0.0))
