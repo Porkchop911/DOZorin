@@ -542,7 +542,8 @@ class GatewaySkills:
                      'part, as JSON only: [{{"label": "...", "point_2d": [x, y]}}] with coordinates '
                      'normalised 0-1000. Return [] if there is none.')
     # (pan, elevation) deg: floor ahead first (0.2-0.6 m), then the room (plan/19).
-    SEARCH_VIEWS = ((0, -40), (50, -40), (-50, -40), (0, 0), (50, 0), (-50, 0))
+    # (0, -60) first: -40 is blind under ~0.2 m, and a sock right ahead was "not found" (2026-10-19).
+    SEARCH_VIEWS = ((0, -60), (0, -40), (50, -40), (-50, -40), (0, 0), (50, 0), (-50, 0))
 
     def find_on_floor(self, label: str = "sock", views=((0, -40),), plane_z: float = 0.0,
                       tries: int = 1, spread: bool = False):
@@ -598,7 +599,7 @@ class GatewaySkills:
         def refind():
             """Close-up first (twice, points across each); lost it = any other in view will do
             (user: "so many socks, just pick one")."""
-            return (keep(self.find_on_floor(label, near + self.SEARCH_VIEWS[1:3], plane_z, tries=2,
+            return (keep(self.find_on_floor(label, near + self.SEARCH_VIEWS[2:4], plane_z, tries=2,
                                             spread=True))
                     or keep(self.find_on_floor(label, self.SEARCH_VIEWS, plane_z)))
         # Of the points on it, the one nearest the reach spot (but outside the 0.19 m wheel guard).
