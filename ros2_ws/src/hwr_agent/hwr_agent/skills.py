@@ -661,7 +661,9 @@ class GatewaySkills:
     def _find_anywhere(self, label: str, plane_z: float = 0.0):
         """Arm sweep, then up to 3 body turns of 120 deg; nearest hit or None."""
         for turns in range(4):
-            found = self.find_on_floor(label, self.SEARCH_VIEWS, plane_z)
+            # < 0.19 m (wheel guard) is the robot's own gripper: the -60 view called it "toy truck" 2/2 (2026-10-19).
+            found = [f for f in self.find_on_floor(label, self.SEARCH_VIEWS, plane_z)
+                     if math.hypot(*f["base"]) >= 0.19]
             if found and found[0].get("source") == "plane":
                 # No depth at the image edge (narrower depth FOV): centre it and look again.
                 x, y = found[0]["base"]
