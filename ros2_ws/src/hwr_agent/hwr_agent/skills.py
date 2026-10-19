@@ -674,7 +674,10 @@ class GatewaySkills:
             # <= 0.15 m blind, then look again: 0.30 m creeps overshot onto socks (live 2026-10-18).
             self.drive(vx=0.1, seconds=min(step, 0.15) / 0.1)
         elif at - 0.20 > 0.03:
-            self.move(at - 0.20)
+            try:
+                self.move(at - 0.20)
+            except RuntimeError:
+                pass  # the costmap moved meanwhile (blocked at 0.3 m, live 2026-10-19): stay put
 
     def _drive_near(self, point, stop_at: float):
         """Face a map point and drive until it is ~stop_at ahead, as far as the costmap allows.
