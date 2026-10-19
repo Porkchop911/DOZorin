@@ -680,8 +680,11 @@ class GatewaySkills:
         x, y = here()
         if abs(math.degrees(math.atan2(y, x))) >= 5.0:
             self.turn(math.degrees(math.atan2(y, x)))
-        distance = math.hypot(*here())
-        if distance - stop_at > 0.03:
+        # Several tries: one creep of <= 0.15 m left the truck 0.68 m away (live 2026-10-19).
+        for _ in range(3):
+            distance = math.hypot(*here())
+            if distance - stop_at <= 0.05:
+                break
             self._advance(distance - stop_at, distance)
         return here()
 
@@ -720,7 +723,9 @@ class GatewaySkills:
         budget = aside[0] - math.sqrt(max(0.19 ** 2 - aside[1] ** 2, 0.0)) - 0.01
         centre, crept, rounds = None, 0.0, []
         for _ in range(4):
-            seen = self.find_on_floor(truck, ((0, -60), (0, -40)), 0.03, tries=2)
+            # < 0.20 m would be under the bumper: a bogus hit (read 0.13 m, live 2026-10-19).
+            seen = [f for f in self.find_on_floor(truck, ((0, -60), (0, -40)), 0.03, tries=2)
+                    if math.hypot(*f["base"]) >= 0.20]
             if not seen:
                 return {"placed": False, "why": f"{truck} not seen up close"}
             # Depth = the floor at its near side; a plane fix of a point on its top reads long.
