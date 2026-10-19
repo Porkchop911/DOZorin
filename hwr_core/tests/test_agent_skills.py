@@ -820,3 +820,24 @@ def test_finish_drop_leapfrogs_the_sock_when_the_creep_budget_runs_out(monkeypat
     result = skills._finish_drop()
     assert result["placed"] is True and crept == [0.1, 0.1]
     assert calls == ["/arm/place", "/arm/pick_at", "/arm/place", "/arm/pick_at", "/arm/place"]
+
+
+
+def test_finish_drop_carries_the_sock_closer_when_the_truck_is_far(monkeypatch):
+    skills = GatewaySkills(token="test")
+    monkeypatch.setattr("time.sleep", lambda s: None)
+    monkeypatch.setattr(skills, "_arm_clear", lambda: None)
+    monkeypatch.setattr(skills, "_lift_to", lambda pose, seconds=3.0: True)
+    sides = iter([[{"base": [0.80, 0.0], "source": "depth"}],   # far: creep the budget first
+                  [{"base": [0.70, 0.0], "source": "depth"}],   # out of budget, still > 0.5 m
+                  [{"base": [0.27, 0.0], "source": "depth"}]])  # after carrying it closer: in reach
+    monkeypatch.setattr(skills, "find_on_floor", lambda label, views=None, plane_z=0.0, tries=1: (
+        next(sides) if label == "toy truck" else [{"base": [0.2, 0.0]}]))
+    monkeypatch.setattr(skills, "drive", lambda vx, seconds: None)
+    advanced = []
+    monkeypatch.setattr(skills, "_advance", lambda step, target_m, creep=True: advanced.append(
+        (round(step, 2), creep)))
+    monkeypatch.setattr(skills, "_motion", lambda d, path, payload, s: (
+        {"outcome": "holding"} if path == "/arm/pick_at" else {"outcome": "placed"}))
+    assert skills._finish_drop()["placed"] is True
+    assert advanced == [(0.32, False)]  # 0.70 -> 0.38 m, costmap-checked, no blind creep

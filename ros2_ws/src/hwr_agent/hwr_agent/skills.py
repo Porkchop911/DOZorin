@@ -757,8 +757,9 @@ class GatewaySkills:
             crept, centre = 0.0, None
             while True:
                 # < 0.20 m would be under the bumper: a bogus hit (read 0.13 m, live 2026-10-19).
-                seen = [f for f in self.find_on_floor(truck, ((0, -60), (0, -40), (35, -40), (-35, -40)),
-                                                      0.03, tries=2)
+                # Near views first; -20 ones for a truck still ~0.7 m out (missed there, 2026-10-19).
+                seen = [f for f in self.find_on_floor(truck, ((0, -60), (0, -40), (35, -40), (-35, -40),
+                                                              (0, -20), (30, -20), (-30, -20)), 0.03, tries=2)
                         if math.hypot(*f["base"]) >= 0.20]
                 if not seen:
                     return {"placed": False, "why": f"{truck} not seen up close", "rounds": rounds}
@@ -797,6 +798,15 @@ class GatewaySkills:
                 return {"placed": place.get("outcome") == "placed",
                         "drop": [round(v, 3) for v in centre], "rounds": rounds,
                         "why": None if place.get("outcome") == "placed" else f"drop {place.get('outcome')}"}
+            # Still far: carry the sock closer (costmap-checked only), then hop again.
+            ahead = math.hypot(x, y)  # the last look came after the last creep: this is now
+            if ahead > 0.50:
+                if not self._lift_to("carry"):
+                    return {"placed": False, "why": "arm did not reach carry", "rounds": rounds}
+                bearing = math.degrees(math.atan2(y, x))
+                if abs(bearing) >= 8.0:
+                    self.turn(bearing)
+                self._advance(ahead - 0.38, ahead, creep=False)
         return {"placed": False, "why": f"{truck} still out of reach after {hops} hops", "rounds": rounds}
 
     def sockmark(self, max_socks: int = 6, truck: str = "toy truck"):
