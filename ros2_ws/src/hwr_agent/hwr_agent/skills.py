@@ -550,6 +550,10 @@ class GatewaySkills:
         plane z = plane_z (base and map frame). Stops at the first view with a hit."""
         if self.dry_run:
             return {"dry_run": True, "would": f"find {label} on the floor"}
+        # arm_aim sets pan/tilt on the forward geometry only: after a carry or a set-down the "-57 deg"
+        # view looked level, and finds missed the truck and the sock beside it (live 2026-10-19).
+        if not self._lift_to("forward"):
+            return []
         for (pan, elevation), _ in ((view, n) for view in views for n in range(tries)):
             self.arm_aim(math.radians(pan), math.radians(elevation))
             time.sleep(1.5)
@@ -670,6 +674,7 @@ class GatewaySkills:
             if not blocked:
                 return
         except RuntimeError as exc:
+            self.last_refusal = str(exc)  # why moves were refused while carrying was never logged
             blocked = re.search(r"blocked in costmap at ([0-9.]+) m", str(exc))
             if not blocked:
                 raise
@@ -735,7 +740,11 @@ class GatewaySkills:
         no close-range re-looks: those spiralled into the truck and under the bumper live."""
         if not self._lift_to("carry"):
             return {"placed": False, "why": "arm did not reach carry (servo limp or blocked?)"}
-        self._drive_near(truck_map, stop_at=self.STANDOFF, creep=False)
+        self.last_refusal = None
+        carried = self._drive_near(truck_map, stop_at=self.STANDOFF, creep=False)
+        if math.hypot(*carried) > self.STANDOFF + 0.25:
+            return {"placed": False, "why": f"carry stopped {math.hypot(*carried):.2f} m from the truck",
+                    "refusal": self.last_refusal}
         if not self._set_aside():
             return {"placed": False, "why": "set-down failed (still holding the sock)"}
         seen = [f for f in self.find_on_floor(truck, ((0, -20), (0, -40), (30, -20), (-30, -20)),
@@ -749,7 +758,8 @@ class GatewaySkills:
         ox, oy, yaw = self._pose()  # odometry: good to ~1 cm over the last ~0.35 m
         centre = (ox + x * scale * math.cos(yaw) - y * scale * math.sin(yaw),
                   oy + x * scale * math.sin(yaw) + y * scale * math.cos(yaw))
-        socks = self.find_on_floor("sock", ((-30, -60), (0, -60), (-45, -40)), tries=2)
+        # ASIDE is to the LEFT (+y): look left (the -30/-45 pans looked right, live 2026-10-19).
+        socks = self.find_on_floor("sock", ((30, -60), (0, -60), (45, -40)), tries=2)
         if not socks:
             return {"placed": False, "why": "set-down sock not seen"}
         sock = min(socks, key=lambda f: math.hypot(f["base"][0] - self.ASIDE[0],
