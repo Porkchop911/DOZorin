@@ -603,6 +603,8 @@ class GatewaySkills:
                                             spread=True))
                     or keep(self.find_on_floor(label, self.SEARCH_VIEWS, plane_z)))
         # Of the points on it, the one nearest the reach spot (but outside the 0.19 m wheel guard).
+        # In reach at any bearing within 60 deg: the arm pans; squaring up to < 8 deg (a cube rule)
+        # turned back and forth as the best point jumped across the sock (live 2026-10-19).
         best = lambda found: min([f for f in found if math.hypot(*f["base"]) >= 0.19] or found,  # noqa: E731
                                  key=lambda f: abs(math.hypot(*f["base"]) - reach_x))
         guard_off = False
@@ -633,7 +635,7 @@ class GatewaySkills:
                 if not found:
                     return None
                 continue
-            if abs(bearing) < 8.0 and distance <= reach_x + 0.02:
+            if abs(bearing) < 60.0 and distance <= reach_x + 0.02:
                 return {"x": x, "y": y, "map": best(found).get("map")}
             self._arm_clear()
             if abs(bearing) >= 8.0:
@@ -647,7 +649,7 @@ class GatewaySkills:
                 return None
         # The last creep can land it in reach: check once more (live 2026-10-18 it ended at 0.211 m).
         x, y = best(found)["base"]
-        if 0.19 <= math.hypot(x, y) <= reach_x + 0.02 and abs(math.degrees(math.atan2(y, x))) < 8.0:
+        if 0.19 <= math.hypot(x, y) <= reach_x + 0.02 and abs(math.degrees(math.atan2(y, x))) < 60.0:
             return {"x": x, "y": y, "map": best(found).get("map")}
         return None
 
