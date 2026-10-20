@@ -54,6 +54,30 @@ The detailed checklist and acceptance criteria live in [`plan/`](plan/):
 
 Work proceeds phase by phase; a phase's checkboxes flip only when its acceptance test has produced the specified evidence artifact.
 
+## Sockmark (socks into a container)
+
+`GatewaySkills.sockmark(max_socks, truck="laundry basket", bed_past=0.15, final=0.35, reach_drop=(0.25, 0.30))`
+runs: find the container, then repeat find sock, drive to it, grip and lift, carry to the container, drop, back off 0.15 m,
+turn 150 deg. The sock is never set down and re-picked. Live logs and the failure table are in `plan/19-sockmark.md`.
+Delivered 2026-10-20 (user-checked): the toy truck once, then the basket repeatedly.
+
+### Pitfalls and engineering challenges
+
+| Problem | What happened | What we do |
+|---|---|---|
+| The VLM names things wrongly | The 4B model calls a sweatshirt, pants and a drying rack a "sock" or "laundry basket". | A second yes/no ask on a crop (`_is_sock`). It is too strict at range, so far socks get rejected. Containers: depth-measure the rim and anchor it; don't trust a sighting. |
+| The VLM is not repeatable | The same view returned a sock once and `[]` the next time. | Sweep many views (all pans per tilt, stop at the first hit); retry the whole search, not one view. |
+| The held sock blinds the lidar | A sock 13-30 cm ahead looked like a wall: costmap "blocked", clearance 0 everywhere. | `nav_node` masks returns under 0.30 m within +-50 deg of the front while the gripper is closed. |
+| The arm can't drop into a tall container | Carry pose puts the tip only 0.17 m ahead, which is the bumper. Releasing there lands on the rim, or the robot shoves the container. | Stop with the front rim 0.20 m ahead, extend with `/arm/reach` over the rim (z 0.30 over a 0.25 m rim), release. `/arm/place` caps z at 0.25. |
+| The sock sticks to the jaws | It stayed on the fingertips after opening. | After opening: tip the jaws about 30 deg further down, wiggle the gripper, return to carry. |
+| Anchor errors | An anchor at the container's edge missed; an old entry averaged into the new one; the container moved when bumped. | Anchor the centre of the front rim; delete the old `places.yaml` entry first; re-measure after any bump. |
+| Localization drifts mid-run | A carry stopped 1 m short because the map pose was wrong. | `_deliver` relocalizes (about 30 s) when localization is unhealthy. |
+| Reverse is the only unprotected move | `/drive` refuses reverse; the arm sweep and retrace budget refused or moved the arm with a limp servo. | `/motion/back` is arm-free and capped at 0.15 m per call. |
+| Standing on a sock | The shoulder servo stalls when the lift is blocked by the sock under the robot. | A pinned lift opens the gripper, backs off and tries the next sock. |
+
+Known gaps: a gateway read timeout aborts the whole run (it should retry once); the not-a-sock check needs tuning for far socks;
+the 0.15 m basket centre offset is a guess.
+
 ## Development quickstart
 
 Run the framework-free suite on the PC:
