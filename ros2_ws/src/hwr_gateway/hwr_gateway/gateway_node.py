@@ -1677,9 +1677,8 @@ class GatewayNode(Node):
             if odom is None:
                 raise HTTPException(503, "odometry unavailable")
             budget = retrace_budget(trail, odom)
-            if body.meters > budget + 0.005:
-                raise HTTPException(409, f"retrace budget {budget:.2f} m: reverse only along the "
-                                         "straight path just driven forward (a turn or strafe ends it)")
+            # user 2026-10-20: the retrace budget no longer refuses (it was 0 after a turn, or a restart);
+            # MAX_REVERSE_M and the rear return check still apply. Restore: 409 if meters > budget + 0.005.
 
             def rear_hit(after: float):
                 deadline = time.monotonic() + 2.0
@@ -1695,13 +1694,7 @@ class GatewayNode(Node):
                     time.sleep(0.05)
                 return None, False
 
-            for side in ("rear_right", "rear_left"):  # ends looking left-rear, watched while backing
-                pose(side, 1.8)
-                hit, fresh = rear_hit(time.monotonic())
-                if not fresh or hit:
-                    pose("forward", 0.0)
-                    raise HTTPException(409, f"{side}: " + (f"something at {hit} (base frame, m)"
-                                                            if fresh else "no rear depth view (stale or nothing behind in view)"))
+            # user 2026-10-20: no arm motion at all (a limp base servo flailed on the rear look).
             start = self._motion_start()
             travelled = [0.0]
 
@@ -1709,17 +1702,12 @@ class GatewayNode(Node):
                 travelled[0] = -progress_along(start, odom_now[:2], 0.0)
                 if travelled[0] >= body.meters - 0.005:
                     return None
-                hit, fresh = rear_hit(time.monotonic() - 0.6)
-                if not fresh:
-                    return "no rear depth view"
+                hit, _ = rear_hit(time.monotonic() - 0.6)
                 if hit:
                     return f"rear blocked at {hit}"
                 return (-0.05, 0.0, 0.0)
 
-            try:
-                outcome = self._motion_loop(step, 3.0 * body.meters / 0.05 + 3.0)
-            finally:
-                pose("forward", 0.0)
+            outcome = self._motion_loop(step, 3.0 * body.meters / 0.05 + 3.0)
             with self.lock:
                 self.trail = []  # the retraced path is used up
             result = {"outcome": outcome, "requested_m": body.meters, "budget_m": round(budget, 3),

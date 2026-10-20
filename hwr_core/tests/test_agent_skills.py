@@ -701,12 +701,14 @@ def test_sockmark_finds_the_truck_first_then_carries_each_held_sock_to_it(monkey
     monkeypatch.setattr(skills, "_act", lambda d, path, payload=None: calls.append(path) or {})
     picks = iter([{"outcome": "holding"}, {"outcome": "missed"}])
     monkeypatch.setattr(skills, "_motion", lambda d, path, payload, s: calls.append(path) or next(picks))
-    monkeypatch.setattr(skills, "_deliver", lambda truck_map, truck: calls.append("deliver") or {"placed": True})
+    monkeypatch.setattr(skills, "_deliver", lambda truck_map, truck, *_: calls.append("deliver") or {"placed": True})
     monkeypatch.setattr(skills, "arm_pose", lambda n: None)
+    monkeypatch.setattr(skills, "back", lambda m: calls.append(("back", m)))
+    monkeypatch.setattr(skills, "turn", lambda d: calls.append(("turn", d)))
     result = skills.sockmark()
     assert result["placed"] == 1 and result["attempts"] == 2
     assert [e["pick"] for e in result["log"]] == ["holding", "missed"]
-    assert calls == ["/places/anchor", "/arm/pick_at", "deliver", "/arm/pick_at"]
+    assert calls == ["/places/anchor", "/arm/pick_at", "deliver", ("back", 0.15), ("turn", 150), "/arm/pick_at"]
     assert avoided == [([1.0, 2.0], 0.5)] * 3  # only socks >= 0.5 m from the truck
 
 
@@ -737,9 +739,9 @@ def test_advance_creeps_through_a_block_at_the_target_and_stops_before_a_real_ob
     assert calls == [("move", 0.5), ("move", 0.44)]
 
 
-def _deliver_rig(monkeypatch, truck_hits, move_to=None):
-    """GatewaySkills with a fake robot: odometry pose, a truck seen at `truck_hits`, the set-down
-    sock where it was put, and moves that advance the odometry pose by `move_to` (or the request)."""
+def _deliver_rig(monkeypatch, truck_dist=0.555, move_to=None):
+    """GatewaySkills with a fake robot: odometry pose at the origin, the truck anchor `truck_dist`
+    dead ahead, and moves that advance the odometry pose by `move_to` (or the request)."""
     skills = GatewaySkills(token="test")
     pose = [0.0, 0.0, 0.0]
     calls = []
@@ -747,6 +749,7 @@ def _deliver_rig(monkeypatch, truck_hits, move_to=None):
     monkeypatch.setattr(skills, "_lift_to", lambda p, seconds=3.0: calls.append(("lift", p)) or True)
     monkeypatch.setattr(skills, "_drive_near", lambda point, stop_at, creep=True: calls.append(
         ("drive_near", stop_at, creep)) or (stop_at, 0.0))
+    monkeypatch.setattr(skills, "_get", lambda path: {"pose": [0.0, 0.0, 0.0]})
     monkeypatch.setattr(skills, "_pose", lambda: list(pose))
     monkeypatch.setattr(skills, "turn", lambda degrees: calls.append(("turn", round(degrees))))
 
@@ -760,30 +763,29 @@ def _deliver_rig(monkeypatch, truck_hits, move_to=None):
         calls.append(("drive", round(vx * seconds, 3)))
         pose[0] += 0.0 if move_to is not None else vx * seconds
     monkeypatch.setattr(skills, "drive", drive)
-    monkeypatch.setattr(skills, "find_on_floor", lambda label, views=None, plane_z=0.0, tries=1, spread=False: (
-        truck_hits if label == "toy truck" else [{"base": [0.23, 0.15]}]))
-    monkeypatch.setattr(skills, "_motion", lambda d, path, payload, s: calls.append((path, payload)) or (
-        {"outcome": "holding"} if path == "/arm/pick_at" else {"outcome": "placed"}))
-    return skills, calls
+    monkeypatch.setattr(skills, "_motion", lambda d, path, payload, s: calls.append((path, payload)) or {
+        "outcome": "placed"})
+    return skills, calls, [truck_dist, 0.0]
 
 
-def test_deliver_looks_once_from_the_standoff_then_drives_by_odometry_and_drops(monkeypatch):
-    skills, calls = _deliver_rig(monkeypatch, [{"base": [0.555, 0.0], "source": "depth"}])
-    result = skills._deliver([1.0, 2.0])
+def test_deliver_carries_drives_by_odometry_and_drops_without_setting_the_sock_down(monkeypatch):
+    skills, calls, truck = _deliver_rig(monkeypatch)
+    result = skills._deliver(truck)
     assert result["placed"] is True
     assert ("drive_near", 0.6, False) in calls  # costmap-checked carry, no creeps
     assert ("move", 0.33) in calls               # centre 0.555 + 0.045 = 0.60 -> 0.27 ahead
-    drop = [c for c in calls if c[0] == "/arm/place"][-1][1]
-    assert drop["x"] == pytest.approx(0.27, abs=1e-6) and drop["z"] == 0.12
-    picks = [c for c in calls if c[0] == "/arm/pick_at"]
-    assert picks == [("/arm/pick_at", {"x": 0.23, "y": 0.15, "z": 0.0})]  # the set-down sock
+    drop = [c for c in calls if c[0] == "/arm/place"]
+    assert len(drop) == 1 and drop[0][1]["z"] == 0.12  # the only place is the drop
+    assert drop[0][1]["x"] == pytest.approx(0.27, abs=1e-6)
+    assert not any(c[0] == "/arm/pick_at" for c in calls)
 
 
 def test_deliver_navigates_to_the_standoff_when_the_straight_carry_is_blocked(monkeypatch):
-    skills, calls = _deliver_rig(monkeypatch, [{"base": [0.555, 0.0], "source": "depth"}])
+    skills, calls, _ = _deliver_rig(monkeypatch)
     stops = iter([(1.23, 0.0), (0.6, 0.0)])  # blocked by a sock, then squared up after the nav goal
     monkeypatch.setattr(skills, "_drive_near", lambda point, stop_at, creep=True: next(stops))
-    monkeypatch.setattr(skills, "_get", lambda path: {"pose": [0.0, 0.0, 0.0]})
+    poses = iter([[0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [1.4, 0.0, 0.0]])  # localization check, before the goto, at the standoff
+    monkeypatch.setattr(skills, "_get", lambda path: {"pose": next(poses)})
     goals = []
     monkeypatch.setattr(skills, "goto", lambda x, y, yaw: goals.append((x, y, yaw)))
     assert skills._deliver([2.0, 0.0])["placed"] is True
@@ -791,7 +793,7 @@ def test_deliver_navigates_to_the_standoff_when_the_straight_carry_is_blocked(mo
 
 
 def test_deliver_moves_up_to_the_costmap_block_then_drives_the_rest_by_odometry(monkeypatch):
-    skills, calls = _deliver_rig(monkeypatch, [{"base": [1.085, 0.0], "source": "depth"}])
+    skills, calls, truck = _deliver_rig(monkeypatch, truck_dist=1.085)
     real_move = skills.move
 
     def move(meters, direction="forward"):
@@ -799,27 +801,49 @@ def test_deliver_moves_up_to_the_costmap_block_then_drives_the_rest_by_odometry(
             raise RuntimeError("gateway HTTP 409: path blocked in costmap at 0.7 m (cost 99)")
         return real_move(meters)
     monkeypatch.setattr(skills, "move", move)
-    result = skills._deliver([1.0, 2.0])
+    result = skills._deliver(truck)
     assert result["placed"] is True
     assert ("move", 0.65) in calls and ("drive", 0.21) in calls  # 1.13 - 0.65 - 0.27
     assert result["drop"][0] == pytest.approx(0.27, abs=1e-6)
 
 
-def test_deliver_stops_with_the_sock_down_when_no_depth_fix_of_the_truck(monkeypatch):
-    skills, calls = _deliver_rig(monkeypatch, [{"base": [0.6, 0.0], "source": "plane"}])
-    assert skills._deliver([1.0, 2.0])["why"] == "toy truck not seen from the standoff"
-    assert not any(c[0] in ("move", "/arm/pick_at") for c in calls)
-
-
 def test_deliver_refuses_the_drop_when_still_out_of_reach_after_the_drive(monkeypatch):
-    skills, calls = _deliver_rig(monkeypatch, [{"base": [0.555, 0.0], "source": "depth"}], move_to=0.20)
-    result = skills._deliver([1.0, 2.0])
+    skills, calls, truck = _deliver_rig(monkeypatch, move_to=0.20)
+    result = skills._deliver(truck)
     assert result["placed"] is False and "out of reach" in result["why"]
-    assert [c for c in calls if c[0] == "/arm/place"] == [("/arm/place", {"x": 0.19, "y": 0.12, "z": 0.03})]
+    assert not any(c[0] == "/arm/place" for c in calls)
 
 
 def test_deliver_never_drives_when_the_arm_did_not_lift(monkeypatch):
-    skills, calls = _deliver_rig(monkeypatch, [])
+    skills, calls, truck = _deliver_rig(monkeypatch)
     monkeypatch.setattr(skills, "_lift_to", lambda p, seconds=3.0: False)
-    assert skills._deliver([1.0, 2.0])["why"].startswith("arm did not reach carry")
+    assert skills._deliver(truck)["why"].startswith("arm did not reach carry")
     assert not any(c[0] == "drive_near" for c in calls)
+
+
+def test_sockmark_lets_go_and_backs_off_when_the_lift_stalls_then_tries_another(monkeypatch):
+    skills = GatewaySkills(token="test")
+    monkeypatch.setattr("time.sleep", lambda s: None)
+    monkeypatch.setattr(skills, "_get", lambda path, binary=False: {"places": {"toy_truck": {
+        "object_x": 1.0, "object_y": 2.0}}})
+    socks = iter([{"x": 0.2, "y": 0.0}, None])
+    monkeypatch.setattr(skills, "_approach", lambda *a, **k: next(socks))
+    calls = []
+    monkeypatch.setattr(skills, "_act", lambda d, path, payload=None: calls.append(path) or {})
+    monkeypatch.setattr(skills, "_motion", lambda d, path, payload, s: {"outcome": "holding"})
+    monkeypatch.setattr(skills, "_deliver", lambda *a: {"placed": False, "pinned": True, "why": "x"})
+    monkeypatch.setattr(skills, "arm_pose", lambda n: None)
+    monkeypatch.setattr(skills, "back", lambda m: calls.append(("back", m)))
+    result = skills.sockmark()
+    assert calls == ["/gripper", ("back", 0.1)] and result["stopped"] == "no more socks found"
+
+
+def test_is_sock_rejects_only_a_clear_no(monkeypatch):
+    from PIL import Image
+    import io
+    skills = GatewaySkills(token="test")
+    buf = io.BytesIO()
+    Image.new("RGB", (640, 400)).save(buf, format="JPEG")
+    for reply, expected in (("No.", False), ("no, it is a sweatshirt", False), ("Yes", True), ("[]", True)):
+        monkeypatch.setattr(skills, "_ask_vlm", lambda image, prompt, reply=reply: reply)
+        assert skills._is_sock(buf.getvalue(), [630, 10]) is expected

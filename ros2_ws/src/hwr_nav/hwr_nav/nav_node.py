@@ -16,7 +16,7 @@ from rclpy.executors import MultiThreadedExecutor
 from rclpy.node import Node
 from rclpy.qos import (QoSDurabilityPolicy, QoSProfile,
                        QoSReliabilityPolicy)
-from sensor_msgs.msg import LaserScan
+from sensor_msgs.msg import JointState, LaserScan
 from std_msgs.msg import Bool
 from std_srvs.srv import Trigger
 
@@ -115,6 +115,9 @@ class NavNode(Node):
         self.create_subscription(LaserScan, "depth_ranges",
                                  self._on_depth_ranges, qos,
                                  callback_group=self.group)
+        self.gripper_closed = False
+        self.create_subscription(JointState, "joint_states", self._on_joints, 10,
+                                 callback_group=self.group)
         self.action = ActionServer(
             self, NavigateToPose, "navigate_to_pose", self._execute,
             cancel_callback=lambda request: CancelResponse.ACCEPT,
@@ -206,6 +209,11 @@ class NavNode(Node):
                 and now - self.pose_stamp <= 1.0
                 and now - self.health_stamp <= 1.0)
 
+    def _on_joints(self, msg: JointState) -> None:
+        # Gripper pulse >= 580 (rad = (pulse - 500) * 0.24 deg): a held sock; open is 200.
+        if "gripper" in msg.name and len(msg.position) == len(msg.name):
+            self.gripper_closed = msg.position[msg.name.index("gripper")] > 0.335
+
     def _on_ranges(self, msg: LaserScan) -> None:
         if self.pose is None or self.costmap is None:
             return
@@ -213,6 +221,11 @@ class NavNode(Node):
         angles = msg.angle_min + np.arange(len(ranges)) * msg.angle_increment
         good = np.isfinite(ranges) & (ranges >= msg.range_min) & (ranges <= msg.range_max)
         sensor_yaw = math.pi if msg.header.frame_id == "lidar_frame" else 0.0
+        if self.gripper_closed:
+            # A held sock hangs 13-30 cm ahead of the lidar and in the depth view (live 2026-10-20) and
+            # boxed the robot in; ignore every sensor's near field dead ahead while carrying.
+            ahead = np.abs(np.angle(np.exp(1j * (angles + sensor_yaw)))) <= math.radians(50.0)
+            good &= ~(ahead & (ranges < 0.30))
         bearings = angles[good] + sensor_yaw + self.pose[2]
         points = np.column_stack((self.pose[0] + ranges[good] * np.cos(bearings),
                                   self.pose[1] + ranges[good] * np.sin(bearings)))

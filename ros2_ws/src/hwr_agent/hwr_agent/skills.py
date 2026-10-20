@@ -543,7 +543,26 @@ class GatewaySkills:
                      'normalised 0-1000. Return [] if there is none.')
     # (pan, elevation) deg: floor ahead first (0.2-0.6 m), then the room (plan/19).
     # (0, -50) first (-60 jammed the gripper servo into the arm, user 2026-10-19): -40 is blind under ~0.2 m, and a sock right ahead was "not found" (2026-10-19).
-    SEARCH_VIEWS = ((0, -50), (0, -40), (50, -40), (-50, -40), (0, 0), (50, 0), (-50, 0))
+    # Pans 0/+-30/+-55 (aim limit 60) at down (-40), slightly down (-20) and horizontal (0): user 2026-10-20,
+    # the 3-pan sweep missed a sock the camera never looked at.
+    SEARCH_VIEWS = ((0, -50),) + tuple((pan, tilt) for tilt in (-40, -20, 0) for pan in (0, 30, -30, 55, -55))
+
+    def _is_sock(self, image: bytes, center) -> bool:
+        """The 4B grounding calls pants and a sweatshirt "sock" (live 2026-10-20: 3 pinned/missed picks).
+        Re-ask on a 240 px crop around the point; only a clear "no" rejects (a failed ask keeps it)."""
+        picture = Image.open(io.BytesIO(image)).convert("RGB")
+        x, y = center
+        crop = picture.crop((max(0, int(x) - 120), max(0, int(y) - 120),
+                             min(picture.width, int(x) + 120), min(picture.height, int(y) + 120)))
+        out = io.BytesIO()
+        crop.save(out, format="JPEG")
+        try:
+            reply = self._ask_vlm(out.getvalue(), "Is the object in the middle of this picture a single "
+                                  "sock? Trousers, shirts, sweatshirts and other clothes are not socks. "
+                                  "Answer only yes or no.")
+        except requests.RequestException:
+            return True
+        return not reply.strip().lower().startswith("no")
 
     def find_on_floor(self, label: str = "sock", views=((0, -40),), plane_z: float = 0.0,
                       tries: int = 1, spread: bool = False):
@@ -564,6 +583,8 @@ class GatewaySkills:
             boxes = [b for b in parse_grounding(self._ask_vlm(
                 image, self.GROUND_PROMPT.format(labels=", ".join(labels))), width, height)
                 if b["label"] == label][:20]  # /vision/locate takes <= 20 (a pile listed more)
+            if label == "sock":
+                boxes = [b for b in boxes if self._is_sock(image, b["center"])]
             if not boxes:
                 continue
             if spread:  # points across each object, not just its one VLM point (long socks)
@@ -599,7 +620,7 @@ class GatewaySkills:
         def refind():
             """Close-up first (twice, points across each); lost it = any other in view will do
             (user: "so many socks, just pick one")."""
-            return (keep(self.find_on_floor(label, near + self.SEARCH_VIEWS[2:4], plane_z, tries=2,
+            return (keep(self.find_on_floor(label, near + ((50, -40), (-50, -40)), plane_z, tries=2,
                                             spread=True))
                     or keep(self.find_on_floor(label, self.SEARCH_VIEWS, plane_z)))
         # Of the points on it, the one nearest the reach spot (but outside the 0.19 m wheel guard).
@@ -747,27 +768,24 @@ class GatewaySkills:
             if time.monotonic() > deadline:
                 return False
 
-    # Set-down spot beside the path. Set at 0.275 m the sock landed 0.29-0.31 m out, past the re-pick
-    # reach ("out of reach", live 2026-10-19); set at 0.21 m it was seen inside the 0.19 m wheel guard.
-    # Picks work 0.19-~0.26 m: aim for the middle.
-    ASIDE = (0.19, 0.12)
-    REPICK_RANGE = 0.225
-    STANDOFF = 0.60       # look at the truck from here: whole truck in view, depth below its near side
+    STANDOFF = 0.60       # carry stops here, facing the truck anchor
     FINAL = 0.27          # bed centre this far ahead for the drop (reach 0.32 at z 0.12)
 
-    def _set_aside(self) -> bool:
-        down = self._motion("set the sock down", "/arm/place",
-                            {"x": self.ASIDE[0], "y": self.ASIDE[1], "z": 0.03}, 20.0)
-        return down.get("outcome") == "placed"
-
-    def _deliver(self, truck_map, truck: str = "toy truck") -> dict:
-        """Holding a sock (plan/19 redesign, 2026-10-19): carry it to a standoff 0.6 m from the truck,
-        set it down beside, look ONCE (the held sock hides the truck), store the bed centre in the
-        odometry frame, re-pick, drive by odometry until the centre is 0.27 m ahead, drop. No creeps,
-        no close-range re-looks: those spiralled into the truck and under the bumper live."""
+    def _deliver(self, truck_map, truck: str = "toy truck", drop_z: float = 0.12,
+                 bed_past: float = BED_PAST_SIDE, final: float = FINAL,
+                 reach_drop=None) -> dict:
+        """Holding a sock: carry it to a standoff 0.6 m from the truck anchor, store the bed centre in
+        the odometry frame, drive by odometry until it is 0.27 m ahead, drop. The sock is never set
+        down. No creeps, no close-range re-looks: those spiralled into the truck live (2026-10-19)."""
         if not self._lift_to("carry"):
-            return {"placed": False, "why": "arm did not reach carry (servo limp or blocked?)"}
+            return {"placed": False, "pinned": True,
+                    "why": "arm did not reach carry (servo limp or blocked?)"}
         self.last_refusal = None
+        localization = self._get("/status").get("localization")
+        if localization is not None and not localization.get("healthy"):
+            # Drifted pose = a carry that stops 1 m short (live 2026-10-20): relocalize before using map points.
+            self._act("relocalize", "/localization/relocalize")
+            time.sleep(30.0)
         carried = self._drive_near(truck_map, stop_at=self.STANDOFF, creep=False)
         if math.hypot(*carried) > self.STANDOFF + 0.25:
             # A sock on the straight line blocked the carry 1.23 m out (live 2026-10-19): let the
@@ -783,38 +801,20 @@ class GatewaySkills:
         if math.hypot(*carried) > self.STANDOFF + 0.25:
             return {"placed": False, "why": f"carry stopped {math.hypot(*carried):.2f} m from the truck",
                     "refusal": self.last_refusal}
-        if not self._set_aside():
-            return {"placed": False, "why": "set-down failed (still holding the sock)"}
-        seen = [f for f in self.find_on_floor(truck, ((0, -20), (0, -40), (30, -20), (-30, -20)),
-                                              0.03, tries=2) if f.get("source") == "depth"]
-        if not seen:
-            return {"placed": False, "why": f"{truck} not seen from the standoff"}
-        x, y = seen[0]["base"]  # depth = the floor at its near side
+        # No look and no set-down (user, 2026-10-20: no repeated putting down / picking up): the anchor
+        # is where the truck was sighted with nothing held; the held sock hides it now anyway.
+        x, y = self._to_base(self._get("/status")["pose"], truck_map).values()
         distance = math.hypot(x, y)
         # shortcut: assumes the truck sideways (bed across); use its box/heading if it is turned.
-        scale = (distance + self.BED_PAST_SIDE) / distance
+        scale = (distance + bed_past) / distance
         ox, oy, yaw = self._pose()  # odometry: good to ~1 cm over the last ~0.35 m
         centre = (ox + x * scale * math.cos(yaw) - y * scale * math.sin(yaw),
                   oy + x * scale * math.sin(yaw) + y * scale * math.cos(yaw))
-        # ASIDE is to the LEFT (+y): look left (the -30/-45 pans looked right, live 2026-10-19).
-        socks = self.find_on_floor("sock", ((30, -50), (0, -50), (45, -40)), tries=2, spread=True)
-        if not socks:
-            return {"placed": False, "why": "set-down sock not seen"}
-        # Of the points across the set-down sock, the one mid pick window (0.19-0.26 m).
-        aside = [f for f in socks if math.hypot(f["base"][0] - self.ASIDE[0],
-                                                f["base"][1] - self.ASIDE[1]) < 0.10] or socks
-        sock = min(aside, key=lambda f: abs(math.hypot(*f["base"]) - self.REPICK_RANGE))
-        pick = self._motion("pick the sock again", "/arm/pick_at",
-                            {"x": sock["base"][0], "y": sock["base"][1], "z": 0.0}, 20.0)
-        if pick.get("outcome") != "holding":
-            return {"placed": False, "why": f"re-pick {pick.get('outcome')}"}
-        if not self._lift_to("carry"):
-            return {"placed": False, "why": "arm did not reach carry after the re-pick"}
         here = lambda: tuple(self._to_base(self._pose(), centre).values())  # noqa: E731
         x, y = here()
         if abs(math.degrees(math.atan2(y, x))) >= 5.0:
             self.turn(math.degrees(math.atan2(y, x)))
-        step = math.hypot(*here()) - self.FINAL
+        step = math.hypot(*here()) - final
         if step > 0.02:
             try:
                 self.move(min(step, 1.0))
@@ -828,19 +828,34 @@ class GatewaySkills:
         # The inflated truck stops costmap moves ~0.4 m short of the drop spot (blocked at 0.7 m with
         # the centre 1.13 m out, live 2026-10-19). The centre is known in odometry: drive the rest.
         for _ in range(3):  # the drive undershot 0.25 -> 0.15 m live: re-measure and correct
-            rest = math.hypot(*here()) - self.FINAL
-            if not 0.02 < rest <= 0.45:
+            rest = math.hypot(*here()) - final
+            if not 0.02 < rest <= 0.60:  # standoff 0.6 + bed offset leaves ~0.5 m to drive
                 break
-            self.drive(vx=0.1, seconds=rest / 0.1)
+            self.drive(vx=0.1, seconds=min(rest, 0.5) / 0.1)  # drive() caps at 5 s
         x, y = here()
-        if math.hypot(x, y) > self.DROP_REACH:
+        if not reach_drop and math.hypot(x, y) > self.DROP_REACH:
             return {"placed": False, "why": f"bed centre {math.hypot(x, y):.2f} m away, out of reach"}
+        if reach_drop:  # tall rim (basket 0.25 m): the carry tip is only 0.17 m out, so extend, then let go
+            self._motion("reach over the rim", "/arm/reach", {"x": reach_drop[0], "y": 0.0, "z": reach_drop[1],
+                                                              "tool_pitch": -0.3, "duration_ms": 1500}, 10.0)
+            time.sleep(1.5)
+            self.gripper("open")
+            # A sock stuck to the jaws (live 2026-10-20): tip the jaws ~30 deg further down, then wiggle.
+            self._motion("tilt the jaws down", "/arm/reach", {"x": reach_drop[0], "y": 0.0, "z": reach_drop[1] - 0.08,
+                                                              "tool_pitch": -0.8, "duration_ms": 1000}, 10.0)
+            time.sleep(1.0)
+            for command in ("close", "open", "close", "open"):
+                self._act(f"wiggle gripper {command}", "/gripper", {"command": command, "duration_ms": 250})
+                time.sleep(0.3)
+            self._lift_to("carry")
+            return {"placed": True, "drop": list(reach_drop), "why": None}
         place = self._motion("drop the sock in the truck", "/arm/place",
-                             {"x": x, "y": y, "z": 0.12}, 20.0)
+                             {"x": x, "y": y, "z": drop_z}, 20.0)
         return {"placed": place.get("outcome") == "placed", "drop": [round(x, 3), round(y, 3)],
                 "why": None if place.get("outcome") == "placed" else f"drop {place.get('outcome')}"}
 
-    def sockmark(self, max_socks: int = 6, truck: str = "toy truck"):
+    def sockmark(self, max_socks: int = 6, truck: str = "toy truck", drop_z: float = 0.12,
+                 bed_past: float = BED_PAST_SIDE, final: float = FINAL, reach_drop=None):
         """Put the socks in the toy truck (plan/19). The truck is found first, with nothing held:
         a held sock covers the bottom of the image where the truck would be (live 2026-10-18).
         Socks are carried in the raised `carry` pose (the low arm dragged them)."""
@@ -872,11 +887,26 @@ class GatewaySkills:
             if pick.get("outcome") != "holding":
                 misses += 1
                 continue
-            entry.update(self._deliver(truck_map, truck))
-            self.arm_pose("forward")
-            time.sleep(2.0)
+            entry.update(self._deliver(truck_map, truck, drop_z, bed_past, final, reach_drop))
+            if entry.get("pinned"):
+                # The lift stalled: the sock is under a wheel (live 2026-10-20). Let go, back off, take another.
+                self._act("let go of the sock", "/gripper", {"command": "open", "duration_ms": 800})
+                self._arm_clear()
+                try:
+                    self.back(0.10)
+                except RuntimeError:
+                    pass  # no straight path back: the next search starts from here
+                misses += 1
+                continue
+            self._arm_clear()
             if not entry.get("placed"):
                 stopped = entry.get("why")
+                break
+            try:  # back off the truck (straight retrace), then turn away before the next search
+                self.back(0.15)
+                self.turn(150)
+            except RuntimeError as exc:
+                stopped = f"could not back off: {exc}"
                 break
         placed = sum(1 for e in log if e.get("placed"))
         return {"placed": placed, "attempts": len(log), "log": log, "stopped": stopped}

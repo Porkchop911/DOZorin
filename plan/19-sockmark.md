@@ -188,3 +188,21 @@ gateway pose and the anchor, no new look:
 
 Lesson: the odometry-frame centre plus a measure-drive-measure loop is enough; one open-loop drive is not.
 User-confirmed: sock in the truck (1). Loop end to end: still 0.
+
+## 2026-10-20: simplified flow (user), offline, untested live
+
+locate truck (once, anchor) -> find sock -> drive to sock -> grip+lift -> carry to truck -> drop -> back off (0.15) -> turn 150 -> repeat from find sock.
+Removed: set-down beside the truck, the look at the truck, the re-pick. Bed centre now comes from the stored
+anchor (map pose at the standoff -> odometry frame); drop as before (z 0.12). Failure stops the run with the
+sock still held (no set-down). Risk: no close-range look, so the anchor must be good (<= ~5 cm); `back` is
+refused after a turn, so a refusal stops the run.
+
+### 2026-10-20 live: first loop delivery (user-confirmed)
+Lidar mask (nav_node, < 0.30 m, +-50 deg, gripper closed) fixed the boxed-in costmap while carrying. `/motion/back`: no arm sweep, no retrace budget, no rear-view refusal. Pinned-lift recovery added (untested live). max_socks=1 only; repeat loop untested.
+
+## 2026-10-20 evening: basket, reach drop, not-a-sock check
+- Truck replaced by a grey laundry basket, rim 0.25 m. `sockmark(truck="laundry basket", bed_past=0.15, final=0.35, reach_drop=(0.25, 0.30))`: carry tip is only 0.17 m ahead (the bumper), so stop with the front rim 0.20 m ahead, `/arm/reach` over the rim, open, tilt jaws down (pitch -0.8), wiggle the gripper, carry, back 0.15.
+- Anchor = centre of the front rim from depth (not the right edge: that missed); anchors average, delete the old entry first.
+- `_is_sock`: second VLM ask on a 240 px crop; the 4B called pants and a sweatshirt "sock". Too strict at range (9 of 10 far candidates rejected, unconfirmed).
+- `_deliver` relocalizes when localization is unhealthy (a drifted pose stopped the carry 1 m short).
+- Open: retry a gateway ReadTimeout once instead of aborting the run (it died mid-delivery); 3 socks left on the floor at shutdown.
