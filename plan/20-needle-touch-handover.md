@@ -238,6 +238,12 @@ total), so estop / pose / `arm_needle` re-check and run 19 could not be done. Be
 `/estop_state` false, `pos:` pose recorded, and the arm camera publishing. Still open and unchanged from the
 19:25 update: whether the needle is still straight and how far it protrudes.
 
-State at the 20:2x update: the detector is **committed and pushed** (see `git log -1` for the hash after this
-section; the push closed the `ahead 1` gap that the 20:05 note described). Nothing was run on the robot. No
-new SSH check was made in this update: the robot was last unreachable at 20:05.
+State at the 20:2x update: the detector is **committed and pushed**. `git push hub rework` moved
+`hub/rework` `6c3dffb..cb7b7b6`, i.e. it published **2** commits (the 20:05 Phase 20 commit `b8d2e7d` plus the
+detector commit `cb7b7b6 feat(needle-touch): stop the descent on an arm-camera load read`); `git status -sb`
+now reads `## rework...hub/rework` with no ahead marker. The self-test was re-run against the committed code:
+12 checks, `--- results: ALL PASS`, exit 0 (23 pose frames read, never fired; `black_1_touch_arm.jpg` fired at
+`dev 39.05 px`; 1-4 px synthetic noise never fired; a held 6 px bend fired only on the 2nd step; a 16 px jump
+fired at once; a lost blob fired after 2 frames; `AIM_BEYOND = 5` and the fixed point (341, 225) unchanged).
+Nothing was run on the robot. No new SSH check was made in this update: the robot was last unreachable at
+20:05.
