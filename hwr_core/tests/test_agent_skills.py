@@ -17,6 +17,22 @@ HWR_CLI = importlib.util.module_from_spec(CLI_SPEC)
 CLI_SPEC.loader.exec_module(HWR_CLI)
 
 
+@pytest.fixture(autouse=True)
+def _arm_reaches_at_once(monkeypatch):
+    # _arm_clear polls /arm/state via _lift_to; no test has a gateway behind _get for it.
+    monkeypatch.setattr(GatewaySkills, "_lift_to", lambda self, pose, seconds=3.0: self.arm_pose(pose) or True)
+    monkeypatch.setattr(GatewaySkills, "_on_person", lambda self, center, margin=40: False)
+
+
+def test_on_person_rejects_pixels_in_or_near_a_person_box(monkeypatch):
+    monkeypatch.undo()
+    skills = GatewaySkills(token="t")
+    skills._get = lambda path: {"objects": [{"class": "person", "box": [200, 50, 400, 300]},
+                                            {"class": "chair", "box": [0, 0, 640, 400]}]}
+    assert skills._on_person([300, 280]) and skills._on_person([430, 320])
+    assert not skills._on_person([500, 350]) and not skills._on_person([100, 100])
+
+
 def test_dry_run_never_needs_token_or_network():
     skills = GatewaySkills(dry_run=True)
     result = skills.goto(1.0, 2.0, 0.5)
@@ -847,3 +863,72 @@ def test_is_sock_rejects_only_a_clear_no(monkeypatch):
     for reply, expected in (("No.", False), ("no, it is a sweatshirt", False), ("Yes", True), ("[]", True)):
         monkeypatch.setattr(skills, "_ask_vlm", lambda image, prompt, reply=reply: reply)
         assert skills._is_sock(buf.getvalue(), [630, 10]) is expected
+
+
+def test_deliver_goes_to_the_standoff_on_the_box_front_normal_when_face_is_given(monkeypatch):
+    skills = GatewaySkills(token="test")
+    monkeypatch.setattr("time.sleep", lambda s: None)
+    monkeypatch.setattr(skills, "_lift_to", lambda pose: True)
+    monkeypatch.setattr(skills, "_get", lambda path, binary=False: {"localization": {"healthy": True}})
+    goals = []
+    monkeypatch.setattr(skills, "goto", lambda x, y, yaw=0.0: goals.append((x, y, yaw)))
+    monkeypatch.setattr(skills, "_drive_near", lambda *a, **k: (_ for _ in ()).throw(StopIteration))
+    with pytest.raises(StopIteration):  # the goto is all this test is about
+        skills._deliver([-1.0, 0.5], "cardboard box", 0.12, 0.15, 0.35, (0.25, 0.3), 0.0)
+    assert goals == [(-1.0 + skills.STANDOFF, 0.5, math.pi)]
+
+
+def test_approach_aims_at_the_middle_of_a_sock_not_its_edge_point(monkeypatch):
+    skills = GatewaySkills(token="test")
+    monkeypatch.setattr("time.sleep", lambda s: None)
+    pts = [{"base": [0.20, y], "map": [1.0, y]} for y in (-0.10, 0.0, 0.10)]  # one sock, 0.2 m long
+    monkeypatch.setattr(skills, "find_on_floor", lambda *a, **k: [dict(p) for p in pts])
+    got = skills._approach("sock")
+    assert got["y"] == pytest.approx(0.0) and got["map"][1] == pytest.approx(0.0)
+
+
+def test_find_on_floor_drops_a_region_wider_than_a_sock(monkeypatch):
+    skills = GatewaySkills(token="test")
+    monkeypatch.setattr("time.sleep", lambda s: None)
+    monkeypatch.setattr(skills, "_lift_to", lambda pose: True)
+    monkeypatch.setattr(skills, "arm_aim", lambda *a: None)
+    import io
+    from PIL import Image
+    buf = io.BytesIO()
+    Image.new("RGB", (640, 400)).save(buf, format="JPEG")
+    monkeypatch.setattr(skills, "_get", lambda path, binary=False: buf.getvalue())
+    monkeypatch.setattr(skills, "_ask_vlm", lambda image, prompt: "")
+    monkeypatch.setattr(skills_mod, "parse_grounding", lambda *a, **k: [
+        {"label": "sock", "center": [100, 100]}, {"label": "sock", "center": [500, 300]}])
+    monkeypatch.setattr(skills, "_is_sock", lambda image, center: True)
+    monkeypatch.setattr(skills_mod, "region_samples", lambda rgb, seed, n=8: [(seed[0] + 1, seed[1])])
+
+    def locate(d, path, payload=None):  # the seed and its sample: 0.1 m apart left, 0.9 m apart right
+        return {"points": [{"base": [0.3 + (0.9 if px[0] > 300 else 0.1) * (px[0] % 2), 0.0]} for px in payload["pixels"]]}
+    monkeypatch.setattr(skills, "_act", locate)
+    found = skills.find_on_floor("sock", ((0, -50),), spread=True)
+    assert {tuple(f["center"])[0] // 100 for f in found} == {1}
+
+
+def test_find_on_floor_drops_a_region_that_rises_off_the_floor(monkeypatch):
+    skills = GatewaySkills(token="test")
+    monkeypatch.setattr("time.sleep", lambda s: None)
+    monkeypatch.setattr(skills, "_lift_to", lambda pose: True)
+    monkeypatch.setattr(skills, "arm_aim", lambda *a: None)
+    import io
+    from PIL import Image
+    buf = io.BytesIO()
+    Image.new("RGB", (640, 400)).save(buf, format="JPEG")
+    monkeypatch.setattr(skills, "_get", lambda path, binary=False: buf.getvalue())
+    monkeypatch.setattr(skills, "_ask_vlm", lambda image, prompt: "")
+    monkeypatch.setattr(skills_mod, "parse_grounding", lambda *a, **k: [
+        {"label": "sock", "center": [100, 100]}, {"label": "sock", "center": [500, 300]}])
+    monkeypatch.setattr(skills, "_is_sock", lambda image, center: True)
+    monkeypatch.setattr(skills_mod, "region_samples", lambda rgb, seed, n=8: [(seed[0] + 1, seed[1])])
+
+    def locate(d, path, payload=None):  # both small; the right one's sample is 0.105 m up (draped sweatshirt)
+        return {"points": [{"base": [0.3 + 0.05 * (px[0] % 2), 0.0],
+                            "z": 0.105 if px[0] > 300 and px[0] % 2 else 0.02} for px in payload["pixels"]]}
+    monkeypatch.setattr(skills, "_act", locate)
+    found = skills.find_on_floor("sock", ((0, -50),), spread=True)
+    assert {tuple(f["center"])[0] // 100 for f in found} == {1}

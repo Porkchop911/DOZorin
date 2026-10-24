@@ -11,7 +11,7 @@ import time
 from pathlib import Path
 
 import requests
-from PIL import Image
+from PIL import Image, ImageOps
 
 import numpy as np
 
@@ -69,9 +69,18 @@ class GatewaySkills:
         return response.json()
 
     def _get(self, path: str, binary: bool = False):
-        response = requests.get(self.url + path,
-                                headers={"Authorization": f"Bearer {self.token}"},
-                                timeout=self.timeout)
+        # One retry on a timeout: a stalled gateway ended a sockmark run mid-search (live 2026-10-22).
+        # Reads only; a POST retry could repeat a motion.
+        for attempt in (0, 1):
+            try:
+                response = requests.get(self.url + path,
+                                        headers={"Authorization": f"Bearer {self.token}"},
+                                        timeout=self.timeout)
+                break
+            except requests.Timeout:
+                if attempt:
+                    raise
+                time.sleep(2.0)
         self._check(response)
         return response.content if binary else response.json()
 
@@ -558,11 +567,31 @@ class GatewaySkills:
         crop.save(out, format="JPEG")
         try:
             reply = self._ask_vlm(out.getvalue(), "Is the object in the middle of this picture a single "
-                                  "sock? Trousers, shirts, sweatshirts and other clothes are not socks. "
+                                  "sock lying loose? Trousers, shirts, sweatshirts and other clothes are not "
+                                  "socks, and a sock on someone's foot or leg is not loose. "
                                   "Answer only yes or no.")
         except requests.RequestException:
             return True
         return not reply.strip().lower().startswith("no")
+
+    @staticmethod
+    def _lift_shadows(image: bytes) -> bytes:
+        """Autocontrast + gamma 0.6 for the VLM: it missed socks in the shelf shadow and the robot drove
+        over them (user, 2026-10-22); lifted, the same photo gave 4/4 socks instead of 3. Same pixels."""
+        picture = ImageOps.autocontrast(Image.open(io.BytesIO(image)).convert("RGB"), cutoff=1)
+        out = io.BytesIO()
+        picture.point(lambda v: int(255 * (v / 255) ** 0.6)).save(out, format="JPEG", quality=90)
+        return out.getvalue()
+
+    def _on_person(self, center, margin: int = 40) -> bool:
+        """The pixel is inside (or within margin of) a YOLO person box in the live frame."""
+        try:
+            objects = self._get("/vision/objects")["objects"]
+        except RuntimeError:  # vision stale: the VLM "not on a foot" check still applies
+            return False
+        x, y = center
+        return any(o["class"] == "person" and o["box"][0] - margin <= x <= o["box"][2] + margin
+                   and o["box"][1] - margin <= y <= o["box"][3] + margin for o in objects)
 
     def find_on_floor(self, label: str = "sock", views=((0, -40),), plane_z: float = 0.0,
                       tries: int = 1, spread: bool = False):
@@ -577,23 +606,33 @@ class GatewaySkills:
         for (pan, elevation), _ in ((view, n) for view in views for n in range(tries)):
             self.arm_aim(math.radians(pan), math.radians(elevation))
             time.sleep(1.5)
-            image = self._get("/snapshot", binary=True)
+            image = self._lift_shadows(self._get("/snapshot", binary=True))
             width, height = Image.open(io.BytesIO(image)).size
             labels = tuple(dict.fromkeys(self.GROUND_LABELS + (label,)))
             boxes = [b for b in parse_grounding(self._ask_vlm(
                 image, self.GROUND_PROMPT.format(labels=", ".join(labels))), width, height)
                 if b["label"] == label][:20]  # /vision/locate takes <= 20 (a pile listed more)
             if label == "sock":
-                boxes = [b for b in boxes if self._is_sock(image, b["center"])]
+                # Run 7 (2026-10-22) ended facing the user's socked foot: nothing inside a person box.
+                boxes = [b for b in boxes if not self._on_person(b["center"]) and self._is_sock(image, b["center"])]
             if not boxes:
                 continue
             if spread:  # points across each object, not just its one VLM point (long socks)
                 rgb = np.asarray(Image.open(io.BytesIO(image)).convert("RGB"))
-                boxes = [{**b, "center": list(px)} for b in boxes
+                boxes = [{**b, "center": list(px), "group": i} for i, b in enumerate(boxes)
                          for px in [tuple(b["center"])] + region_samples(rgb, b["center"], n=8)][:20]
             points = self._act(f"locate {label}", "/vision/locate",
                                {"pixels": [b["center"] for b in boxes], "plane_z": plane_z})["points"]
             found = [{**b, **p, "view": [pan, elevation]} for b, p in zip(boxes, points) if p]
+            if spread and label == "sock":
+                # A sweatshirt called a sock (live 2026-10-21): the region it fills spans > a sock's length.
+                def span(g):
+                    pts = [f["base"] for f in found if f["group"] == g]
+                    return max(math.dist(a, b) for a in pts for b in pts)
+                # Draped fabric: the VLM boxed only the floor end of the sweatshirt (0.13 m, passed the
+                # span check) but it rose to 0.105 m; a sock lies flat (live 2026-10-22).
+                high = {f["group"] for f in found if f.get("z", 0.0) > self.MAX_SOCK_Z}
+                found = [f for f in found if span(f["group"]) <= self.MAX_SOCK_M and f["group"] not in high]
             if found:
                 return sorted(found, key=lambda f: math.hypot(*f["base"]))
         return []
@@ -607,7 +646,8 @@ class GatewaySkills:
         keep = lambda found: [f for f in found if avoid is None or "map" not in f  # noqa: E731
                               or math.hypot(f["map"][0] - avoid[0], f["map"][1] - avoid[1]) > avoid_m]
         for turns in range(4):
-            found = keep(self.find_on_floor(label, self.SEARCH_VIEWS, plane_z))
+            # spread = size check from the first look: it drove to a sweatshirt and only rejected it up close (live 2026-10-22).
+            found = keep(self.find_on_floor(label, self.SEARCH_VIEWS, plane_z, spread=True))
             if found:
                 break
             if turns < 3:
@@ -622,12 +662,24 @@ class GatewaySkills:
             (user: "so many socks, just pick one")."""
             return (keep(self.find_on_floor(label, near + ((50, -40), (-50, -40)), plane_z, tries=2,
                                             spread=True))
-                    or keep(self.find_on_floor(label, self.SEARCH_VIEWS, plane_z)))
+                    or keep(self.find_on_floor(label, self.SEARCH_VIEWS, plane_z, spread=True)))
         # Of the points on it, the one nearest the reach spot (but outside the 0.19 m wheel guard).
         # In reach at any bearing within 60 deg: the arm pans; squaring up to < 8 deg (a cube rule)
         # turned back and forth as the best point jumped across the sock (live 2026-10-19).
-        best = lambda found: min([f for f in found if math.hypot(*f["base"]) >= 0.19] or found,  # noqa: E731
-                                 key=lambda f: abs(math.hypot(*f["base"]) - reach_x))
+        nearest = lambda found: min([f for f in found if math.hypot(*f["base"]) >= 0.19] or found,  # noqa: E731
+                                    key=lambda f: abs(math.hypot(*f["base"]) - reach_x))
+
+        def best(found):
+            """Socks: the middle of the points on it, not the edge one nearest the reach spot: an
+            edge grip left the sock dangling in front of the lidar and stuck on the box rim (user, 2026-10-21)."""
+            f = nearest(found)
+            if label != "sock":
+                return f
+            same = [g for g in found if math.dist(g["base"], f["base"]) <= 0.12]
+            mid = {"base": [sum(g["base"][i] for g in same) / len(same) for i in (0, 1)]}
+            if all("map" in g for g in same):
+                mid["map"] = [sum(g["map"][i] for g in same) / len(same) for i in (0, 1)]
+            return {**f, **mid}
         skip = []  # map points of socks the robot may be standing on
         backs = 0  # back-offs so far: backing and re-advancing looped until the 8 passes ran out (live 2026-10-19)
         for _ in range(8):
@@ -711,7 +763,15 @@ class GatewaySkills:
         (<= 0.30 m, like the cube creep); a block well short of it is a real obstacle: stop before it."""
         try:
             # A block found mid-move comes back as the outcome, not an error (live 2026-10-18).
-            outcome = str(self.move(min(step, 2.0)).get("outcome", "done"))
+            try:
+                outcome = str(self.move(min(step, 2.0)).get("outcome", "done"))
+            except RuntimeError as exc:
+                # Refused "camera not forward" with the readback already forward (live 2026-10-22): settle, retry once.
+                if "forward camera pose" not in str(exc):
+                    raise
+                self._arm_clear()
+                time.sleep(1.0)
+                outcome = str(self.move(min(step, 2.0)).get("outcome", "done"))
             blocked = re.search(r"blocked at ([0-9.]+) m", outcome)
             if not blocked:
                 return
@@ -752,6 +812,8 @@ class GatewaySkills:
     # Live 2026-10-18: the truck's bed centre is ~4.5 cm past its near side (truck sideways, bed ~9 cm
     # across); a drop from 0.12 m reaches 0.32 m at -30 deg (0.14 m reaches only 0.31).
     BED_PAST_SIDE = 0.045
+    MAX_SOCK_M = 0.40  # longest span of a sock's region; the sweatshirt spans more
+    MAX_SOCK_Z = 0.08  # highest point on a sock lying on the floor (user, 2026-10-22)
     DROP_REACH = 0.32
 
     def _lift_to(self, pose: str, seconds: float = 3.0) -> bool:
@@ -773,7 +835,7 @@ class GatewaySkills:
 
     def _deliver(self, truck_map, truck: str = "toy truck", drop_z: float = 0.12,
                  bed_past: float = BED_PAST_SIDE, final: float = FINAL,
-                 reach_drop=None) -> dict:
+                 reach_drop=None, face=None) -> dict:
         """Holding a sock: carry it to a standoff 0.6 m from the truck anchor, store the bed centre in
         the odometry frame, drive by odometry until it is 0.27 m ahead, drop. The sock is never set
         down. No creeps, no close-range re-looks: those spiralled into the truck live (2026-10-19)."""
@@ -786,6 +848,14 @@ class GatewaySkills:
             # Drifted pose = a carry that stops 1 m short (live 2026-10-20): relocalize before using map points.
             self._act("relocalize", "/localization/relocalize")
             time.sleep(30.0)
+        if face is not None:
+            # Square to the box front (user, 2026-10-21: it came in at an angle and the sock missed):
+            # stand on the front-face normal at the standoff, facing the anchor.
+            try:
+                self.goto(truck_map[0] + self.STANDOFF * math.cos(face),
+                          truck_map[1] + self.STANDOFF * math.sin(face), face + math.pi)
+            except RuntimeError as exc:
+                self.last_refusal = str(exc)
         carried = self._drive_near(truck_map, stop_at=self.STANDOFF, creep=False)
         if math.hypot(*carried) > self.STANDOFF + 0.25:
             # A sock on the straight line blocked the carry 1.23 m out (live 2026-10-19): let the
@@ -855,7 +925,7 @@ class GatewaySkills:
                 "why": None if place.get("outcome") == "placed" else f"drop {place.get('outcome')}"}
 
     def sockmark(self, max_socks: int = 6, truck: str = "toy truck", drop_z: float = 0.12,
-                 bed_past: float = BED_PAST_SIDE, final: float = FINAL, reach_drop=None):
+                 bed_past: float = BED_PAST_SIDE, final: float = FINAL, reach_drop=None, face=None):
         """Put the socks in the toy truck (plan/19). The truck is found first, with nothing held:
         a held sock covers the bottom of the image where the truck would be (live 2026-10-18).
         Socks are carried in the raised `carry` pose (the low arm dragged them)."""
@@ -887,7 +957,7 @@ class GatewaySkills:
             if pick.get("outcome") != "holding":
                 misses += 1
                 continue
-            entry.update(self._deliver(truck_map, truck, drop_z, bed_past, final, reach_drop))
+            entry.update(self._deliver(truck_map, truck, drop_z, bed_past, final, reach_drop, face))
             if entry.get("pinned"):
                 # The lift stalled: the sock is under a wheel (live 2026-10-20). Let go, back off, take another.
                 self._act("let go of the sock", "/gripper", {"command": "open", "duration_ms": 800})
@@ -1008,8 +1078,9 @@ class GatewaySkills:
 
     def _arm_clear(self):
         # S5 #3 2026-10-17: a turn in look_down swept the held cube through the 2-stack.
-        self.arm_pose("forward")
-        time.sleep(2.0)
+        # A blind sleep raced the gateway's joint-state readback and got "camera not forward"
+        # on an occasional slow settle (live 2026-10-21); poll it like _lift_to does.
+        self._lift_to("forward")
 
     def _strafe(self, meters: float) -> bool:
         """Sideways (+ = left) through move(): costmap-checked, which needs the forward camera."""
