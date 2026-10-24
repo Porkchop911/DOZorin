@@ -174,6 +174,67 @@ def arm_needle(image: np.ndarray) -> tuple[tuple[float, float], np.ndarray] | No
     return (float(us[top]), float(vs[top])), mask
 
 
+def arm_read(image: np.ndarray) -> dict | None:
+    """One arm-camera needle read: tip pixel, mask area, mask height span. None when no dark blob
+    reaches the bottom edge (the sheet filling the lens does that)."""
+    found = arm_needle(image)
+    if found is None:
+        return None
+    (tu, tv), mask = found
+    vs, _ = np.nonzero(mask)
+    return {"tip": np.array([tu, tv], dtype=float), "area": int(mask.sum()),
+            "span_v": int(vs.max() - vs.min())}
+
+
+class ArmContact:
+    """Contact detector for one descent, from the eye-in-hand camera alone.
+
+    Camera and needle are rigid, so the needle's pixel footprint is the same at every arm pose
+    (plan/20, runs 17-18). Contact is the one thing that changes it: the needle bends or is pushed
+    into the gripper and the paper appears at the lens. Both move the tip pixel away from its
+    baseline or grow the mask.
+
+    The baseline is the median tip of the first `warmup` frames of *this* descent, which absorbs the
+    fixed offset between the hover view and the descent view. Then fire on:
+      - dev >= CONTACT_DEV_PX held for CONTACT_CONFIRM consecutive steps (a sustained bend), or
+      - a single step-to-step tip jump >= FRAME_JUMP_PX (sudden: paper at the lens, needle slipped), or
+      - the needle blob missing for CONTACT_CONFIRM consecutive steps.
+    update() reports every frame's dev so the chosen trigger can be checked against the frames.
+    """
+
+    def __init__(self, warmup: int = 3):
+        self.warmup, self.samples, self.base = warmup, [], None
+        self.prev, self.held, self.lost = None, 0, 0
+
+    def update(self, read: dict | None) -> tuple[bool, str, float | None]:
+        """-> (fired, reason, dev_px) for one descent step."""
+        if read is None:
+            self.lost += 1
+            if self.base is not None and self.lost >= CONTACT_CONFIRM:
+                return True, f"needle blob gone {self.lost} steps", None
+            return False, "", None
+        self.lost = 0
+        here = read["tip"]
+        jump = None if self.prev is None else float(np.hypot(*(here - self.prev)))
+        self.prev = here
+        if self.base is None:
+            self.samples.append(here)
+            if len(self.samples) < self.warmup:
+                return False, "", None
+            self.base = np.median(np.array(self.samples), axis=0)
+            return False, "", 0.0
+        dev = float(np.hypot(*(here - self.base)))
+        if jump is not None and jump >= FRAME_JUMP_PX:
+            return True, f"tip jumped {jump:.1f} px in one step", dev
+        if dev >= CONTACT_DEV_PX:
+            self.held += 1
+            if self.held >= CONTACT_CONFIRM:
+                return True, f"tip held {dev:.1f} px off baseline {self.held} steps", dev
+        else:
+            self.held = 0
+        return False, "", dev
+
+
 def arm_dots(image: np.ndarray, color: str, mask: np.ndarray) -> list[np.ndarray]:
     """Ink dots in the arm camera, ignoring the needle itself."""
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -230,6 +291,15 @@ PROBE = 0.008  # arm-camera Jacobian probe step (+-)
 GAIN = 0.6  # damped correction; full gain oscillated (live 2026-10-24)
 ONE_DOT = True  # user: one more try
 AIM_BEYOND = 5  # px past the tip along the needle in the arm image (~1.5 mm at the dot)
+# Arm-camera contact rule (plan/20 next step 1). The eye-in-hand camera is rigid to the needle, so
+# the tip pixel is pose-invariant: runs 17-18 measured (340-341, 225-226) across 22 hover, probe and
+# aim frames at different arm poses (+-1 px). A load on the needle breaks that: run 18's bottom frame
+# read tip (342.0, 187.0), mask area 23.6k px, span_v 214. dev is measured against the start of
+# *this* descent, not against hover, so paper creeping toward the lens as the descent proceeds does not
+# fire the rule by itself.
+CONTACT_DEV_PX, CONTACT_CONFIRM = 6.0, 2  # px off the descent baseline, held for 2 consecutive steps
+FRAME_JUMP_PX = 15.0  # one step-to-step jump: the paper has arrived at the lens, or the needle slipped
+DESCEND_SHOT_EVERY = 4  # bound the descent frames; a firing frame is always written
 
 
 def run(color: str, out: Path, x0: float = 0.25, y0: float = 0.0) -> None:
@@ -237,7 +307,16 @@ def run(color: str, out: Path, x0: float = 0.25, y0: float = 0.0) -> None:
     The only contact with the paper is the touch on each dot (user, 2026-10-24)."""
     out.mkdir(parents=True, exist_ok=True)
     arm, cam = Arm(NEEDLE_MODEL), Camera()
-    log = (out / "touches.csv").open("a", encoding="utf-8")
+    touches_path = out / "touches.csv"
+    fresh_record = not touches_path.exists() or touches_path.stat().st_size == 0
+    log = touches_path.open("a", encoding="utf-8")
+    if fresh_record:
+        log.write("ts,color,dot,contact,z_m,x_m,y_m,ugreen_tip_u,ugreen_tip_v,stop_reason\n")
+    # one row per descent step: the arm-camera needle read beside the UGREEN read, so the contact
+    # trigger that fired can be checked against the frames afterwards
+    descent_log = (out / "descent.csv").open("w", encoding="utf-8")
+    descent_log.write("dot,step,travel_mm,z_m,arm_tip_u,arm_tip_v,arm_dev_px,arm_area,span_v,"
+                      "ugreen_u,ugreen_v,ugreen_moved\n")
     shots = iter(range(10_000))
 
     def choose_pitch(x, y):
@@ -364,13 +443,24 @@ def run(color: str, out: Path, x0: float = 0.25, y0: float = 0.0) -> None:
         ray = (start_tip - camera) / np.linalg.norm(start_tip - camera)
         print(f"  ray {ray.round(3)} from tip {start_tip.round(4)}", flush=True)
         contact, travel, image = False, 0.0, cam.frame()
+        watch, reason = ArmContact(), ""
+        step_index, dev, arm_image = 0, None, None
         while True:
             travel += STEP
             point = start_tip + travel * ray
             if point[2] < FLOOR_Z:
+                reason = "floor"
                 break
             arm.move(*point, pitch, ms=400, preload=False)  # no sideways pan swing near the paper
             z = point[2]
+            step_index += 1
+            arm_image = snap()
+            read = arm_read(arm_image)
+            fired, why, dev = watch.update(read)
+            if fired:
+                contact, reason = True, why
+            if fired or step_index % DESCEND_SHOT_EVERY == 0:
+                cv2.imwrite(str(out / f"descend_{n}_{step_index:03d}.jpg"), arm_image)
             image = cam.frame()
             ugreen = tip(reference, image, None)
             moved = None
@@ -380,18 +470,32 @@ def run(color: str, out: Path, x0: float = 0.25, y0: float = 0.0) -> None:
                     expected, still = moved, 0
                 elif expected is not None:
                     still = still + 1 if abs(moved) < 1 else 0  # a jump up is not "still"
-                    contact = still >= 2  # ~5 px per step: one quiet frame can be noise
-            print(f"  travel {travel * 1000:.1f} mm tip {point.round(4)} ugreen {ugreen} moved {moved}", flush=True)
+                    if still >= 2:  # kept only as a second opinion: run 18 showed it cannot fire
+                        contact, reason = True, f"ugreen tip quiet {still} steps (moved {moved:.1f} px)"
+            arm_tip = None if read is None else read["tip"].round(1).tolist()
+            print(f"  travel {travel * 1000:.1f} mm tip {point.round(4)} ugreen {ugreen} moved {moved} "
+                  f"arm {arm_tip} dev {dev} area {None if read is None else read['area']} {why}", flush=True)
+            arm_cells = ["", "", "", "", ""] if read is None else [
+                f"{read['tip'][0]:.1f}", f"{read['tip'][1]:.1f}",
+                "" if dev is None else f"{dev:.1f}", str(read["area"]), str(read["span_v"])]
+            ug_cells = ["", ""] if ugreen is None else [f"{ugreen[0]:.1f}", f"{ugreen[1]:.1f}"]
+            descent_log.write(",".join([str(n), str(step_index), f"{travel * 1000:.1f}", f"{z:.4f}",
+                                        *arm_cells, *ug_cells,
+                                        "" if moved is None else f"{moved:.1f}"]) + "\n")
+            descent_log.flush()
             ugreen_prev = ugreen if ugreen is not None else ugreen_prev
             if contact:
                 break
         xy = point[:2]
-        cv2.imwrite(str(out / f"shot_{next(shots):03d}_{color}_{n}_touch.jpg"), image)
+        if arm_image is not None:
+            cv2.imwrite(str(out / f"descend_{n}_{step_index:03d}_end.jpg"), arm_image)
+        cv2.imwrite(str(out / f"shot_{next(shots):03d}_{color}_{n}_{'touch' if contact else 'no_contact'}.jpg"), image)
         snap(f"{color}_{n}_touch_arm.jpg")
-        print(f"dot {n} {'TOUCH' if contact else 'reached floor without seeing contact'} at model z {z:.4f}, "
+        print(f"dot {n} {'TOUCH: ' + reason if contact else 'no contact (' + reason + ')'} at model z {z:.4f}, "
               f"ugreen tip {ugreen_prev}", flush=True)
         log.write(f"{time.time():.0f},{color},{n},{int(contact)},{z:.4f},{xy[0]:.4f},{xy[1]:.4f},"
-                  f"{'' if ugreen_prev is None else f'{ugreen_prev[0]:.1f},{ugreen_prev[1]:.1f}'}\n")
+                  f"{'' if ugreen_prev is None else f'{ugreen_prev[0]:.1f},{ugreen_prev[1]:.1f}'}"
+                  f",{reason}\n")
         log.flush()
         touched.append(xy.copy())
         arm.move(*xy, START_Z, pitch, ms=1000)
