@@ -13,8 +13,22 @@ small pulse steps really move the tip. This test decides go / no-go before the a
 |---|---|
 | Servo step | 0.24 deg/pulse (`RAD_PER_PULSE`); at ~0.22 m reach 1 pulse on pan/shoulder ~ 0.9 mm at the tip |
 | Known errors | elbow gravity sag ~12 pulses, repeatable (plan/02); shoulder short 4-14 pulses (plan/16) |
-| Access | no raw-pulse gateway route; bench script uses `hwr_core.Robot.arm.set_pose({id: pulse})` and `arm.read()` directly, with the gateway/driver stopped |
-| Camera | UGREEN 1080p, fixed focus, 90 deg FOV, UVC; auto exposure/white balance must be locked |
+| Access | no raw-pulse gateway route; servo steps go through `hwr_core.Robot.arm.set_pose({id: pulse})` and `arm.read()` on the robot, with `hwr_driver` stopped (it owns the serial port) |
+| Overhead camera | UGREEN 1080p, fixed focus, 90 deg FOV, UVC, USB into the **PC** (not the robot). Probed 2026-10-24 via OpenCV `CAP_DSHOW` + MJPG: 1920x1080 frames, `AUTO_EXPOSURE`/`EXPOSURE`/`AUTO_WB` settable, ~4-5 fps |
+| Arm camera | stays on the robot (moves with the arm); the PC reads it through gateway `GET /snapshot` (latest `camera/color/image_raw`), which needs the camera + gateway up but not the driver |
+
+## Coordination: two feeds, one loop (on the PC)
+
+| Role | Where | Job |
+|---|---|---|
+| Loop + logging | PC (`tools/colony_bench.py`) | runs S0-S3, owns the CSVs and the closed loop |
+| Servo shell | robot, over **one** SSH session (stdin/stdout, one JSON line per command: `set {id: pulse} ms`, `read`) | `Robot.arm.set_pose` / `arm.read`; nothing else. One long-lived session, never reconnect in a loop (sshd MaxStartups) |
+| Overhead feed | PC, UGREEN | the metric ruler: fixed frame, mm/px from S0; every gain, scatter and S3 error is measured here |
+| Close-up feed | robot arm camera via `/snapshot` | tip-vs-dot close-up, saved every step; a second opinion on S3, and the fallback servo feed if the overhead fails S0 resolution |
+
+Per step, strictly in order (no clock sync needed, PC time only): command -> servo shell ack + readback ->
+wait 1.0 s -> drop stale UGREEN frames (`CAP_PROP_BUFFERSIZE=1`, grab 5) -> average 3 frames -> `GET /snapshot`
+-> one CSV row. The feeds are not calibrated to each other; each is measured in its own frame.
 
 ## Rig (~30 min)
 
@@ -22,8 +36,9 @@ small pulse steps really move the tip. This test decides go / no-go before the a
 - [ ] Needle: thinnest available (2 mm), tape-wrapped where the jaws close, ~40 mm sticking out past the
       fingertips. A ~2 mm dot of bright nail polish 3-5 mm above the tip = the tracked marker.
 - [ ] mm graph paper taped flat at plate height, at the reach spot (base x ~0.22 m, y 0), where the needle points straight down.
-- [ ] UGREEN on a tripod, lens 10-20 cm straight above the paper; diffuse light, no direct glare.
-- [ ] Lock the camera: `v4l2-ctl -d /dev/video0 -L`, then auto exposure off, white balance auto off, fixed values.
+- [ ] UGREEN on a tripod, lens 10-20 cm straight above the paper, USB to the PC (extension if the cable is short); diffuse light, no direct glare.
+- [ ] Lock the UGREEN from the PC (OpenCV `CAP_DSHOW`): `AUTO_EXPOSURE=0.25` (manual), fixed `EXPOSURE`, `AUTO_WB=0`, fixed `WB_TEMPERATURE`; read them back and log them. If DSHOW ignores a value, open `CAP_PROP_SETTINGS` and set it in the driver dialog.
+- [ ] Robot: stop `hwr_driver`, keep camera + gateway up; open the servo shell; check `GET /snapshot` returns a fresh frame.
 
 ## S0 — camera check (10 min), gate for everything else
 
@@ -32,6 +47,8 @@ small pulse steps really move the tip. This test decides go / no-go before the a
 2. Scale: fit the grid -> mm/px at the paper (expect ~0.05-0.15). Record it.
 3. Noise: 20 frames with nothing moving -> marker centroid scatter. Must be <= 0.1 mm (sigma),
    otherwise the steps below are not measurable (light flicker, focus, compression: average 3 frames).
+4. Arm camera at the start pose: are the needle tip and a dot both in the `/snapshot` view and sharp?
+   No -> the close-up feed is evidence only (stills per step), not a servo input.
 
 ## S1 — single-pulse step test (45 min), the real question
 
@@ -47,8 +64,9 @@ For each servo 1 (pan), 2 (shoulder), 3 (elbow), 4 (wrist), one at a time:
 | C | +2 x5, -2 x5 | |
 | D | +5 x3, -5 x3 | reference: expected mm/pulse |
 
-Per step: command `duration_ms=300`, wait 1.0 s, read back the pulse (`arm.read()`), average 3 frames ->
-marker centroid. Log one CSV row: `servo, block, commanded, readback, u, v, x_mm, y_mm, t`.
+Per step (sequence in Coordination): command `duration_ms=300`, wait 1.0 s, readback via the servo shell,
+3 fresh UGREEN frames averaged -> marker centroid, then the `/snapshot` still. Log one CSV row:
+`servo, block, commanded, readback, u, v, x_mm, y_mm, t, snapshot_file`.
 Abort and stop the servos if the tip touches the paper or the readback is > 30 pulses off.
 
 Per servo, compute:
@@ -86,7 +104,7 @@ GND, lower 0.5 mm steps until it closes) and the shadow-meets-tip check with a l
 
 ## Evidence
 
-`evidence/phase20/`: S0 still + scale, `steps.csv`, S2/S3 CSVs, a plot of tip path per servo block, a one-line
+`evidence/phase20/`: S0 UGREEN still + scale + locked camera settings, `steps.csv`, S2/S3 CSVs, arm-camera stills (`snap/`), a plot of tip path per servo block, a one-line
 README entry with the verdict and denominators (e.g. "pan 18/20 single steps, S3 4/5 <= 1.0 mm").
 
 ## Risks
