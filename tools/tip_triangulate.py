@@ -5,7 +5,7 @@ UGREEN (fixed, PC) and the arm camera (eye-in-hand) each get their pose from the
 (tools/paper_grid.py). Each numbers the grid from its own crossing, so the arm frame is mapped onto
 the UGREEN frame by a fixed rotation plus a whole number of squares. The shift comes from pairing
 a black ink dot seen by the arm camera with each black dot the UGREEN sees; the pairing under which
-every other UGREEN dot in the arm's view lands on ink wins. The tip is where the two rays meet; their
+every other UGREEN dot in the arm's view lands on ink breaks ties. The tip is where the two rays meet; their
 miss distance is a self-check (it cannot pick the pairing: a shift only moves the miss along one
 direction, so wrong pairings also met within 0.3 mm live). Refused when the miss exceeds MAX_MISS_MM.
 
@@ -42,6 +42,9 @@ MAX_MISS_MM = 3.0
 # the UGREEN and the sheet stay put, so one calibration is reused: per-frame single-view calibration
 # moved the focal length 1097-1163 px between frames and the ray miss with it (0.4 -> 2.4 mm)
 RIG = Path("evidence/phase21/tip/ugreen_rig.json")
+# the UGREEN's lens is hardware: calibrated once (the ruler-confirmed daylight frame) and reused, so a
+# moved UGREEN only re-solves its pose. Single-view self-calibration drifted f by ~1 % per view.
+LENS = Path("evidence/phase21/tip/ugreen_lens.json")
 
 
 def ray(px, k, d, r, t) -> tuple[np.ndarray, np.ndarray]:
@@ -77,7 +80,14 @@ def _on_ruled_sheet(points: np.ndarray, crossings: np.ndarray) -> np.ndarray:
 def ugreen_rig(image: np.ndarray) -> dict:
     """UGREEN intrinsics + pose from the ruling, and the sheet position of each ink dot it sees."""
     obj, px, _ = pg.grid_points(image)
-    rms, k, d, r, t, used = pg.calibrate(obj, px, (image.shape[1], image.shape[0]))
+    if LENS.exists():
+        lens = json.loads(LENS.read_text())
+        k, d = np.array(lens["k"]), np.array(lens["d"])
+        ok, r, t, inl = cv2.solvePnPRansac(obj, px, k, d, reprojectionError=3.0)
+        proj, _ = cv2.projectPoints(obj[inl[:, 0]], r, t, k, d)
+        rms, used = float(np.sqrt(np.mean(np.sum((proj[:, 0] - px[inl[:, 0]]) ** 2, 1)))), int(len(inl))
+    else:
+        rms, k, d, r, t, used = pg.calibrate(obj, px, (image.shape[1], image.shape[0]))
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     hat = cv2.morphologyEx(gray, cv2.MORPH_BLACKHAT, np.ones((21, 21), np.uint8))
     count, labels, stats, centres = cv2.connectedComponentsWithStats((hat > 25).astype(np.uint8))
@@ -96,6 +106,7 @@ def ugreen_rig(image: np.ndarray) -> dict:
     pts = pts[far] if len(pts) else pts
     return {"k": k.tolist(), "d": d.ravel().tolist(), "r": r.ravel().tolist(), "t": t.ravel().tolist(),
             "rms": rms, "crossings": used, "dots": pts[:, :2].tolist(),
+            "sheet": cv2.convexHull(px.astype(np.float32))[:, 0].tolist(),
             "black": pts[pts[:, 2] < 80, :2].tolist()}  # black ink reads < 80; red and holes stay lighter
 
 
@@ -154,9 +165,10 @@ def _needle_blob(image: np.ndarray) -> np.ndarray:
     return labels == np.bincount(finger[finger > 0]).argmax()
 
 
-def arm_tip(image: np.ndarray) -> tuple[float, float]:
+def arm_tip(image: np.ndarray, with_axis: bool = False):
     """Sub-pixel needle tip in the (blurred) arm image: fit the needle axis, then find where the
-    intensity along the axis crosses halfway from needle to paper."""
+    intensity along the axis crosses halfway from needle to paper. `with_axis` also returns the unit
+    image direction from the fingers toward the tip."""
     gray = cv2.GaussianBlur(cv2.cvtColor(image, cv2.COLOR_BGR2GRAY), (3, 3), 0).astype(np.float32)
     blob = _needle_blob(image)
     vs, us = np.nonzero(blob)
@@ -173,40 +185,78 @@ def arm_tip(image: np.ndarray) -> tuple[float, float]:
     k = int(np.argmax(samples > half))
     k = k - (samples[k] - half) / (samples[k] - samples[k - 1]) if k > 0 else 0
     tip = start + k * 0.25 * axis
+    if with_axis:
+        return (float(tip[0]), float(tip[1])), axis.astype(float)
     return float(tip[0]), float(tip[1])
 
 
 def ugreen_tip(image: np.ndarray, near: tuple[float, float], radius: int = 70,
-               exclude: tuple = ()) -> tuple[float, float]:
+               exclude: tuple = (), sheet: np.ndarray | None = None) -> tuple[float, float]:
     """Needle point in the UGREEN image near `near`.
 
+    Dark = below 0.55 x the paper's median in the window (a fixed threshold broke when the exposure
+    changed). `sheet`: hull of the grid crossings; outside it (the floor above the sheet edge) is
+    ignored, since the floor merged with the needle and dragged the 'tip' 230 px away (2026-10-26).
+    Of the dark blobs, the one whose lowest point is nearest `near` wins.
     shortcut: assumes the needle enters from the image top (robot opposite the UGREEN), so the
-    tip is the lowest dark pixel; generalise with an axis fit if the camera moves round.
+    tip is the blob's lowest pixel; generalise with an axis fit if the camera moves round.
     `exclude`: pixels of known ink dots, blanked so a dot under the tip is not taken for it."""
     u0, v0 = int(near[0]), int(near[1])
     x0, y0 = max(u0 - radius, 0), max(v0 - radius, 0)
     roi = cv2.cvtColor(image[y0:v0 + radius, x0:u0 + radius], cv2.COLOR_BGR2GRAY)
+    keep = np.ones(roi.shape, np.uint8)
+    if sheet is not None:
+        full = np.zeros(image.shape[:2], np.uint8)
+        cv2.fillConvexPoly(full, np.asarray(sheet, np.int32), 1)
+        keep = full[y0:v0 + radius, x0:u0 + radius]
     for u, v in exclude:
-        cv2.circle(roi, (int(round(u - x0)), int(round(v - y0))), 9, 255, -1)
-    count, labels, stats, _ = cv2.connectedComponentsWithStats((roi < 110).astype(np.uint8))
-    if count < 2:
+        cv2.circle(keep, (int(round(u - x0)), int(round(v - y0))), 9, 0, -1)
+    paper = np.median(roi[keep > 0]) if keep.any() else np.median(roi)
+    dark = ((roi < 0.55 * paper) & (keep > 0)).astype(np.uint8)
+    count, labels, stats, _ = cv2.connectedComponentsWithStats(dark)
+    best = None
+    for i in range(1, count):
+        if stats[i, cv2.CC_STAT_AREA] < 15:
+            continue
+        vs, us = np.nonzero(labels == i)
+        low = vs >= vs.max() - 1
+        point = np.array([us[low].mean() + x0, vs.max() + y0], float)
+        gap = np.hypot(*(point - np.array(near)))
+        if best is None or gap < best[0]:
+            best = (gap, point)
+    if best is None:
         raise RuntimeError("UGREEN: no dark needle point near the predicted tip")
-    blob = labels == 1 + int(np.argmax(stats[1:, cv2.CC_STAT_AREA]))
-    vs, us = np.nonzero(blob)
-    low = vs >= vs.max() - 1
-    return float(us[low].mean() + x0), float(vs.max() + y0)
+    return float(best[1][0]), float(best[1][1])
 
 
-def snap_arm(n: int = 6) -> np.ndarray:
-    frames = []
+_last_jpeg: list[bytes] = []
+
+
+def snap_arm(n: int = 6, frozen_s: float = 3.0) -> np.ndarray:
+    """Mean of `n` distinct arm-camera frames, all newer than the previous call's.
+
+    The camera sometimes repeats one frame for ~10-30 s while the topic still looks fresh (age
+    ~0.05 s; live 2026-10-26 night: 6 bit-identical measurements in a row, strafe frames that showed
+    no move). Live frames never repeat byte for byte (sensor noise), so a repeat is a stale frame."""
+    frames, seen = [], set(_last_jpeg)
+    deadline = time.monotonic() + frozen_s
     while len(frames) < n:
         try:
             reply = servo({"snap": True})[0]
         except RuntimeError:  # 'no camera frame yet' right after the shell starts
             time.sleep(0.5)
             continue
-        frames.append(cv2.imdecode(np.frombuffer(base64.b64decode(reply["jpeg"]), np.uint8), 1).astype(np.float32))
+        jpeg = base64.b64decode(reply["jpeg"])
+        if jpeg in seen:
+            if time.monotonic() > deadline:
+                raise RuntimeError(f"arm camera frozen: same frame for > {frozen_s:.0f} s")
+            time.sleep(0.1)
+            continue
+        seen.add(jpeg)
+        deadline = time.monotonic() + frozen_s
+        frames.append(cv2.imdecode(np.frombuffer(jpeg, np.uint8), 1).astype(np.float32))
         time.sleep(0.12)
+    _last_jpeg[:] = [jpeg]
     return np.mean(frames, 0).astype(np.uint8)
 
 
@@ -216,16 +266,20 @@ def measure(ug_image: np.ndarray, arm_image: np.ndarray, rig: dict, ug_near: tup
     pa, pu = arm_tip(arm_image), ugreen_tip(ug_image, ug_near)
     seen = ray(pu, ku, du, ru, tu)
     tries = [(meet(seen, ray(pa, ARM_K, ARM_D, r, t)), r, t, shift, score) for r, t, shift, score in candidates]
-    tries.sort(key=lambda x: (-x[4], x[0][1]))
-    (tip, miss), ra, ta, shift, score = tries[0]
-    if len(tries) > 1 and tries[1][4] == score and abs(tries[1][0][0][2] - tip[2]) > 1.0:
-        raise RuntimeError(f"two dot pairings fit equally (ink score {score}) and disagree on the tip")
-    if miss > MAX_MISS_MM:
-        raise RuntimeError(f"tip rays miss by {miss:.1f} mm under the best pairing")
+    # physically possible: the rays meet and the tip is above the paper. That alone left one pairing
+    # under room light (2026-10-26 night), where the ink scores did not separate them; ink breaks ties.
+    valid = [x for x in tries if x[0][1] <= MAX_MISS_MM and -x[0][0][2] > 0]
+    if not valid:
+        raise RuntimeError(f"no dot pairing makes the tip rays meet above the paper: misses "
+                           f"{sorted(round(x[0][1], 1) for x in tries)[:4]} mm")
+    valid.sort(key=lambda x: (-x[4], x[0][1]))
+    (tip, miss), ra, ta, shift, score = valid[0]
+    if len(valid) > 1 and valid[1][4] == score and abs(valid[1][0][0][2] - tip[2]) > 1.0:
+        raise RuntimeError(f"{len(valid)} dot pairings fit equally (ink score {score}) and disagree on the tip")
     rot, _ = cv2.Rodrigues(ra)
     in_cam = rot @ tip + ta  # the tip in the arm-camera frame: fixed for one grasp
     return {"tip_sheet_mm": np.round(tip, 2).tolist(), "height_mm": round(float(-tip[2]), 2),
-            "miss_mm": round(miss, 2), "ink_score": score, "runner_up_ink_score": tries[1][4] if len(tries) > 1 else None,
+            "miss_mm": round(miss, 2), "ink_score": score, "valid_pairings": len(valid),
             "shift_mm": shift,
             "tip_arm_cam_mm": np.round(in_cam, 2).tolist(), "grid_inliers": inliers,
             "arm_tip_px": np.round(pa, 2).tolist(), "ugreen_tip_px": np.round(pu, 2).tolist(),

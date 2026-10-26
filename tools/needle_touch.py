@@ -102,6 +102,8 @@ class Arm:
 class Camera:
     def __init__(self, index: int = 0):
         self.cap = cv2.VideoCapture(index, cv2.CAP_DSHOW)
+        if not self.cap.isOpened():  # DSHOW lost the UGREEN after a re-enumeration (live 2026-10-26); MSMF still had it
+            self.cap = cv2.VideoCapture(index, cv2.CAP_MSMF)
         self.cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*"MJPG"))
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
@@ -110,6 +112,19 @@ class Camera:
         while time.monotonic() < deadline:
             self.cap.read()
         exposure = self.cap.get(cv2.CAP_PROP_EXPOSURE)  # lock it: frame diffs need a steady exposure
+        if self.cap.getBackendName() == "MSMF":
+            # MSMF reads the exposure back as -6 whatever it is, so lock the manual step whose scene
+            # median is closest to 140: auto exposure under the rig lamps settled at ~230 and washed
+            # the ruling out; ~140-170 kept it (lamp sweep 2026-10-26)
+            auto = 140.0
+            tried = []
+            for step in range(-3, -11, -1):
+                self.cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0.25)
+                self.cap.set(cv2.CAP_PROP_EXPOSURE, step)
+                for _ in range(4):
+                    ok, frame = self.cap.read()
+                tried.append((abs(np.median(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)) - auto), step))
+            exposure = min(tried)[1]
         self.cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0.25)
         self.cap.set(cv2.CAP_PROP_EXPOSURE, exposure)
         self.cap.set(cv2.CAP_PROP_AUTO_WB, 0)

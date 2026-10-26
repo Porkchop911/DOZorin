@@ -144,3 +144,20 @@ Video of 5.4, write-up, numbers with denominators from every milestone.
 | `tools/tip_descend.py` | run 1-2 refused (logging bug; fresh calibration miss 1.97 > 1.5). Run 3 (`--tip-cam 4.15 24.94 236.11 --dot 35.3 8.3`): start 74.3 mm above, 24.6 mm from the dot; lost the UGREEN tip during the pan +-6 Jacobian probe (search radius 90 px centred on the previous probe) -> abort -> lift. Lift reached shoulder 423 of 456 (33 short, inside the 35 tolerance): battery low (user: charging) |
 
 Next: centre the UGREEN tip search on the start pose for every probe (or widen to ~150 px with dots masked); tighten the lift check (expect it to reach, not "within 35"); rerun the descent on a charged battery. Arm left at {1:497, 2:423, 3:235, 4:269, 5:502, 10:657}, estop off, needle held.
+
+## Session 2026-10-26 night (live): camera faults found; strafe triangulation fixed; dot servo not run
+
+| Item | Result |
+|---|---|
+| Reboot + carry | robot carried to the charger and back; needle shifted in the jaws (tip offset now ~(4, 58, 209) mm in the arm-camera frame, was (4, 25, 236)). Arm came up with servo 2 at its back stop (933) and elbow 3 limp; staged return elbow-first was blocked at 180, shoulder-first from 933 worked |
+| Hue | `tools/hue.py`, bridge 192.168.0.70 (local API, key in config/hue.local.json, git-excluded). Rig lamps = lights 12, 13 (Hue Play). Placed behind the sheet they blinded the arm camera (auto exposure -> black); placed as side/top, every setting works. Rule: set the lamps, then open the UGREEN (its exposure locks at open). At night the UGREEN view is lit almost only by the lamps: both 254/ct 250 -> UGREEN 1713 crossings, arm 1084 inliers |
+| UGREEN lens | fixed to the ruler-confirmed calibration (`evidence/phase21/tip/ugreen_lens.json`); a moved UGREEN only re-solves its pose. Tape check: projected 20-80 mm heights land on the tape marks within ~1 mm |
+| Strafe triangulation | `tools/tip_motion.py`: pure-translation model gave 63.4 mm vs tape ~56 mm; the robot yaws up to 0.7 deg per strafe. With each frame's measured rotation and the arm tip ray as constraints: 57.3-59.1 mm, ray error 0.18 mm. Strafes always return to the start (closed loop, measured by the arm camera, self-correcting direction); forward steps are not used (cannot be undone) |
+| Camera fault 1 | USB hub 1-2.1 connection: camera dropped off the bus (`bulk_transfer failed -4`) from 20:47 after the carry; fixed by re-seating the hub (user) |
+| Camera fault 2 | `sensor_supervisor_node` kept killing/respawning the camera every 16 s after the hub was fixed (it stopped seeing frames after its own restart). User: shut it off -> killed (SIGINT; SIGTERM was ignored). Camera then 13.5 Hz, max gap 0.15 s. **It stays off only until the next stack restart; while off, lidar dropouts trigger no estop.** Root cause in the supervisor not found |
+| servo_shell | deployed to the robot (old copy `~/hwr/tools/servo_shell.py.bak`): colour image BEST_EFFORT, `{"snap"}` refuses frames older than 1 s, `--no-depth` flag (no effect, can go). PC `snap_arm` refuses repeated (stale) frames |
+| UGREEN backend | DSHOW stopped opening the UGREEN (after re-enumeration); `Camera` falls back to MSMF, which misreports exposure (always -6): lock the step whose scene median is closest to 140 |
+| UGREEN tip | fixed threshold broke with exposure; now relative to local paper, restricted to the sheet hull, nearest blob to the prediction: stable (742, 180) |
+| `tools/dot_servo.py` | user's approach: hold the dot 6 px past the tip in the arm camera, close in, UGREEN height readouts. Read-only checks only, never moved. Open: which UGREEN dot is the target is ambiguous (two unknowns fit every dot exactly; heights 43/63/152 mm). Planned fix (written, not applied): add the arm camera's own grid height as a third constraint so the leftover miss picks the dot |
+
+Stop: battery empty. Arm at {1:502, 2:412, 3:235, 4:268, 5:503, 10:658}; it goes limp when power drops.

@@ -77,6 +77,8 @@ def number(points: np.ndarray, seed: np.ndarray, patch: float = 120.0) -> tuple[
             ij[m] = (i + di, j + dj)
             queue.append(m)
     keys = np.array(list(ij))
+    if len(keys) < 6:
+        raise ValueError(f"only {len(keys)} crossings around the seed")
     lattice = np.array([ij[k] for k in keys], np.float32)
     labelled = keys
     for _ in range(8):
@@ -99,8 +101,20 @@ def grid_points(image: np.ndarray, seed: tuple[float, float] | None = None) -> t
     the steep one, z = 0 on the sheet. Mis-labelled crossings are trimmed later by calibrate()."""
     mask = ruling_mask(image)
     pts = crossings(mask)
-    seed = np.array(seed if seed is not None else (image.shape[1] / 2, image.shape[0] / 2), np.float32)
-    ij, px = number(pts, seed)
+    h, w = image.shape[:2]
+    first = [seed] if seed is not None else []
+    # a seed on a dot, the needle or a blurred patch numbers too little: try a few, keep the largest
+    best = None
+    for sd in first + [(w / 2, h / 2), (w / 2, h * 0.75), (w * 0.35, h * 0.6), (w * 0.65, h * 0.6), (w / 2, h * 0.35)]:
+        try:
+            ij, px = number(pts, np.array(sd, np.float32))
+        except (ValueError, cv2.error):
+            continue
+        if best is None or len(ij) > len(best[0]):
+            best = (ij, px)
+    if best is None:
+        raise RuntimeError("paper grid: no seed numbered enough crossings")
+    ij, px = best
     obj = np.column_stack([ij[:, 0] * SQUARE_MM, ij[:, 1] * SQUARE_MM, np.zeros(len(ij))]).astype(np.float32)
     return obj, px, mask
 
