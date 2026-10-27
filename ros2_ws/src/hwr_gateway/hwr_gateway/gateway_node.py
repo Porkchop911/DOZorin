@@ -47,7 +47,7 @@ from rclpy.executors import MultiThreadedExecutor
 from rclpy.node import Node
 from rclpy.qos import DurabilityPolicy, QoSProfile, QoSReliabilityPolicy
 from sensor_msgs.msg import BatteryState, Image, JointState, LaserScan
-from std_msgs.msg import Bool, String, UInt16
+from std_msgs.msg import String, UInt16
 from std_srvs.srv import SetBool, Trigger
 
 from hwr_core.navigation.vision_geometry import depth_below
@@ -229,7 +229,6 @@ class GatewayNode(Node):
         self.color_shape = None   # (height, width) of the colour image, for depth lookups
         self.depth_msg = None     # latest depth Image, converted only when /vision/locate asks
         self.vision = None
-        self.estop_latched = None
         self.last_jpeg = 0.0
         self.joint_positions = {}
         self.joint_stamp = 0.0
@@ -259,7 +258,6 @@ class GatewayNode(Node):
         self.beep_pub = self.create_publisher(UInt16, "beep", 10)
         self.nav = ActionClient(self, NavigateToPose, "navigate_to_pose",
                                 callback_group=self.group)
-        self.estop = self.create_client(SetBool, "estop", callback_group=self.group)
         self.explore = self.create_client(SetBool, "explore", callback_group=self.group)
         self.arm_pose = self.create_client(ArmPose, "arm/pose", callback_group=self.group)
         self.arm_reach = self.create_client(ArmReach, "arm/reach", callback_group=self.group)
@@ -283,9 +281,6 @@ class GatewayNode(Node):
         self.create_subscription(OccupancyGrid, "map", self._map, map_qos,
                                  callback_group=self.group)
         self.create_subscription(String, "vision/objects", self._vision, 1)
-        self.create_subscription(Bool, "estop_state", self._estop_state, QoSProfile(
-            depth=1, reliability=QoSReliabilityPolicy.RELIABLE,
-            durability=DurabilityPolicy.TRANSIENT_LOCAL))
         self.create_subscription(Image, "camera/color/image_raw", self._image, 1,
                                  callback_group=self.group)
         self.create_subscription(Image, "camera/depth/image_raw", self._depth, QoSProfile(
@@ -393,10 +388,6 @@ class GatewayNode(Node):
         angles = [msg.angle_min + i * msg.angle_increment for i in range(len(msg.ranges))]
         with self.lock:
             self.rear_fan = (time.monotonic(), angles, list(msg.ranges))
-
-    def _estop_state(self, msg: Bool) -> None:
-        with self.lock:
-            self.estop_latched = bool(msg.data)
 
     def _vision(self, msg: String) -> None:
         with self.lock:
@@ -630,8 +621,6 @@ class GatewayNode(Node):
 
     def _motion_start(self) -> list:
         with self.lock:
-            if self.estop_latched:
-                raise HTTPException(409, "estop latched; reset before drive")
             if self.odom_pose is None or time.monotonic() - self.odom_stamp > 0.5:
                 raise HTTPException(503, "odometry stale")
             return list(self.odom_pose)
@@ -661,7 +650,7 @@ class GatewayNode(Node):
     def _motion_loop(self, step, timeout: float) -> str:
         """Command step(odom_pose) -> (vx, vy, wz) every 50 ms until it returns None.
 
-        Aborts on /stop, estop, stale odometry or timeout; always ends with a zero command.
+        Aborts on /stop, stale odometry or timeout; always ends with a zero command.
         A string from step is an abort reason."""
         if not self.motion_lock.acquire(blocking=False):
             raise HTTPException(409, "another motion is running")
@@ -676,8 +665,6 @@ class GatewayNode(Node):
                 with self.lock:
                     if self.motion_epoch != epoch:
                         outcome = "stopped"
-                    elif self.estop_latched:
-                        outcome = "estop"
                     elif self.odom_pose is None or now - self.odom_stamp > 0.5:
                         outcome = "odometry stale"
                     odom = None if self.odom_pose is None else list(self.odom_pose)
@@ -730,8 +717,6 @@ class GatewayNode(Node):
                     and abs(body.wz) <= 0.5 and 0.02 <= body.duration <= 0.5):
                 raise HTTPException(422, "drive outside bounded no-reverse envelope")
             with self.lock:
-                if self.estop_latched:
-                    raise HTTPException(409, "estop latched; reset before drive")
                 self.drive_command = (body.vx, body.vy, body.wz)
                 self.drive_until = time.monotonic() + body.duration
             self._audit("drive", "accepted", _model_dict(body))
@@ -1033,7 +1018,7 @@ class GatewayNode(Node):
                              start_new_session=True)
             self._audit("mode_switch", "accepted", {"mode": body.mode, "map": body.map})
             return {"switching": True, "mode": body.mode, "map": body.map,
-                    "note": "stack restarts; gateway is back in ~30-60 s with the estop latched (startup)"}
+                    "note": "stack restarts; gateway is back in ~30-60 s"}
 
         @app.post("/map/save", dependencies=[Depends(auth)])
         def map_save():
@@ -1093,24 +1078,18 @@ class GatewayNode(Node):
             self.drive_pub.publish(Twist())
             if handle is not None:
                 handle.cancel_goal_async()
-            request = SetBool.Request()
-            request.data = True
-            response = self._call(self.estop, request)
-            self._audit("stop", "accepted", {"message": response.message})
-            return {"success": response.success, "message": response.message}
-
-        @app.post("/estop/reset", dependencies=[Depends(auth)])
-        def reset_estop():
-            request = SetBool.Request()
-            request.data = False
-            response = self._call(self.estop, request)
-            self._audit("estop_reset", "accepted" if response.success else "rejected",
-                        {"message": response.message})
-            return {"success": response.success, "message": response.message}
+            try:  # end any exploration session so it does not send the next goal
+                request = SetBool.Request()
+                request.data = False
+                self._call(self.explore, request)
+            except HTTPException:
+                pass
+            self._audit("stop", "accepted", {})
+            return {"success": True, "message": "stopped"}
 
         @app.post("/localization/relocalize", dependencies=[Depends(auth)])
         def relocalize():
-            # Global search over the whole map; no motion, so no estop check.
+            # Global search over the whole map.
             response = self._call(self.relocalize, Trigger.Request(), timeout=20.0)
             self._audit("relocalize", "accepted" if response.success else "rejected",
                         {"message": response.message})

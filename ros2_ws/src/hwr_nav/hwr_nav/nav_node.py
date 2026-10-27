@@ -14,10 +14,9 @@ from rclpy.action import ActionServer, CancelResponse, GoalResponse
 from rclpy.callback_groups import ReentrantCallbackGroup
 from rclpy.executors import MultiThreadedExecutor
 from rclpy.node import Node
-from rclpy.qos import (QoSDurabilityPolicy, QoSProfile,
+from rclpy.qos import (QoSProfile,
                        QoSReliabilityPolicy)
 from sensor_msgs.msg import JointState, LaserScan
-from std_msgs.msg import Bool
 from std_srvs.srv import Trigger
 
 from hwr_core.mapping import load_map
@@ -90,9 +89,6 @@ class NavNode(Node):
         self.pose_stamp = self.health_stamp = self.odom_stamp = 0.0
         self.lidar_stamp = self.depth_ranges_stamp = 0.0
         self.goal_active = False
-        # The driver starts latched and publishes transient-local state. Reject
-        # goals until an explicit reset is observed.
-        self.estop_latched = True
         self.group = ReentrantCallbackGroup()
         self.pub = self.create_publisher(Twist, "cmd_vel_nav", 10)
         self.pub_costmap = self.create_publisher(OccupancyGrid, "costmap", 1)
@@ -102,11 +98,6 @@ class NavNode(Node):
                                  callback_group=self.group)
         self.create_subscription(LocalizationHealth, "localization_health",
                                  self._on_health, 10, callback_group=self.group)
-        state_qos = QoSProfile(
-            depth=1, reliability=QoSReliabilityPolicy.RELIABLE,
-            durability=QoSDurabilityPolicy.TRANSIENT_LOCAL)
-        self.create_subscription(Bool, "estop_state", self._on_estop,
-                                 state_qos, callback_group=self.group)
         self.create_subscription(OccupancyGrid, "map", self._on_map, 1,
                                  callback_group=self.group)
         qos = QoSProfile(depth=5, reliability=QoSReliabilityPolicy.BEST_EFFORT)
@@ -153,11 +144,6 @@ class NavNode(Node):
             self.gyro_stamp = now
         self.odom_stamp = now
 
-    def _on_estop(self, msg: Bool) -> None:
-        self.estop_latched = bool(msg.data)
-        if self.estop_latched:
-            self.pub.publish(Twist())
-
     def _on_map(self, msg: OccupancyGrid) -> None:
         if not msg.data or msg.info.resolution <= 0.0:
             return
@@ -174,7 +160,7 @@ class NavNode(Node):
             self.costmap.occupancy = occupancy
 
     def _on_goal(self, request):
-        if self.goal_active or self.estop_latched:
+        if self.goal_active:
             return GoalResponse.REJECT
         self.goal_active = True
         return GoalResponse.ACCEPT
@@ -316,9 +302,6 @@ class NavNode(Node):
         self.costmap.clear_live()
         started = time.monotonic()
         while True:
-            if self.estop_latched:
-                self._stop()
-                return False, "estop latched during navigation"
             if handle.is_cancel_requested:
                 self._stop()
                 return False, "canceled"
@@ -344,10 +327,6 @@ class NavNode(Node):
     def _execute(self, handle):
         result = NavigateToPose.Result()
         try:
-            if self.estop_latched:
-                handle.abort()
-                result.message = "estop latched"
-                return result
             if self.costmap is None:
                 handle.abort()
                 result.message = "map unavailable"
@@ -395,11 +374,6 @@ class NavNode(Node):
             live_replans = ReplanBudget(self.max_live_replans)
             localization_lost_since = None
             while time.monotonic() < deadline:
-                if self.estop_latched:
-                    self._stop()
-                    handle.abort()
-                    result.message = "estop latched during navigation"
-                    return result
                 if not sensor_sample_fresh(
                         time.monotonic(), self.odom_stamp,
                         self.motion_sensor_timeout):

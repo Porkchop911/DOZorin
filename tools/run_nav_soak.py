@@ -1,7 +1,6 @@
 """Plan or execute a bounded, logged HWR navigation soak.
 
-Dry-run is the default. Execution never resets estop; the human must explicitly
-enable motion first. Every exit path attempts to re-latch estop.
+Dry-run is the default; goals are only sent with --execute.
 """
 from __future__ import annotations
 
@@ -28,10 +27,6 @@ from hwr_core.navigation import (assessment_from_visual_observation,
 from nav_msgs.msg import OccupancyGrid
 from rclpy.action import ActionClient
 from rclpy.node import Node
-from rclpy.qos import (QoSDurabilityPolicy, QoSProfile,
-                       QoSReliabilityPolicy)
-from std_msgs.msg import Bool
-from std_srvs.srv import SetBool
 
 
 SCHEMA_REPAIR_PROMPT = (
@@ -60,20 +55,13 @@ class SoakNode(Node):
         self.health_stamp = 0.0
         self.grid: OccupancyGrid | None = None
         self.grid_stamp = 0.0
-        self.estop_seen = False
-        self.estop_latched = True
         self.reverse_samples = 0
         self.max_reverse = 0.0
         self.client = ActionClient(self, NavigateToPose, "navigate_to_pose")
-        self.estop = self.create_client(SetBool, "estop")
         self.create_subscription(PoseWithCovarianceStamped, "pose", self._pose, 10)
         self.create_subscription(LocalizationHealth, "localization_health",
                                  self._health, 10)
         self.create_subscription(OccupancyGrid, "costmap", self._grid, 1)
-        state_qos = QoSProfile(depth=1,
-                               reliability=QoSReliabilityPolicy.RELIABLE,
-                               durability=QoSDurabilityPolicy.TRANSIENT_LOCAL)
-        self.create_subscription(Bool, "estop_state", self._estop, state_qos)
         self.create_subscription(TwistStamped, "cmd_vel_applied",
                                  self._applied, 10)
 
@@ -91,10 +79,6 @@ class SoakNode(Node):
             self.grid = message
             self.grid_stamp = time.monotonic()
 
-    def _estop(self, message: Bool) -> None:
-        self.estop_seen = True
-        self.estop_latched = bool(message.data)
-
     def _applied(self, message: TwistStamped) -> None:
         reverse = max(0.0, -float(message.twist.linear.x))
         self.max_reverse = max(self.max_reverse, reverse)
@@ -109,10 +93,6 @@ class SoakNode(Node):
             return False, "localization unhealthy or stale"
         if self.grid is None or now - self.grid_stamp > 2.0:
             return False, "costmap missing or stale"
-        if not self.estop_seen:
-            return False, "estop state unavailable"
-        if require_enabled and self.estop_latched:
-            return False, "estop is latched; this runner never resets it"
         if self.reverse_samples:
             return False, "negative forward command observed"
         return True, "ready"
@@ -134,16 +114,6 @@ class SoakNode(Node):
         internal = np.clip(np.rint(values * 2.55), 0, 255).astype(np.uint8)
         origin = (message.info.origin.position.x, message.info.origin.position.y)
         return internal, float(message.info.resolution), origin
-
-    def trip_estop(self) -> bool:
-        if not self.estop.wait_for_service(timeout_sec=2.0):
-            return False
-        future = self.estop.call_async(SetBool.Request(data=True))
-        deadline = time.monotonic() + 3.0
-        while rclpy.ok() and not future.done() and time.monotonic() < deadline:
-            rclpy.spin_once(self, timeout_sec=0.1)
-        return bool(future.done() and future.result().success)
-
 
 class Journal:
     def __init__(self, path: Path):
@@ -648,8 +618,6 @@ def main() -> int:
         print(f"ABORT: {exc}")
         return 4
     finally:
-        if args.execute:
-            node.trip_estop()
         node.destroy_node()
         rclpy.shutdown()
 

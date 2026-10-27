@@ -21,7 +21,6 @@ from rclpy.executors import MultiThreadedExecutor
 from rclpy.node import Node
 from rclpy.qos import (QoSDurabilityPolicy, QoSProfile,
                        QoSReliabilityPolicy, qos_profile_sensor_data)
-from std_msgs.msg import Bool
 from std_srvs.srv import SetBool, Trigger
 from sensor_msgs.msg import LaserScan
 
@@ -93,10 +92,6 @@ class ExploreNode(Node):
         self.started = 0.0
         self.goal_handle = None
         self.goal_pending = False
-        self.pending_request = None
-        self.pending_generation = None
-        self.reset_acknowledged = False
-        self.reset_requested = 0.0
         self.goal_started = 0.0
         self.active_frontier = None
         self.committed_frontier = None
@@ -105,10 +100,6 @@ class ExploreNode(Node):
         self.session_rotation_stages = 0
         self.active_waypoint = None
         self.active_kind = None
-        self.stop_pending = False
-        self.stop_future = None
-        self.estop_latched = True
-        self.estop_state_time = 0.0
         self.next_goal_after = 0.0
         self.failures = 0
         self.cooldowns: list[tuple[tuple[float, float], float]] = []
@@ -164,8 +155,6 @@ class ExploreNode(Node):
             callback_group=self.control_group)
         self.save = self.create_client(
             Trigger, "map_save", callback_group=self.control_group)
-        self.estop = self.create_client(
-            SetBool, "estop", callback_group=self.control_group)
         map_qos = QoSProfile(
             depth=1, reliability=QoSReliabilityPolicy.RELIABLE,
             durability=QoSDurabilityPolicy.TRANSIENT_LOCAL)
@@ -181,8 +170,6 @@ class ExploreNode(Node):
         self.create_subscription(LocalizationHealth, "localization_health",
                                  self._on_localization, 10,
                                  callback_group=self.sensor_group)
-        self.create_subscription(Bool, "estop_state", self._on_estop_state,
-                                 map_qos, callback_group=self.sensor_group)
         self.create_subscription(LaserScan, "floor_support",
                                  self._on_floor_support,
                                  qos_profile_sensor_data,
@@ -236,11 +223,6 @@ class ExploreNode(Node):
         with self.state_lock:
             self.localization_healthy = bool(msg.healthy)
             self.localization_time = time.monotonic()
-
-    def _on_estop_state(self, msg: Bool) -> None:
-        with self.state_lock:
-            self.estop_latched = bool(msg.data)
-            self.estop_state_time = time.monotonic()
 
     def _on_floor_support(self, msg: LaserScan) -> None:
         ranges = np.asarray(msg.ranges, dtype=float)
@@ -334,26 +316,6 @@ class ExploreNode(Node):
             response.success, response.message = True, "exploration stopped"
         return response
 
-    def _trip_stop(self) -> None:
-        if self.stop_pending or not self.estop.service_is_ready():
-            return
-        self.stop_pending = True
-        future = self.estop.call_async(SetBool.Request(data=True))
-        self.stop_future = future
-        future.add_done_callback(self._stop_complete)
-
-    def _stop_complete(self, future) -> None:
-        if future is not self.stop_future:
-            return
-        self.stop_future = None
-        self.stop_pending = False
-        try:
-            response = future.result()
-            if not response.success:
-                self._journal("stop_latch_failed", reason=response.message)
-        except Exception as exc:
-            self._journal("stop_latch_failed", reason=str(exc))
-
     def _save_map(self) -> None:
         if not self.save.service_is_ready():
             self._journal("map_save_unavailable")
@@ -374,10 +336,6 @@ class ExploreNode(Node):
             self.goal_handle.cancel_goal_async()
         self.goal_handle = None
         self.goal_pending = False
-        self.pending_request = None
-        self.pending_generation = None
-        self.reset_acknowledged = False
-        self.reset_requested = 0.0
         self.goal_started = 0.0
         self.active_frontier = None
         self.committed_frontier = None
@@ -388,7 +346,6 @@ class ExploreNode(Node):
         was_enabled = self.enabled
         self.enabled = False
         self.session_generation += 1
-        self._trip_stop()
         if was_enabled:
             self._journal("session_finished", reason=reason,
                           failures=self.failures, save_requested=save)
@@ -453,11 +410,6 @@ class ExploreNode(Node):
                 self.get_parameter("session_seconds").value):
             self._finish("exploration session budget reached")
             return
-        # A stop request issued after the previous goal must be acknowledged
-        # before any new reset can be sent. This closes the async true/false
-        # race that could re-latch stop during the next accepted goal.
-        if self.stop_pending:
-            return
         if self.goal_handle is not None:
             # Once navigation has accepted a goal, it owns live localization,
             # lidar/depth freshness, collision checking, and stop behavior.
@@ -479,8 +431,7 @@ class ExploreNode(Node):
                         self.get_parameter("input_freshness_seconds").value):
                     # The mapper may resize first; navigation republishes the
                     # matching costmap on its next 0.5 s cycle.  Never plan
-                    # across generations, and keep the existing stop latch.
-                    self._trip_stop()
+                    # across generations.
                     return
             self._finish(reason)
             return
@@ -488,33 +439,6 @@ class ExploreNode(Node):
             self._journal("grid_sync_restored")
             self.geometry_mismatch_since = 0.0
         if self.goal_pending:
-            if self.reset_acknowledged and self.pending_request is not None:
-                with self.state_lock:
-                    reset_observed = (
-                        not self.estop_latched
-                        and now - self.estop_state_time <= 1.0)
-                if reset_observed:
-                    request = self.pending_request
-                    request_generation = self.pending_generation
-                    self.pending_request = None
-                    self.pending_generation = None
-                    self.reset_acknowledged = False
-                    if (not self.enabled
-                            or request_generation != self.session_generation):
-                        self.goal_pending = False
-                        self._trip_stop()
-                        return
-                    self._journal("estop_reset_observed_for_goal",
-                                  kind=self.active_kind)
-                    sent = self.nav.send_goal_async(request)
-                    sent.add_done_callback(self._goal_response)
-                elif now - self.reset_requested > 2.0:
-                    self.goal_pending = False
-                    self.pending_request = None
-                    self.pending_generation = None
-                    self.reset_acknowledged = False
-                    self._finish("estop reset state was not observed")
-                return
             return
         if now < self.next_goal_after:
             return
@@ -624,7 +548,6 @@ class ExploreNode(Node):
                 self._finish(f"rotation context unavailable: {exc}")
                 return
             if not self.enabled or generation != self.session_generation:
-                self._trip_stop()
                 return
             allowed, reasons = metric_rotation_preflight(context)
             preflight = {"allowed": allowed, "reasons": reasons,
@@ -683,7 +606,6 @@ class ExploreNode(Node):
                 self._finish(f"semantic preflight unavailable: {exc}")
                 return
             if not self.enabled or generation != self.session_generation:
-                self._trip_stop()
                 return
             glass_boundary = bool(
                 (preflight.get("assessment") or {}).get(
@@ -697,7 +619,6 @@ class ExploreNode(Node):
                 except Exception:
                     half_allowed = False
                 if not self.enabled or generation != self.session_generation:
-                    self._trip_stop()
                     return
                 self._journal("half_leg_retry", frontier_goal=list(frontier.goal),
                               waypoint=list(half), allowed=half_allowed)
@@ -750,53 +671,15 @@ class ExploreNode(Node):
             eligible_frontiers=len(frontiers), preflight=preflight)
         if not self.enabled or generation != self.session_generation:
             self.goal_pending = False
-            self.pending_request = None
-            self.pending_generation = None
-            self.reset_acknowledged = False
-            self._trip_stop()
             return
-        if not self.estop.wait_for_service(timeout_sec=0.1):
-            self.goal_pending = False
-            self._finish("estop reset service unavailable")
-            return
-        self.pending_request = request
-        self.pending_generation = generation
-        self.reset_requested = time.monotonic()
-        self.reset_acknowledged = False
-        reset = self.estop.call_async(SetBool.Request(data=False))
-        reset.add_done_callback(self._reset_complete)
-
-    def _reset_complete(self, future) -> None:
-        if not self.enabled:
-            self.goal_pending = False
-            self.pending_request = None
-            self.pending_generation = None
-            self.reset_acknowledged = False
-            self._trip_stop()
-            return
-        try:
-            response = future.result()
-            if not response.success:
-                raise RuntimeError(response.message or "estop reset rejected")
-        except Exception as exc:
-            self.goal_pending = False
-            self.pending_request = None
-            self.pending_generation = None
-            self.reset_acknowledged = False
-            self._finish(f"estop reset failed: {exc}")
-            return
-        # The reset service response can arrive before hwr_nav receives the
-        # transient-local estop_state=false sample. The control timer dispatches
-        # only after that subscriber acknowledgement is fresh.
-        self.reset_acknowledged = True
-        self._journal("estop_reset_acknowledged", kind=self.active_kind)
+        sent = self.nav.send_goal_async(request)
+        sent.add_done_callback(self._goal_response)
 
     def _goal_response(self, future) -> None:
         self.goal_pending = False
         try:
             handle = future.result()
         except Exception as exc:
-            self._trip_stop()
             self._cooldown_active_frontier(f"goal send failed: {exc}")
             self.active_frontier = None
             self.active_waypoint = None
@@ -806,13 +689,11 @@ class ExploreNode(Node):
         if not self.enabled:
             if handle.accepted:
                 handle.cancel_goal_async()
-            self._trip_stop()
             self.active_frontier = None
             self.active_waypoint = None
             self.active_kind = None
             return
         if not handle.accepted:
-            self._trip_stop()
             self._cooldown_active_frontier("goal rejected")
             self.active_frontier = None
             self.active_waypoint = None
@@ -826,7 +707,6 @@ class ExploreNode(Node):
         handle.get_result_async().add_done_callback(self._goal_result)
 
     def _goal_result(self, future) -> None:
-        self._trip_stop()
         self.goal_handle = None
         self.goal_started = 0.0
         if not self.enabled:

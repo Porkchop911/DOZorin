@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """Raw bus-servo shell for PC-side bench loops (plan/20), one JSON object per line on stdin/stdout.
 
-  {"set": {"1": 500, "10": 680}, "ms": 300}  -> publish servo_cmd (the driver's estop gate applies)
+  {"set": {"1": 500, "10": 680}, "ms": 300}  -> publish servo_cmd
   {"read": true}                               -> {"pulses": {"1": 500, ...}, "age": s}
   {"snap": true}                               -> {"jpeg": base64, "age": s} (arm camera, colour)
   {"intrinsics": true}                         -> {"color": {...}, "depth": {...}, "K_match": bool}
   {"depth": {"u":341,"v":226,"n":16,"grid":8}} -> {"patch": [[mm]], "stats": {...}, "plane": {...}}
 
-"intrinsics" and "depth" are read-only: no actuation, so they work with the estop latched. The arm
+"intrinsics" and "depth" are read-only: no actuation, so they never move anything. The arm
 camera is a Deptrum Aurora 930 RGB-D (plan/90:68 - 640x400@12fps, 74x51 deg, 0.15-3 m) and the driver
 filters depth outside 150-3000 mm (hwr_sensors/launch/camera.launch.py). Structured light returns
 nothing off a 2 mm needle, the same reason hwr_core depth_below() exists

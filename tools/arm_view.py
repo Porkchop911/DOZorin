@@ -3,7 +3,7 @@
 
     python tools/arm_view.py            # window; s = save a frame to evidence/phase21/view/, q = quit
 
-Read-only: works with the estop latched, beside any other tool (each tool has its own SSH session).
+Read-only: works beside any other tool (each tool has its own SSH session).
 """
 from __future__ import annotations
 

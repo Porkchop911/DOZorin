@@ -2,7 +2,7 @@
 
 This monitor deliberately uses only battery-free gateway endpoints.  It tails the
 exploration journal, captures a camera image and navigation context after every
-successful translation, and always stops exploration and latches the e-stop on
+successful translation, and always stops exploration and motion on
 exit.
 """
 from __future__ import annotations
@@ -211,7 +211,7 @@ def main() -> int:
             print(json.dumps({"event": "monitor_error", "reason": reason}), flush=True)
         finally:
             for name, path in (("explore_stop", "/explore/stop"),
-                               ("estop", "/stop")):
+                               ("stop", "/stop")):
                 try:
                     stop_results[name] = _post(args.gateway_url, token, path)
                 except Exception as exc:

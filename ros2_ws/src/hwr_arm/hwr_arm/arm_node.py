@@ -9,9 +9,6 @@ from ament_index_python.packages import get_package_share_directory
 from hwr_msgs.msg import ServoCommand
 from hwr_msgs.srv import AimCamera, ArmPose, ArmReach, Gripper
 from rclpy.node import Node
-from rclpy.qos import (QoSDurabilityPolicy, QoSProfile,
-                       QoSReliabilityPolicy)
-from std_msgs.msg import Bool
 
 from hwr_core.arm import ArmKinematics, CameraAim, joints_to_pulses
 
@@ -26,26 +23,13 @@ class ArmNode(Node):
         self.gripper = {name: int(value) for name, value in config["gripper"].items()}
         self.kinematics = ArmKinematics()
         self.aim = CameraAim()
-        self.estop_latched = True
         self.pub = self.create_publisher(ServoCommand, "servo_cmd", 10)
-        state_qos = QoSProfile(depth=1,
-                               reliability=QoSReliabilityPolicy.RELIABLE,
-                               durability=QoSDurabilityPolicy.TRANSIENT_LOCAL)
-        self.create_subscription(Bool, "estop_state", self._estop_state,
-                                 state_qos)
         self.create_service(ArmPose, "arm/pose", self._pose)
         self.create_service(ArmReach, "arm/reach", self._reach)
         self.create_service(AimCamera, "arm/aim", self._aim)
         self.create_service(Gripper, "gripper", self._gripper)
 
-    def _estop_state(self, message: Bool) -> None:
-        self.estop_latched = bool(message.data)
-
     def _send(self, positions, duration: int, response):
-        if self.estop_latched:
-            response.success = False
-            response.message = "estop latched; reset before arm command"
-            return response
         duration = int(duration or 1500)
         if not 1 <= duration <= 65535:
             response.success, response.message = False, "invalid duration"

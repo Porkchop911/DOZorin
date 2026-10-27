@@ -297,7 +297,7 @@ class GatewaySkills:
     def stop(self):
         # Outside the action budget: halting must always be possible.
         if self.dry_run:
-            return {"dry_run": True, "would": "stop motion and latch estop"}
+            return {"dry_run": True, "would": "stop motion"}
         response = requests.post(self.url + "/stop",
                                  headers={"Authorization": f"Bearer {self.token}"},
                                  timeout=self.timeout)
@@ -421,7 +421,7 @@ class GatewaySkills:
         return str(name)
 
     def _switch(self, mode: str, name: str, timeout: float = 150.0) -> dict:
-        """Restart the stack in mode on map name, wait until it answers, clear its startup estop."""
+        """Restart the stack in mode on map name, wait until it answers."""
         self._act(f"switch to {mode} on map {name}", "/mode", {"mode": mode, "map": name})
         time.sleep(5.0)  # let the old gateway die before polling
         deadline = time.monotonic() + timeout
@@ -436,8 +436,6 @@ class GatewaySkills:
             if time.monotonic() > deadline:
                 raise RuntimeError(f"stack did not come back in {mode} mode within {timeout:.0f} s")
             time.sleep(3.0)
-        # The driver latches the estop at every stack start (by design); this switch caused it.
-        self.reset_estop()
         return state
 
     def use_map(self, name: str):
@@ -1324,10 +1322,6 @@ class GatewaySkills:
     def say(self, text: str):
         return self._act(f"say: {text}", "/say", {"text": str(text)})
 
-    def reset_estop(self):
-        # User decision 2026-10-13: the agent may clear the estop itself (counts against the budget).
-        return self._act("reset estop", "/estop/reset")
-
     def relocalize(self):
         return self._act("global relocalize", "/localization/relocalize")
 
@@ -1360,7 +1354,7 @@ class GatewaySkills:
     def call(self, name: str, arguments: dict):
         allowed = {"goto_place", "goto", "explore", "look", "describe_view",
                    "assess_scene", "patrol", "arm_pose", "pick_test",
-                   "where_am_i", "relocalize", "stop", "reset_estop",
+                   "where_am_i", "relocalize", "stop",
                    "drive", "arm_aim", "arm_reach", "gripper",
                    "say", "seen_objects", "wander", "turn", "move", "back",
                    "approach", "roam_step", "map_room", "use_map", "list_maps",

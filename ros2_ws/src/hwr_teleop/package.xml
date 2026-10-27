@@ -3,13 +3,12 @@
 <package format="3">
   <name>hwr_teleop</name>
   <version>0.0.1</version>
-  <description>Keyboard teleop over SSH: hold-to-drive, release-to-stop, estop.</description>
+  <description>Keyboard teleop over SSH: hold-to-drive, release-to-stop.</description>
   <maintainer email="adam9x6loeb@googlemail.com">Niko</maintainer>
   <license>MIT</license>
 
   <depend>rclpy</depend>
   <depend>geometry_msgs</depend>
-  <depend>std_srvs</depend>
 
   <export>
     <build_type>ament_python</build_type>

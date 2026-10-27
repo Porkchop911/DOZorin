@@ -2,7 +2,7 @@ import time
 
 import pytest
 
-from hwr_core.safety import EStop, Limits, Watchdog, validate_wheel_rps
+from hwr_core.safety import Limits, Watchdog, validate_wheel_rps
 
 
 # ---------------------------------------------------------------- Limits
@@ -89,15 +89,3 @@ def test_watchdog_action_exception_does_not_kill_thread():
         assert len(calls) == 2
     finally:
         dog.close()
-
-
-# ---------------------------------------------------------------- EStop
-
-def test_estop_latch():
-    e = EStop()
-    assert not e.tripped
-    e.trip("test")
-    e.trip("second")                    # first reason wins
-    assert e.tripped and e.reason == "test"
-    e.reset()
-    assert not e.tripped

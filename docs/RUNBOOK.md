@@ -16,7 +16,7 @@ Phase 8 soak gate is accepted. Power decisions belong to the human operator.
 4. After a reboot, navigation starts the HWR arm service but does not move the
    arm automatically. If the camera is not forward-facing, with the base stopped
    call the live-verified `forward` named pose, wait for interpolation to finish,
-   then re-latch estop before validating depth ranges.
+   then stop before validating depth ranges.
 5. Run `deploy/handback.sh` and verify scan and web UI health.
 
 Typical mode commands on the robot:
@@ -71,16 +71,15 @@ PC (repo root):
 
 | Step | Why |
 |---|---|
-| 1. Estop reset (`reset_estop`, once) | Driver latches estop at every start, by design (boot into stopped state). |
-| 2. Arm `forward` (`arm_pose('forward')`) | Arm never moves unasked. Goals are refused until `camera_forward: true`. |
-| 3. Relocalize (`relocalize`), robot stationary | Boot does not know where the robot stands on the map. |
+| 1. Arm `forward` (`arm_pose('forward')`) | Arm never moves unasked. Goals are refused until `camera_forward: true`. |
+| 2. Relocalize (`relocalize`), robot stationary | Boot does not know where the robot stands on the map. |
 
 Hermes or the human performs these. Power decisions stay with the human.
 
 ### Acceptance
 
 - Cold power-on, no SSH.
-- After the human estop reset, "Soudruhu, turn left" moves the robot (speech-end → motion ≤ 1.5 s).
+- After boot, "Soudruhu, turn left" moves the robot (speech-end → motion ≤ 1.5 s).
 - Record: reboots worked / reboots tried = ___ / ___.
 
 ### Known risks to check on first boot
@@ -163,18 +162,15 @@ any motion was dispatched, including zero-motion terminal checks.
 
 ## Robot moves unexpectedly
 
-- Call `/estop` or run `python cli/hwr.py stop` immediately. If the gateway is
-  unavailable, SSH in and call the ROS `/estop` service directly.
-- Power off if ROS is unreachable. Do not reset estop until the command source is
+- Run `python cli/hwr.py stop` (gateway `/stop`) immediately. If the gateway is
+  unavailable, SSH in and stop the command source (the driver watchdog zeroes
+  the motors 0.4 s after it goes silent).
+- Power off if ROS is unreachable. Do not drive again until the command source is
   identified and `/wheel_speeds` is zero.
-- Invalid/non-finite/over-limit wheel commands latch estop automatically.
-- `cmd_vel_applied`, `wheel_speeds`, and model odometry are hard-zero while the
-  driver estop state is latched. Navigation goals are rejected while latched and
-  abort if the latch trips during execution or recovery. If a latched test ever
-  reports nonzero applied/wheel values or goal success, stop the run and treat
-  it as an instrumentation/odometry safety failure.
+- Invalid/non-finite/over-limit wheel and servo commands are rejected by the
+  driver (error logged, no motion); nothing is latched.
 
-After contact with a person or object, keep estop latched, preserve the gateway
+After contact with a person or object, stop, preserve the gateway
 audit, mode-session log, and camera frame, and do not resume from the same run.
 A collision is a failed acceptance result even if localization or the planner
 reports a different terminal reason.
@@ -189,7 +185,7 @@ reports a different terminal reason.
 ## Power policy
 
 - Power telemetry may be published and recorded, but it never controls takeover,
-  drive, navigation, exploration, arm commands, or estop state.
+  drive, navigation, exploration, or arm commands.
 - The human operator is solely responsible for deciding when to continue, stop,
   or charge the robot.
 - The autonomous tool manifests expose no power or battery skill. Goal polling,

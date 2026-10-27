@@ -86,10 +86,6 @@ def main() -> int:
     last_yaw = float(odom_pose[2])
     accumulated_yaw = 0.0
 
-    reset = gateway.request("POST", "/estop/reset")
-    if not reset.get("success"):
-        raise RuntimeError(f"estop reset failed: {reset.get('message', 'unknown')}")
-
     started = time.monotonic()
     next_report = started
     try:

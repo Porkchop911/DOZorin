@@ -624,11 +624,8 @@ class Gateway:
 
     def execute_goal(self, x: float, y: float, yaw: float,
                      timeout: float) -> dict:
-        """Enable only for one goal and always re-latch stop afterward."""
+        """Send one goal and always stop afterward."""
         try:
-            reset = self.post("/estop/reset")
-            if not reset.get("success"):
-                raise RuntimeError(f"estop reset rejected: {reset}")
             self.post("/goto", {"x": x, "y": y, "yaw": yaw})
             deadline = time.monotonic() + timeout
             seen = False

@@ -44,9 +44,6 @@ timeout 5 ros2 run tf2_ros tf2_echo base_link lidar_frame 2>/dev/null | head -6
 print "=== TF: odom -> base_footprint (model odom at rest) ==="
 timeout 5 ros2 run tf2_ros tf2_echo odom base_footprint 2>/dev/null | head -6
 
-print "=== estop service ==="
-ros2 service list | grep estop
-
 print "=== stopping launch process group ==="
 cleanup
 wait $LPID 2>/dev/null || true

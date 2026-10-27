@@ -16,14 +16,14 @@ import math
 
 import rclpy
 from rclpy.node import Node
-from rclpy.qos import (QoSDurabilityPolicy, QoSProfile,
+from rclpy.qos import (QoSProfile,
                        QoSReliabilityPolicy)
 
 from geometry_msgs.msg import TransformStamped, Twist, TwistStamped
 from hwr_msgs.msg import WheelSpeeds
 from nav_msgs.msg import Odometry
 from sensor_msgs.msg import Imu
-from std_msgs.msg import Bool, String
+from std_msgs.msg import String
 from tf2_ros import TransformBroadcaster
 
 from hwr_core.control import CommandMux
@@ -78,8 +78,6 @@ class BaseNode(Node):
         self.create_subscription(Imu, "imu", self._on_imu, sensor_qos)
 
         self._applied = (0.0, 0.0, 0.0)
-        # Fail closed until the driver's transient-local startup latch arrives.
-        self._estop_latched = True
         self._active_source = None
         # odometry state
         self._x = self._y = self._yaw = 0.0
@@ -87,12 +85,6 @@ class BaseNode(Node):
         self._gz_bias = 0.0
         self._bias_buf: list[float] = []
         self._last_tick = None
-
-        state_qos = QoSProfile(
-            depth=1, reliability=QoSReliabilityPolicy.RELIABLE,
-            durability=QoSDurabilityPolicy.TRANSIENT_LOCAL)
-        self.create_subscription(
-            Bool, "estop_state", self._on_estop, state_qos)
 
         period = 1.0 / float(self.get_parameter("rate").value)
         self.create_timer(period, self._tick)
@@ -117,13 +109,6 @@ class BaseNode(Node):
             return
         self._gz = gz - self._gz_bias
 
-    def _on_estop(self, msg: Bool) -> None:
-        self._estop_latched = bool(msg.data)
-        if self._estop_latched:
-            # Estop is an instantaneous physical stop, not an acceleration-ramp
-            # request.  Keep "applied" telemetry and model odometry truthful.
-            self._applied = (0.0, 0.0, 0.0)
-
     # ------------------------------------------------------------- 20 Hz pipeline
 
     def _tick(self) -> None:
@@ -140,15 +125,12 @@ class BaseNode(Node):
             self.pub_source.publish(source_msg)
 
         vx, vy, wz = target
-        if self._estop_latched:
-            cmd = (0.0, 0.0, 0.0)
-        else:
-            if not self.get_parameter("allow_reverse").value and vx < 0.0:
-                vx = 0.0  # structural no-reverse: rear ~140 deg is lidar-blind
-            if source is None and now.nanoseconds * 1e-9 - self._reverse_stamp <= 0.3:
-                vx, vy, wz = self._reverse  # already clamp_reverse'd: pure -x, <= 0.06 m/s
-            cmd = self.limits.clamp_velocity(vx, vy, wz)
-            cmd = self.limits.clamp_accel(cmd, self._applied, dt)
+        if not self.get_parameter("allow_reverse").value and vx < 0.0:
+            vx = 0.0  # structural no-reverse: rear ~140 deg is lidar-blind
+        if source is None and now.nanoseconds * 1e-9 - self._reverse_stamp <= 0.3:
+            vx, vy, wz = self._reverse  # already clamp_reverse'd: pure -x, <= 0.06 m/s
+        cmd = self.limits.clamp_velocity(vx, vy, wz)
+        cmd = self.limits.clamp_accel(cmd, self._applied, dt)
         self._applied = cmd
 
         applied = TwistStamped()

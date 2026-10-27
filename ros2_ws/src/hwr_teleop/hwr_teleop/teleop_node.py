@@ -6,7 +6,6 @@ Keys (hold to drive; releasing = keys stop repeating = robot stops):
     q / e    rotate CCW/CW
     [ / ]    speed down/up
     space    immediate stop
-    x        ESTOP (latches via hwr_driver service; X again resets)
     ctrl-c   quit (stops first)
 
 Publishes cmd_vel_teleop at 10 Hz; hwr_base's staleness timeout plus the driver
@@ -23,7 +22,6 @@ import rclpy
 from rclpy.node import Node
 
 from geometry_msgs.msg import Twist
-from std_srvs.srv import SetBool
 
 KEY_HOLD_S = 0.35  # a key older than this counts as released
 SPEEDS = [(0.05, 0.2), (0.1, 0.3), (0.15, 0.4), (0.2, 0.5)]  # (m/s, rad/s)
@@ -33,9 +31,7 @@ class TeleopNode(Node):
     def __init__(self) -> None:
         super().__init__("hwr_teleop")
         self.pub = self.create_publisher(Twist, "cmd_vel_teleop", 10)
-        self.estop_client = self.create_client(SetBool, "estop")
         self.speed_idx = 1
-        self.estopped = False
         self._pressed: dict[str, float] = {}
         self._lock = threading.Lock()
         self.create_timer(0.1, self._tick)
@@ -51,23 +47,12 @@ class TeleopNode(Node):
             elif key == "]":
                 self.speed_idx = min(len(SPEEDS) - 1, self.speed_idx + 1)
                 self._print_status()
-            elif key in ("x", "X"):
-                self._pressed.clear()
-                self.estopped = not self.estopped
-                self._call_estop(self.estopped)
             elif key in "wadqe":
                 self._pressed[key] = now
 
-    def _call_estop(self, trip: bool) -> None:
-        req = SetBool.Request()
-        req.data = trip
-        self.estop_client.call_async(req)
-        print(f"\r{'ESTOP TRIPPED' if trip else 'estop reset':<40}", end="", flush=True)
-
     def _print_status(self) -> None:
         v, w = SPEEDS[self.speed_idx]
-        print(f"\rspeed {self.speed_idx + 1}/{len(SPEEDS)}: {v} m/s, {w} rad/s"
-              f"{' [ESTOP]' if self.estopped else '':<10}", end="", flush=True)
+        print(f"\rspeed {self.speed_idx + 1}/{len(SPEEDS)}: {v} m/s, {w} rad/s", end="", flush=True)
 
     def _tick(self) -> None:
         now = time.monotonic()

@@ -4,27 +4,24 @@ Pubs:  imu (sensor_msgs/Imu, param rate), battery (sensor_msgs/BatteryState ~1 H
        joint_states (arm read-back, param rate), button (std_msgs/String)
 Subs:  wheel_speeds (hwr_msgs/WheelSpeeds), servo_cmd (hwr_msgs/ServoCommand),
        beep (std_msgs/UInt16, value = freq Hz)
-Srv:   estop (std_srvs/SetBool: data=true trip, false reset)
 
 Safety (hwr_core primitives, unit-tested): watchdog auto-zeros motors 0.4 s
-after the last nonzero wheel_speeds; estop and invalid-command latches stop
-motors and servos; SIGINT/shutdown always stops motors.
+after the last nonzero wheel_speeds; invalid wheel/servo commands are rejected
+(logged, nothing latched); SIGINT/shutdown always stops motors.
 Jazzy-ready: plain rclpy, no distro-specific APIs.
 """
 import math
 
 import rclpy
 from rclpy.node import Node
-from rclpy.qos import (QoSDurabilityPolicy, QoSProfile,
-                       QoSReliabilityPolicy)
+from rclpy.qos import QoSProfile, QoSReliabilityPolicy
 
 from hwr_msgs.msg import ServoCommand, WheelSpeeds
 from sensor_msgs.msg import BatteryState, Imu, JointState
-from std_msgs.msg import Bool, String, UInt16
-from std_srvs.srv import SetBool
+from std_msgs.msg import String, UInt16
 
 from hwr_core.rrc import Board, codecs
-from hwr_core.safety import EStop, Watchdog, validate_wheel_rps
+from hwr_core.safety import Watchdog, validate_wheel_rps
 
 ARM_JOINTS = {1: "joint1", 2: "joint2", 3: "joint3", 4: "joint4", 5: "joint5"}
 # Read back with the arm; a held cube stalls the close short of its target (grasp check).
@@ -51,8 +48,7 @@ class DriverNode(Node):
         self.board.set_motor_type(codecs.MOTOR_TYPE_JGB37)
         self.get_logger().info(f"board open on {device}")
 
-        self.estop = EStop()
-        self.estop.trip("startup")
+        # known idle state at start; nothing stays latched
         self.board.stop_all_motors()
         self.board.stop_servos(list(ARM_JOINTS) + [10])
         self.watchdog = Watchdog(
@@ -64,15 +60,10 @@ class DriverNode(Node):
         self.pub_batt = self.create_publisher(BatteryState, "battery", 10)
         self.pub_joints = self.create_publisher(JointState, "joint_states", 10)
         self.pub_button = self.create_publisher(String, "button", 10)
-        state_qos = QoSProfile(depth=1,
-                               reliability=QoSReliabilityPolicy.RELIABLE,
-                               durability=QoSDurabilityPolicy.TRANSIENT_LOCAL)
-        self.pub_estop_state = self.create_publisher(Bool, "estop_state", state_qos)
 
         self.create_subscription(WheelSpeeds, "wheel_speeds", self._on_wheel_speeds, 10)
         self.create_subscription(ServoCommand, "servo_cmd", self._on_servo_cmd, 10)
         self.create_subscription(UInt16, "beep", self._on_beep, 10)
-        self.create_service(SetBool, "estop", self._on_estop_srv)
 
         self._latest_imu = None  # (ImuSample, stamp) cached from the RX thread
         # A partial servo response must not disconnect the articulated camera
@@ -92,7 +83,6 @@ class DriverNode(Node):
         js_rate = float(self.get_parameter("joint_state_rate").value)
         if js_rate > 0:
             self.create_timer(1.0 / js_rate, self._publish_joint_states)
-        self._publish_estop_state()
 
     # ------------------------------------------------------------- safety paths
 
@@ -100,32 +90,14 @@ class DriverNode(Node):
         self.board.stop_all_motors()
         self.get_logger().warning("watchdog: wheel_speeds source went silent -> motors stopped")
 
-    def _trip_estop(self, reason: str) -> None:
-        self.estop.trip(reason)
-        self.watchdog.disarm()
-        self.board.stop_all_motors()
-        self.board.stop_servos(list(ARM_JOINTS) + [10])
-        self._publish_estop_state()
-
-    def _publish_estop_state(self) -> None:
-        msg = Bool()
-        msg.data = self.estop.tripped
-        self.pub_estop_state.publish(msg)
-
-    def _motion_allowed(self) -> bool:
-        return not self.estop.tripped
-
     # ------------------------------------------------------------- subscriptions
 
     def _on_wheel_speeds(self, msg: WheelSpeeds) -> None:
-        if not self._motion_allowed():
-            self.board.stop_all_motors()
-            return
         limit = float(self.get_parameter("max_wheel_rps").value)
         try:
             rps = validate_wheel_rps(msg.rps, limit)
         except ValueError as exc:
-            self._trip_estop("invalid wheel command")
+            self.board.stop_all_motors()
             self.get_logger().error(
                 f"invalid wheel command {list(msg.rps)!r}: {exc}")
             return
@@ -136,14 +108,11 @@ class DriverNode(Node):
             self.watchdog.disarm()
 
     def _on_servo_cmd(self, msg: ServoCommand) -> None:
-        if not self._motion_allowed():
-            return
         ids = [int(sid) for sid in msg.ids]
         pulses = [int(pulse) for pulse in msg.positions]
         if (len(ids) != len(pulses) or not ids
                 or any(sid not in VALID_SERVO_IDS for sid in ids)
                 or any(not 0 <= pulse <= 1000 for pulse in pulses)):
-            self._trip_estop("invalid servo command")
             self.get_logger().error(
                 f"invalid servo command ids={ids!r} positions={pulses!r}")
             return
@@ -153,18 +122,6 @@ class DriverNode(Node):
 
     def _on_beep(self, msg: UInt16) -> None:
         self.board.beep(int(msg.data) or 1500, 100, 100, 1)
-
-    def _on_estop_srv(self, request, response):
-        if request.data:
-            self._trip_estop("service")
-            response.message = "estop tripped"
-        else:
-            self.estop.reset()
-            response.message = "estop reset"
-            self._publish_estop_state()
-        self.get_logger().warning(response.message)
-        response.success = True
-        return response
 
     # ------------------------------------------------------------- report relays
 

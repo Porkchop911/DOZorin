@@ -1,7 +1,7 @@
 """The hwr_core.Robot facade — the Python API everything above builds on.
 
 Safety pipeline on every drive() call:
-    estop latch -> velocity clamp -> accel clamp ->
+    velocity clamp -> accel clamp ->
     mecanum mixing -> wheel-speed scale -> wire; watchdog auto-stops
     0.4 s after the last command if the caller dies mid-drive.
 
@@ -16,7 +16,7 @@ from typing import Mapping, Sequence
 
 from .kinematics import Calibration, scale_to_limit, wheel_speeds
 from .rrc import Board, codecs
-from .safety import EStop, Limits, Watchdog
+from .safety import Limits, Watchdog
 
 MAX_WHEEL_RPS = 4.0  # conservative wire-level cap; envelope really set by Limits
 
@@ -28,17 +28,11 @@ ARM_SERVO_IDS = (1, 2, 3, 4, 5)
 GRIPPER_ID = 10
 
 
-class EStopError(RuntimeError):
-    pass
-
-
 class Arm:
-    def __init__(self, board: Board, require_actuation) -> None:
+    def __init__(self, board: Board) -> None:
         self._board = board
-        self._require_actuation = require_actuation
 
     def set_pose(self, pose: str | Mapping[int, int], duration_ms: int = 1500) -> None:
-        self._require_actuation()
         if isinstance(pose, str):
             pose = ARM_POSES[pose]
         self._board.set_servo_positions(duration_ms, sorted(pose.items()))
@@ -50,13 +44,10 @@ class Arm:
         self._board.stop_servos([*ARM_SERVO_IDS, GRIPPER_ID])
 
     def torque(self, enable: bool, servo_ids: Sequence[int] = (*ARM_SERVO_IDS, GRIPPER_ID)) -> None:
-        if enable:
-            self._require_actuation()
         for sid in servo_ids:
             self._board.set_servo_torque(sid, enable)
 
     def gripper(self, pulse: int, duration_ms: int = 800) -> None:
-        self._require_actuation()
         self._board.set_servo_positions(duration_ms, [(GRIPPER_ID, pulse)])
 
 
@@ -67,11 +58,10 @@ class Robot:
         self._board = board
         self.limits = limits or Limits()
         self.calibration = calibration or Calibration()
-        self.estop_latch = EStop()
         self.watchdog = Watchdog(self._watchdog_stop, timeout=watchdog_timeout)
         self._last_cmd = (0.0, 0.0, 0.0)
         self._last_cmd_time: float | None = None
-        self.arm = Arm(board, self._require_motion)
+        self.arm = Arm(board)
 
     # ------------------------------------------------------------- lifecycle
 
@@ -102,15 +92,9 @@ class Robot:
 
     # ------------------------------------------------------------- motion
 
-    def _require_motion(self) -> None:
-        if self.estop_latch.tripped:
-            raise EStopError(f"estop: {self.estop_latch.reason}")
-
     def drive(self, vx: float, vy: float, wz: float) -> tuple[float, float, float]:
         """Command a body velocity. Returns what was actually applied after
-        clamping. Raises EStopError instead of silently moving less safely."""
-        self._require_motion()
-
+        clamping."""
         cmd = self.limits.clamp_velocity(vx, vy, wz)
         now = time.monotonic()
         if self._last_cmd_time is not None:
@@ -127,17 +111,6 @@ class Robot:
         self._board.stop_all_motors()
         self._last_cmd = (0.0, 0.0, 0.0)
         self._last_cmd_time = None
-
-    def estop(self, reason: str = "manual") -> None:
-        """Latched emergency stop: motors zero, servos halt, motion refused
-        until reset_estop()."""
-        self.estop_latch.trip(reason)
-        self.watchdog.disarm()
-        self._board.stop_all_motors()
-        self.arm.stop()
-
-    def reset_estop(self) -> None:
-        self.estop_latch.reset()
 
     # ------------------------------------------------------------- sensors / misc
 

@@ -1,7 +1,6 @@
 source ~/hwr/deploy/env.zsh
 export HWR_GATEWAY_TOKEN=$(grep -o 'TOKEN=.*' ~/hwr/config/hwr.env | head -1 | cut -d= -f2)
 H="Authorization: Bearer $HWR_GATEWAY_TOKEN"
-curl -s -m 5 -o /dev/null -X POST -H "$H" localhost:8090/estop/reset
 cd ~/hwr/ros2_ws/src/hwr_agent
 python3 - <<'PY'
 import json, math, time

@@ -99,10 +99,10 @@ Before starting the gateway, run `deploy/install_deps.sh`, copy
 `config/hwr.env.example` to `config/hwr.env`, and replace the placeholder with a
 random token of at least 24 characters. From the PC, set the same
 `HWR_GATEWAY_TOKEN`, then use `python cli/hwr.py status`; `--help` lists drive,
-navigation, exploration, arm, snapshot, map, telemetry, and estop commands.
+navigation, exploration, arm, snapshot, map, and telemetry commands (`stop` halts motion).
 
 Power telemetry never controls takeover or actuation; power decisions belong to
-the human operator. Keep the robot attended with the estop path in reach. Take over with
+the human operator. Keep the robot attended with the `stop` command in reach. Take over with
 `deploy/takeover.sh` and always restore the factory stack with `deploy/handback.sh`.
 
 ## From-scratch policy

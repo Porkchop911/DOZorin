@@ -70,8 +70,6 @@ def reflex(heard: str):
     text = re.sub(r"^(please|okay|ok|now) |( please| now)$", "", text).strip(" .")
     if re.fullmatch(r"(stop|halt|freeze|stay)( (now|there|moving|it))?", text):
         return "/stop", None, "Stopping."
-    if re.fullmatch(r"(reset|all clear|clear the (e-?stop|emergency stop))", text):
-        return "/estop/reset", None, "All clear."
     if re.fullmatch(r"turn (around|back)", text):
         return "/motion/turn", {"degrees": 180.0}, "Turning around."
     if re.fullmatch(r"(spin( around)?|do a spin|turn a full circle)", text):

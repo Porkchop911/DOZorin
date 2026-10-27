@@ -3,7 +3,7 @@ import time
 
 import pytest
 
-from hwr_core.robot import ARM_POSES, EStopError, Robot
+from hwr_core.robot import ARM_POSES, Robot
 from hwr_core.rrc import Board, Function
 from hwr_core.rrc.transport import Transport
 
@@ -86,22 +86,6 @@ def test_watchdog_stops_dead_driver():
         time.sleep(0.5)                                    # driver "dies"
         assert robot.watchdog.fired_count == 1
         assert motor_cmds(fake)[-1] == (0.0, 0.0, 0.0, 0.0)
-    finally:
-        robot.close()
-
-
-def test_estop_latches_and_refuses_motion():
-    fake, robot = make_robot()
-    try:
-        robot.drive(0.1, 0, 0)
-        robot.estop("test")
-        assert motor_cmds(fake)[-1] == (0.0, 0.0, 0.0, 0.0)
-        with pytest.raises(EStopError):
-            robot.drive(0.1, 0, 0)
-        with pytest.raises(EStopError):
-            robot.arm.set_pose("forward")
-        robot.reset_estop()
-        robot.drive(0.05, 0, 0)                            # allowed again
     finally:
         robot.close()
 

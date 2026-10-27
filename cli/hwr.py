@@ -102,8 +102,6 @@ def _run(args) -> int:
                                   {"frequency": args.frequency}), indent=2))
     elif command == "stop":
         print(json.dumps(_request(args, "POST", "/stop"), indent=2))
-    elif command == "reset":
-        print(json.dumps(_request(args, "POST", "/estop/reset"), indent=2))
     elif command == "goto":
         payload = ({"place": args.place} if args.place else
                    {"x": args.x, "y": args.y, "yaw": args.yaw})
@@ -214,7 +212,6 @@ def parser() -> argparse.ArgumentParser:
     beep = commands.add_parser("beep")
     beep.add_argument("frequency", nargs="?", type=int, default=1500)
     commands.add_parser("stop")
-    commands.add_parser("reset")
     goto = commands.add_parser("goto")
     goto.add_argument("place", nargs="?")
     goto.add_argument("--x", type=float)
